@@ -200,7 +200,7 @@
             <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 <!-- LIVE SCOREBOARD -->
 
-                <div class="xl:col-span-2 space-y-6">
+                <div id="live-match-section" class="xl:col-span-2 space-y-6">
                     <div
                         class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl"
                     >
@@ -212,6 +212,13 @@
                             </div>
 
                             <div class="flex gap-2">
+                                <button
+                                    onclick="toggleLiveMatch()"
+                                    id="toggle-live-btn"
+                                    class="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition"
+                                >
+                                    Hide
+                                </button>
                                 <button
                                     onclick="setMatchFormat(5)"
                                     id="btn-best-5"
@@ -541,7 +548,70 @@
                 }, 100);
             }
 
-            function showSetupModal() {
+            /* ---------------------------------- */
+            /* TOGGLE LIVE MATCH */
+            /* ---------------------------------- */
+
+            let lastAdminActivity = Date.now();
+            const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+            let autoHideTimer;
+
+            function recordAdminActivity() {
+                lastAdminActivity = Date.now();
+                resetAutoHideTimer();
+            }
+
+            function resetAutoHideTimer() {
+                clearTimeout(autoHideTimer);
+                autoHideTimer = setTimeout(() => {
+                    // Auto-hide live match if admin hasn't done anything for 5 minutes
+                    const hidden = localStorage.getItem("live_match_hidden");
+                    if (hidden !== "true") {
+                        console.log("Auto-hiding live match due to inactivity");
+                        toggleLiveMatch();
+                    }
+                }, INACTIVITY_TIMEOUT);
+            }
+
+            function toggleLiveMatch() {
+                const section = document.getElementById("live-match-section");
+                const btn = document.getElementById("toggle-live-btn");
+                
+                if (section.style.display === "none") {
+                    // Show it
+                    section.style.display = "";
+                    liveMatch.hidden = false;
+                    localStorage.setItem("live_match_hidden", "false");
+                    btn.innerText = "Hide";
+                    btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                } else {
+                    // Hide it
+                    section.style.display = "none";
+                    liveMatch.hidden = true;
+                    localStorage.setItem("live_match_hidden", "true");
+                    btn.innerText = "Show";
+                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                }
+                recordAdminActivity();
+                saveTournamentData(); // Save the hidden status to GitHub
+            }
+
+            function restoreLiveMatchVisibility() {
+                const hidden = localStorage.getItem("live_match_hidden");
+                if (hidden === "true") {
+                    // Simulate toggle to set it to hidden state
+                    const section = document.getElementById("live-match-section");
+                    const btn = document.getElementById("toggle-live-btn");
+                    section.style.display = "none";
+                    btn.innerText = "Show";
+                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                } else {
+                    resetAutoHideTimer();
+                }
+            }
                 const skipped = localStorage.getItem("github_setup_skipped");
                 if (githubToken || skipped) {
                     document.getElementById("setup-modal").style.display = "none";
@@ -589,7 +659,36 @@
                     });
 
                     if (!response.ok) {
-                        throw new Error(`GitHub API error: ${response.status}`);
+                        const errorData = await response.json();
+                        
+                        // If it's a 409 or other error with existing gistId, try creating a new one
+                        if ((response.status === 409 || response.status === 404) && gistId) {
+                            console.warn("Gist update failed, creating new gist...");
+                            localStorage.removeItem("acsii_tt_gist_id");
+                            gistId = null;
+                            
+                            // Retry with POST to create new gist
+                            const newResponse = await fetch("https://api.github.com/gists", {
+                                method: "POST",
+                                headers: {
+                                    "Authorization": `token ${githubToken}`,
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify(gistData)
+                            });
+                            
+                            if (!newResponse.ok) {
+                                throw new Error(`GitHub API error: ${newResponse.status}`);
+                            }
+                            
+                            const result = await newResponse.json();
+                            gistId = result.id;
+                            localStorage.setItem("acsii_tt_gist_id", gistId);
+                            console.log("New gist created:", gistId);
+                            return;
+                        }
+                        
+                        throw new Error(`GitHub API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
                     }
 
                     const result = await response.json();
@@ -602,7 +701,8 @@
                     console.log("Data saved to GitHub Gist:", gistId);
                 } catch (error) {
                     console.error("Error saving to GitHub:", error);
-                    alert("Failed to save to GitHub. Check your token and try again.");
+                    // Don't alert on every save, just log it
+                    // Users can still use the app with local storage
                 }
             }
 
@@ -666,6 +766,14 @@
                         // Show modal
                         showSetupModal();
                     }
+                    
+                    // Restore live match visibility
+                    restoreLiveMatchVisibility();
+                    
+                    // Add global activity tracking
+                    document.addEventListener("click", recordAdminActivity);
+                    document.addEventListener("input", recordAdminActivity);
+                    document.addEventListener("change", recordAdminActivity);
                 }
             );
 
@@ -824,15 +932,22 @@ ${team.name}
 
                 select2.value = liveMatch.team2Id;
 
-                // Add event listeners to save selection
-                select1.addEventListener("change", () => {
-                    liveMatch.team1Id = select1.value;
+                // Remove old event listeners by cloning and replacing
+                const newSelect1 = select1.cloneNode(true);
+                const newSelect2 = select2.cloneNode(true);
+                
+                select1.parentNode.replaceChild(newSelect1, select1);
+                select2.parentNode.replaceChild(newSelect2, select2);
+
+                // Add event listeners to new elements
+                document.getElementById("live-team-1").addEventListener("change", () => {
+                    liveMatch.team1Id = document.getElementById("live-team-1").value;
                     localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
                     updateLiveScoreDOM();
                 });
 
-                select2.addEventListener("change", () => {
-                    liveMatch.team2Id = select2.value;
+                document.getElementById("live-team-2").addEventListener("change", () => {
+                    liveMatch.team2Id = document.getElementById("live-team-2").value;
                     localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
                     updateLiveScoreDOM();
                 });
@@ -1294,8 +1409,6 @@ ${match.setHistory.join(" | ")}
 
 `;
                 });
-
-                saveTournamentData();
             }
         </script>
     </body>
