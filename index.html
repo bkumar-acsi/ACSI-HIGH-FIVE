@@ -656,7 +656,16 @@
                     
                     console.log("GitHub Token:", githubToken ? "Set" : "Not set");
                     console.log("Setup skipped:", localStorage.getItem("github_setup_skipped"));
-                    showSetupModal();
+                    
+                    const skipped = localStorage.getItem("github_setup_skipped");
+                    if (githubToken || skipped) {
+                        // Skip modal and load data directly
+                        document.getElementById("setup-modal").style.display = "none";
+                        loadTournamentData();
+                    } else {
+                        // Show modal
+                        showSetupModal();
+                    }
                 }
             );
 
@@ -835,28 +844,46 @@ ${team.name}
 
             function createNewTeam(event) {
                 event.preventDefault();
+                
+                console.log("Creating new team...");
 
                 const input = document.getElementById("new-team-name");
 
                 const name = input.value.trim();
+                
+                console.log("Team name:", name);
 
-                if (!name) return;
+                if (!name) {
+                    console.log("Name is empty");
+                    return;
+                }
 
                 const category = tournamentState[currentCategory];
+                
+                console.log("Current category:", currentCategory);
+                console.log("Category exists:", !!category);
 
                 category.teams.push({
                     id: "t_" + Date.now(),
 
                     name: name,
                 });
+                
+                console.log("Team added. Total teams:", category.teams.length);
 
                 input.value = "";
 
                 saveTournamentData();
+                
+                console.log("Data saved");
 
                 renderDashboard();
+                
+                console.log("Dashboard rendered");
 
                 initLiveSelectors();
+                
+                console.log("Selectors initialized");
             }
 
             /* ---------------------------------- */
