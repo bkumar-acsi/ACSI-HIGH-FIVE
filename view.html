@@ -197,52 +197,9 @@
                 </div>
             </div>
 
-            <!-- STANDINGS -->
+            <!-- STANDINGS FOR ALL CATEGORIES -->
 
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                <div class="p-5 border-b border-slate-800 flex justify-between">
-                    <div>
-                        <h2 class="font-bold text-lg">
-                            <span id="current-view-title"> Men Singles </span>
-
-                            Standings
-                        </h2>
-
-                        <p class="text-slate-500 text-sm">Rankings update automatically</p>
-                    </div>
-
-                    <div
-                        id="match-count-badge"
-                        class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold"
-                    >
-                        0 Matches
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 text-sm">
-                                <th class="py-4 px-4 text-center">#</th>
-
-                                <th class="py-4 px-4">Team / Player</th>
-
-                                <th class="py-4 px-4 text-center">Played</th>
-
-                                <th class="py-4 px-4 text-center">Wins</th>
-
-                                <th class="py-4 px-4 text-center">Losses</th>
-
-                                <th class="py-4 px-4 text-center">Set Diff</th>
-
-                                <th class="py-4 px-4 text-center">Points</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="standings-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
+            <div id="all-standings-container" class="space-y-6"></div>
 
             <!-- MATCH HISTORY -->
 
@@ -369,8 +326,12 @@
                 if (PUBLIC_GIST_ID && PUBLIC_GIST_ID !== "YOUR_PUBLIC_GIST_ID_HERE") {
                     const githubData = await loadFromGitHub();
                     if (githubData) {
+                        console.log("✅ Loading from GitHub Gist");
                         tournamentState = githubData.tournament;
                         liveMatch = githubData.liveMatch;
+                        
+                        console.log("Tournament data:", tournamentState);
+                        console.log("Live match:", liveMatch);
                         
                         renderDashboard();
                         updateLiveScoreDOM();
@@ -380,6 +341,7 @@
                 }
 
                 // Fall back to local storage
+                console.log("⚠️ Loading from localStorage (Gist failed)");
                 const saved = localStorage.getItem("acsii_tt_v1");
 
                 if (saved) {
@@ -402,25 +364,6 @@
             /* ---------------------------------- */
             /* STORAGE */
             /* ---------------------------------- */
-
-            function loadTournamentData() {
-                const saved = localStorage.getItem("acsii_tt_v1");
-
-                if (saved) {
-                    tournamentState = JSON.parse(saved);
-                } else {
-                    tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
-                }
-
-                // Load live match state
-                const savedLiveMatch = localStorage.getItem("acsii_tt_live_match");
-                if (savedLiveMatch) {
-                    liveMatch = JSON.parse(savedLiveMatch);
-                }
-
-                renderDashboard();
-                updateLiveScoreDOM();
-            }
 
             /* ---------------------------------- */
             /* SYNC LIVE MATCH VISIBILITY */
@@ -535,35 +478,16 @@
             /* Live match visibility is controlled by admin in index.html */
 
             function renderDashboard() {
-                const category = tournamentState[currentCategory];
+                // Render standings for all categories
+                const container = document.getElementById("all-standings-container");
+                container.innerHTML = "";
 
-                document.getElementById("current-view-title").innerText = category.title;
-
-                const tbody = document.getElementById("standings-table-body");
-                tbody.innerHTML = "";
-
-                category.teams.forEach((team, index) => {
-                    const stats = calculateStats(team);
-
-                    tbody.innerHTML += `
-<tr class="border-b border-slate-800">
-<td class="py-4 px-4 text-center">${index + 1}</td>
-<td class="py-4 px-4 font-semibold">${team.name}</td>
-<td class="py-4 px-4 text-center">${stats.played}</td>
-<td class="py-4 px-4 text-center text-green-400">${stats.wins}</td>
-<td class="py-4 px-4 text-center text-red-400">${stats.losses}</td>
-<td class="py-4 px-4 text-center">${stats.wins - stats.losses}</td>
-<td class="py-4 px-4 text-center text-blue-400 font-bold">${stats.points}</td>
-</tr>
-`;
-                });
-
+                // Render match history for first category
+                const firstCategory = tournamentState[currentCategory] || tournamentState["mens_singles"];
                 const history = document.getElementById("match-history-list");
                 history.innerHTML = "";
 
-                document.getElementById("match-count-badge").innerText = `${category.matches.length} Matches`;
-
-                category.matches.forEach((match) => {
+                firstCategory.matches.forEach((match) => {
                     history.innerHTML += `
 <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
 <div class="text-xs text-slate-500 mb-2">${match.timestamp}</div>
@@ -573,6 +497,62 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 <div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
 </div>
 `;
+                });
+
+                // Render all categories standings
+                Object.keys(tournamentState).forEach((categoryKey) => {
+                    const category = tournamentState[categoryKey];
+                    
+                    let standings = `
+<div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+    <div class="p-5 border-b border-slate-800 flex justify-between">
+        <div>
+            <h2 class="font-bold text-lg">${category.title} Standings</h2>
+            <p class="text-slate-500 text-sm">Rankings update automatically</p>
+        </div>
+        <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            ${category.matches.length} Matches
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-slate-800 text-slate-400 text-sm">
+                    <th class="py-4 px-4 text-center">#</th>
+                    <th class="py-4 px-4">Team / Player</th>
+                    <th class="py-4 px-4 text-center">Played</th>
+                    <th class="py-4 px-4 text-center">Wins</th>
+                    <th class="py-4 px-4 text-center">Losses</th>
+                    <th class="py-4 px-4 text-center">Set Diff</th>
+                    <th class="py-4 px-4 text-center">Points</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+
+                    category.teams.forEach((team, index) => {
+                        const stats = calculateStats(team);
+                        standings += `
+<tr class="border-b border-slate-800">
+    <td class="py-4 px-4 text-center">${index + 1}</td>
+                    <td class="py-4 px-4 font-semibold">${team.name}</td>
+                    <td class="py-4 px-4 text-center">${stats.played}</td>
+                    <td class="py-4 px-4 text-center text-green-400">${stats.wins}</td>
+                    <td class="py-4 px-4 text-center text-red-400">${stats.losses}</td>
+                    <td class="py-4 px-4 text-center">${stats.wins - stats.losses}</td>
+                    <td class="py-4 px-4 text-center text-blue-400 font-bold">${stats.points}</td>
+                </tr>
+`;
+                    });
+
+                    standings += `
+            </tbody>
+        </table>
+    </div>
+</div>
+`;
+
+                    container.innerHTML += standings;
                 });
             }
         </script>
