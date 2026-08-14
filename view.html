@@ -98,12 +98,6 @@
                         Auto-refreshing every 5 seconds
                         <span class="auto-refresh inline-block ml-2">●</span>
                     </span>
-                    <a 
-                        href="index.html"
-                        class="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition"
-                    >
-                        Edit Mode
-                    </a>
                 </div>
             </div>
         </header>
@@ -159,7 +153,7 @@
         <main class="max-w-7xl mx-auto px-4 mt-6">
             <!-- LIVE SCOREBOARD -->
 
-            <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
+            <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
                 <div class="text-center mb-8">
                     <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
                     <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
@@ -322,14 +316,88 @@
             };
 
             /* ---------------------------------- */
+            /* GITHUB INTEGRATION - PUBLIC GIST READ */
+            /* ---------------------------------- */
+
+            // Public Gist ID - anyone can read this without authentication
+            const PUBLIC_GIST_ID = "07976ee644e8d7bd84da31758de0ad74";
+
+            async function loadFromGitHub() {
+                if (!PUBLIC_GIST_ID || PUBLIC_GIST_ID === "YOUR_PUBLIC_GIST_ID_HERE") {
+                    console.log("Public Gist ID not configured");
+                    return null;
+                }
+
+                try {
+                    // Read public gist (no token needed, no authentication required)
+                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`);
+
+                    if (!response.ok) {
+                        throw new Error(`GitHub API error: ${response.status}`);
+                    }
+
+                    const gist = await response.json();
+                    const content = gist.files["tournament-data.json"].content;
+                    const data = JSON.parse(content);
+                    
+                    console.log("Data loaded from public GitHub Gist");
+                    return data;
+                } catch (error) {
+                    console.error("Error loading from GitHub:", error);
+                    return null;
+                }
+            }
+
+            /* ---------------------------------- */
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
 
             window.addEventListener("DOMContentLoaded", () => {
+                console.log("View page loaded");
+                
+                // Load data immediately from public Gist
                 loadTournamentData();
+                
                 // Auto-refresh every 5 seconds
-                setInterval(loadTournamentData, 5000);
+                setInterval(() => {
+                    loadTournamentData();
+                }, 5000);
             });
+
+            async function loadTournamentData() {
+                // Try to load from public GitHub Gist first
+                if (PUBLIC_GIST_ID && PUBLIC_GIST_ID !== "YOUR_PUBLIC_GIST_ID_HERE") {
+                    const githubData = await loadFromGitHub();
+                    if (githubData) {
+                        tournamentState = githubData.tournament;
+                        liveMatch = githubData.liveMatch;
+                        
+                        renderDashboard();
+                        updateLiveScoreDOM();
+                        applyLiveMatchVisibility();
+                        return;
+                    }
+                }
+
+                // Fall back to local storage
+                const saved = localStorage.getItem("acsii_tt_v1");
+
+                if (saved) {
+                    tournamentState = JSON.parse(saved);
+                } else {
+                    tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
+                }
+
+                // Load live match state
+                const savedLiveMatch = localStorage.getItem("acsii_tt_live_match");
+                if (savedLiveMatch) {
+                    liveMatch = JSON.parse(savedLiveMatch);
+                }
+
+                renderDashboard();
+                updateLiveScoreDOM();
+                applyLiveMatchVisibility();
+            }
 
             /* ---------------------------------- */
             /* STORAGE */
@@ -352,6 +420,21 @@
 
                 renderDashboard();
                 updateLiveScoreDOM();
+            }
+
+            /* ---------------------------------- */
+            /* SYNC LIVE MATCH VISIBILITY */
+            /* ---------------------------------- */
+
+            function applyLiveMatchVisibility() {
+                const section = document.getElementById("live-match-section");
+                
+                // Check if live match is hidden from the data
+                if (liveMatch.hidden === true) {
+                    section.style.display = "none";
+                } else {
+                    section.style.display = "";
+                }
             }
 
             /* ---------------------------------- */
@@ -441,6 +524,15 @@
             /* ---------------------------------- */
             /* RENDER */
             /* ---------------------------------- */
+
+            /* ---------------------------------- */
+            /* TOGGLE LIVE MATCH */
+            /* ---------------------------------- */
+            /* TOGGLE LIVE MATCH */
+            /* ---------------------------------- */
+
+            /* View page is read-only, no toggle button needed */
+            /* Live match visibility is controlled by admin in index.html */
 
             function renderDashboard() {
                 const category = tournamentState[currentCategory];
