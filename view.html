@@ -358,10 +358,16 @@
             function applyLiveMatchVisibility() {
                 const section = document.getElementById("live-match-section");
                 
+                console.log("🎬 applyLiveMatchVisibility called");
+                console.log("Current liveMatch.hidden:", liveMatch.hidden);
+                console.log("Full liveMatch object:", liveMatch);
+                
                 // Check if live match is hidden from the data
                 if (liveMatch.hidden === true) {
+                    console.log("🔴 Setting display to NONE (hidden)");
                     section.style.display = "none";
                 } else {
+                    console.log("🟢 Setting display to BLOCK (visible)");
                     section.style.display = "";
                 }
             }
