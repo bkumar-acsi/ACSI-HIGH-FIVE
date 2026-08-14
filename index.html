@@ -1,676 +1,1018 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACSII TT Tournament 🏓</title>
-    <!-- Tailwind CSS for modern responsive layout -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap');
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
-        }
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 3px;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col pb-12">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Header Section -->
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <!-- Custom Modern TT Paddle & Ball Logo -->
-                <div class="bg-gradient-to-tr from-amber-500 to-rose-500 p-2.5 rounded-xl text-slate-950 shadow-lg shadow-orange-500/20 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14z" fill="currentColor" fill-opacity="0.15"/>
-                        <path d="M12 16v6"/>
-                        <path d="M10 22h4"/>
-                        <circle cx="18" cy="6" r="2" fill="#ffffff" stroke="#ffffff" stroke-width="1"/>
-                        <path d="M15 9c.5-.5 1.5-.5 2 0" stroke-width="1.5"/>
-                    </svg>
+        <title>ACSII HiFive TT Tournament 2026</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+            body {
+                font-family: "Plus Jakarta Sans", sans-serif;
+                background: #0f172a;
+                color: #f8fafc;
+            }
+
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #1e293b;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #475569;
+                border-radius: 999px;
+            }
+
+            .score-glow {
+                text-shadow:
+                    0 0 20px rgba(59, 130, 246, 0.8),
+                    0 0 40px rgba(59, 130, 246, 0.4);
+            }
+        </style>
+    </head>
+
+    <body class="min-h-screen pb-10">
+        <!-- HEADER -->
+
+        <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/80 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <!-- TT LOGO -->
+
+                    <div
+                        class="bg-gradient-to-tr from-blue-500 to-cyan-500 p-3 rounded-2xl shadow-lg shadow-blue-500/20"
+                    >
+                        <svg width="34" height="34" viewBox="0 0 64 64">
+                            <circle cx="26" cy="24" r="16" fill="#2563EB" />
+                            <circle cx="26" cy="24" r="12" fill="#60A5FA" />
+
+                            <rect x="22" y="38" width="8" height="18" rx="4" fill="#E2E8F0" />
+
+                            <circle cx="50" cy="14" r="6" fill="#FFFFFF" />
+
+                            <path
+                                d="M37 18C41 13 45 12 50 14"
+                                stroke="#FFFFFF"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M39 26C45 24 50 26 56 32"
+                                stroke="#A5F3FC"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-extrabold">ACSII HiFive TT Tournament 2026</h1>
+
+                        <p
+                            class="text-sm bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-bold"
+                        >
+                            Serve • Smash • Shine
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
-                        ACSII TT Tournament <span class="text-base">🏓</span>
-                    </h1>
-                    <p class="text-xs font-semibold tracking-wide bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Serve. Smash. Shine</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="resetTournamentData()" class="px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 border border-slate-700 hover:border-rose-900/60 rounded-lg transition-all duration-200 flex items-center space-x-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
-                    </svg>
-                    <span>Reset Data</span>
+
+                <button
+                    disabled
+                    class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm font-semibold opacity-50 cursor-not-allowed"
+                >
+                    Reset Tournament
                 </button>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Category Filter Bar Navigation -->
-    <nav class="bg-slate-900 border-b border-slate-800 py-3 sticky top-16 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2 hidden sm:inline">Category:</span>
-                <button onclick="switchCategory('mens_singles')" id="btn-mens_singles" class="px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-amber-500 text-slate-950 shadow-md">Mens Singles</button>
-                <button onclick="switchCategory('mens_doubles')" id="btn-mens_doubles" class="px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">Mens Doubles</button>
-                <button onclick="switchCategory('womens_singles')" id="btn-womens_singles" class="px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">Womens Singles</button>
-                <button onclick="switchCategory('womens_doubles')" id="btn-womens_doubles" class="px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">Womens Doubles</button>
-                <button onclick="switchCategory('mix_doubles')" id="btn-mix_doubles" class="px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">Mix Doubles</button>
+        <!-- CATEGORY NAV -->
+
+        <section class="sticky top-20 z-40 bg-slate-900 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
+                <button
+                    id="btn-mens_singles"
+                    onclick="switchCategory('mens_singles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                >
+                    Men Singles
+                </button>
+
+                <button
+                    id="btn-mens_doubles"
+                    onclick="switchCategory('mens_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Men Doubles
+                </button>
+
+                <button
+                    id="btn-womens_singles"
+                    onclick="switchCategory('womens_singles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Women Singles
+                </button>
+
+                <button
+                    id="btn-womens_doubles"
+                    onclick="switchCategory('womens_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Women Doubles
+                </button>
+
+                <button
+                    id="btn-mix_doubles"
+                    onclick="switchCategory('mix_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Mixed Doubles
+                </button>
             </div>
-        </div>
-    </nav>
+        </section>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex-grow w-full">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- LEFT COLUMN: Live Match Scoring & Add Team -->
-            <div class="space-y-6 lg:col-span-1">
-                
-                <!-- Active Scoring Terminal Card -->
-                <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 opacity-5 pointer-events-none">
-                        <svg class="w-40 h-40 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-                    </div>
-                    
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                            Live Scoring Panel
-                        </span>
-                        <span id="match-rules-badge" class="text-[11px] text-slate-500">Best of 5 sets (11 pts)</span>
-                    </div>
+        <!-- MAIN -->
 
-                    <!-- Live Scoring Workspace -->
-                    <div id="live-scoring-workspace" class="space-y-5">
-                        <div class="grid grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+        <main class="max-w-7xl mx-auto px-4 mt-6">
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                <!-- LIVE SCOREBOARD -->
+
+                <div class="xl:col-span-2 space-y-6">
+                    <div
+                        class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl"
+                    >
+                        <div class="flex justify-between items-center mb-6">
                             <div>
-                                <label class="block text-[11px] font-medium text-slate-400 mb-1">Player/Team 1</label>
-                                <select id="live-team-1" onchange="updateLiveMatchSetup()" class="w-full text-sm bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 text-white"></select>
+                                <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
+
+                                <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
                             </div>
+
+                            <div class="flex gap-2">
+                                <button
+                                    onclick="setMatchFormat(5)"
+                                    id="btn-best-5"
+                                    class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-semibold transition hover:bg-blue-500/30"
+                                >
+                                    Best of 5
+                                </button>
+                                <button
+                                    onclick="setMatchFormat(7)"
+                                    id="btn-best-7"
+                                    class="px-3 py-1 rounded-full bg-slate-700/50 border border-slate-600/50 text-slate-400 text-xs font-semibold transition hover:bg-slate-700"
+                                >
+                                    Best of 7
+                                </button>
+                            </div>
+
+                            <div
+                                class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold"
+                            >
+                                SCORING ACTIVE
+                            </div>
+                        </div>
+
+                        <!-- PLAYER SELECTION -->
+
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <select
+                                id="live-team-1"
+                                class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
+                            ></select>
+
+                            <select
+                                id="live-team-2"
+                                class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
+                            ></select>
+                        </div>
+
+                        <!-- SCOREBOARD -->
+
+                        <div class="grid grid-cols-2 gap-4 text-center relative">
                             <div>
-                                <label class="block text-[11px] font-medium text-slate-400 mb-1">Player/Team 2</label>
-                                <select id="live-team-2" onchange="updateLiveMatchSetup()" class="w-full text-sm bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 text-white"></select>
-                            </div>
-                        </div>
+                                <div id="display-name-1" class="text-lg font-bold mb-4">Player 1</div>
 
-                        <!-- Main Scoreboard Numbers -->
-                        <div class="grid grid-cols-2 gap-4 text-center py-2 relative">
-                            <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-800/60 transform -translate-x-1/2"></div>
-                            
-                            <!-- Team 1 Controls -->
-                            <div class="space-y-3 flex flex-col items-center">
-                                <span id="display-name-1" class="text-sm font-semibold truncate max-w-[130px] text-slate-300">Team 1</span>
-                                <div class="text-5xl font-black font-mono tracking-tight text-white my-1" id="live-points-1">0</div>
-                                <div class="flex space-x-1.5">
-                                    <button onclick="adjustPoints(1, -1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm flex items-center justify-center transition">-</button>
-                                    <button onclick="adjustPoints(1, 1)" class="w-12 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-lg flex items-center justify-center transition shadow-md shadow-amber-500/10">+</button>
-                                </div>
-                                <div class="pt-1">
-                                    <span class="text-xs text-slate-500">Sets Won:</span>
-                                    <span id="live-sets-1" class="text-xs font-bold text-amber-400 font-mono ml-1">0</span>
-                                </div>
-                            </div>
+                                <input
+                                    type="number"
+                                    id="live-points-1"
+                                    min="0"
+                                    onchange="updatePointsFromInput(1)"
+                                    class="score-glow text-[3rem] font-black leading-none w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl px-2 py-1 focus:outline-none focus:border-blue-500"
+                                    value="0"
+                                />
 
-                            <!-- Team 2 Controls -->
-                            <div class="space-y-3 flex flex-col items-center">
-                                <span id="display-name-2" class="text-sm font-semibold truncate max-w-[130px] text-slate-300">Team 2</span>
-                                <div class="text-5xl font-black font-mono tracking-tight text-white my-1" id="live-points-2">0</div>
-                                <div class="flex space-x-1.5">
-                                    <button onclick="adjustPoints(2, -1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm flex items-center justify-center transition">-</button>
-                                    <button onclick="adjustPoints(2, 1)" class="w-12 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-lg flex items-center justify-center transition shadow-md shadow-amber-500/10">+</button>
+                                <div class="mt-6 flex justify-center gap-3">
+                                    <button
+                                        onclick="adjustPoints(1,-1)"
+                                        class="w-12 h-12 rounded-xl bg-slate-800 text-xl"
+                                    >
+                                        -
+                                    </button>
+
+                                    <button
+                                        onclick="adjustPoints(1,1)"
+                                        class="w-16 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 text-3xl font-black"
+                                    >
+                                        +
+                                    </button>
                                 </div>
-                                <div class="pt-1">
-                                    <span class="text-xs text-slate-500">Sets Won:</span>
-                                    <span id="live-sets-2" class="text-xs font-bold text-amber-400 font-mono ml-1">0</span>
+
+                                <div class="mt-2">
+                                    <div class="text-sm text-slate-500">Sets Won</div>
+
+                                    <div id="live-sets-1" class="text-xl font-bold text-blue-400">0</div>
                                 </div>
                             </div>
+
+                            <div>
+                                <div id="display-name-2" class="text-lg font-bold mb-4">Player 2</div>
+
+                                <input
+                                    type="number"
+                                    id="live-points-2"
+                                    min="0"
+                                    onchange="updatePointsFromInput(2)"
+                                    class="score-glow text-[3rem] font-black leading-none w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl px-2 py-1 focus:outline-none focus:border-blue-500"
+                                    value="0"
+                                />
+
+                                <div class="mt-6 flex justify-center gap-3">
+                                    <button
+                                        onclick="adjustPoints(2,-1)"
+                                        class="w-12 h-12 rounded-xl bg-slate-800 text-xl"
+                                    >
+                                        -
+                                    </button>
+
+                                    <button
+                                        onclick="adjustPoints(2,1)"
+                                        class="w-16 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 text-3xl font-black"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
+                                <div class="mt-2">
+                                    <div class="text-sm text-slate-500">Sets Won</div>
+
+                                    <div id="live-sets-2" class="text-xl font-bold text-blue-400">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SET HISTORY -->
+
+                        <div
+                            id="set-history-log"
+                            class="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800 text-center text-sm text-slate-300 min-h-[32px] flex items-center justify-center"
+                        >
+                            No Sets Completed Yet
                         </div>
 
-                        <div id="set-history-log" class="text-center text-xs text-slate-400 bg-slate-950 p-2 rounded-xl border border-slate-900 font-mono min-h-[34px] flex items-center justify-center">
-                            No sets completed yet
-                        </div>
+                        <!-- MATCH ACTIONS -->
 
-                        <div class="grid grid-cols-2 gap-2 pt-2">
-                            <button onclick="confirmSetWinner()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-slate-200 transition">
+                        <div class="grid grid-cols-2 gap-3 mt-4">
+                            <button
+                                onclick="confirmSetWinner()"
+                                class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-semibold transition"
+                            >
                                 End Current Set
                             </button>
-                            <button onclick="submitCompletedMatch()" class="w-full py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-xl text-xs font-bold text-slate-950 tracking-wide transition shadow-lg shadow-orange-500/10">
-                                Save Full Match
+
+                            <button
+                                onclick="submitCompletedMatch()"
+                                class="py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold text-sm transition"
+                            >
+                                Save Match
                             </button>
                         </div>
                     </div>
+
+                    <!-- ADD TEAM PANEL -->
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <h3 class="text-lg font-bold mb-4">Add Competitor</h3>
+
+                        <form id="add-team-form" onsubmit="createNewTeam(event)" class="flex gap-3">
+                            <input
+                                id="new-team-name"
+                                required
+                                type="text"
+                                placeholder="Enter player or pair name"
+                                class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3"
+                            />
+
+                            <button type="submit" class="px-5 py-3 rounded-xl bg-blue-500 text-white font-semibold">
+                                Add
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                    <h3 class="text-sm font-bold text-white mb-1 flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-                        </svg>
-                        Quick Add Competitor
-                    </h3>
-                    <p class="text-xs text-slate-400 mb-3">Enlist a new name/pair to the selected category.</p>
-                    <form id="add-team-form" onsubmit="createNewTeam(event)" class="flex space-x-2">
-                        <input type="text" id="new-team-name" placeholder="e.g., Rohit / Sneha" required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
-                        <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-white px-4 rounded-xl text-xs font-semibold border border-slate-700 transition">
-                            Add
-                        </button>
-                    </form>
+                <!-- RIGHT SIDE -->
+
+                <div class="xl:col-span-2 space-y-6">
+                    <!-- STANDINGS -->
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-800 flex justify-between">
+                            <div>
+                                <h2 class="font-bold text-lg">
+                                    <span id="current-view-title"> Men Singles </span>
+
+                                    Standings
+                                </h2>
+
+                                <p class="text-slate-500 text-sm">Rankings update automatically</p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-slate-400 text-sm">
+                                        <th class="py-4 px-4 text-center">#</th>
+
+                                        <th class="py-4 px-4">Team / Player</th>
+
+                                        <th class="py-4 px-4 text-center">Actions</th>
+
+                                        <th class="py-4 px-4 text-center">Played</th>
+
+                                        <th class="py-4 px-4 text-center">Wins</th>
+
+                                        <th class="py-4 px-4 text-center">Losses</th>
+
+                                        <th class="py-4 px-4 text-center">Set Diff</th>
+
+                                        <th class="py-4 px-4 text-center">Points</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="standings-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- MATCH HISTORY -->
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-800 flex justify-between">
+                            <h2 class="font-bold text-lg">Match History</h2>
+
+                            <div id="match-count-badge" class="text-sm text-slate-400">0 Matches</div>
+                        </div>
+
+                        <div id="match-history-list" class="p-5 space-y-3 max-h-[420px] overflow-y-auto"></div>
+                    </div>
                 </div>
             </div>
+        </main>
 
-            <div class="space-y-6 lg:col-span-2">
-                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                            <h2 class="text-base font-bold text-white flex items-center gap-2">
-                                <span id="current-view-title">Mens Singles</span> Standings
-                            </h2>
-                            <p class="text-xs text-slate-400">Live rankings compiled automatically from completed records.</p>
-                        </div>
-                        <div class="text-[11px] text-slate-500 bg-slate-950/60 border border-slate-800 px-2.5 py-1 rounded-lg self-start sm:self-center font-mono">
-                            PTS: W=3, L=1
-                        </div>
-                    </div>
+        <script>
+            /* ---------------------------------- */
+            /* TOURNAMENT DATA */
+            /* ---------------------------------- */
 
-                        <table class="w-full text-left border-collapse min-w-[500px]">
-                            <thead>
-                                <tr class="bg-slate-950/40 border-b border-slate-800 text-[11px] uppercase tracking-wider font-semibold text-slate-400">
-                                    <th class="py-3 px-4 text-center w-12">Rank</th>
-                                    <th class="py-3 px-4">Player / Pair</th>
-                                    <th class="py-3 px-3 text-center">Played</th>
-                                    <th class="py-3 px-3 text-center text-emerald-400">Wins</th>
-                                    <th class="py-3 px-3 text-center text-rose-400">Losses</th>
-                                    <th class="py-3 px-3 text-center">Set Diff</th>
-                                    <th class="py-3 px-4 text-center font-bold text-white">Points</th>
-                                </tr>
-                            </thead>
-                            <tbody id="standings-table-body" class="divide-y divide-slate-800/60 text-sm">
-                                <!-- Generated Dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            const SEED_DATA = {
+                mens_singles: {
+                    title: "Men Singles",
+                    teams: [
+                        {
+                            id: "ms1",
+                            name: "Rahul Sharma",
+                        },
+                        {
+                            id: "ms2",
+                            name: "Brajesh Kumar",
+                        },
+                    ],
+                    matches: [],
+                },
 
-                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between">
-                        <div>
-                            <h2 class="text-base font-bold text-white">Category Match Ledger Log</h2>
-                            <p class="text-xs text-slate-400">Chronological history of registered category matchups.</p>
-                        </div>
-                        <span id="match-count-badge" class="text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md text-slate-300">0 Matches</span>
-                    </div>
+                mens_doubles: {
+                    title: "Men Doubles",
+                    teams: [],
+                    matches: [],
+                },
 
-                    <div class="p-4">
-                        <div id="match-history-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                        </div>
-                    </div>
-                </div>
-            </div>
+                womens_singles: {
+                    title: "Women Singles",
+                    teams: [],
+                    matches: [],
+                },
 
-        </div>
-    </main>
+                womens_doubles: {
+                    title: "Women Doubles",
+                    teams: [],
+                    matches: [],
+                },
 
-    <script>
-        // Seed data segregated smoothly by the 5 specific tournament categories
-        const SEED_DATA = {
-            mens_singles: {
-                title: "Mens Singles",
-                teams: [
-                    { id: "ms1", name: "Rahul Sharma", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "ms2", name: "Vikram Malhotra", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "ms3", name: "Amit Patel", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "ms4", name: "Rohan Verma", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 }
-                ],
-                matches: [
-                    { id: "m_ms1", team1Id: "ms1", team2Id: "ms2", team1Name: "Rahul Sharma", team2Name: "Vikram Malhotra", sets1: 3, sets2: 1, setHistory: ["11-8", "9-11", "11-6", "11-7"], timestamp: new Date(Date.now() - 3600000).toLocaleString() }
-                ]
-            },
-            mens_doubles: {
-                title: "Mens Doubles",
-                teams: [
-                    { id: "md1", name: "Rahul S. / Amit P.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "md2", name: "Vikram M. / Rohan V.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "md3", name: "Kabir D. / Arjun N.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 }
-                ],
-                matches: []
-            },
-            womens_singles: {
-                title: "Womens Singles",
-                teams: [
-                    { id: "ws1", name: "Ananya Iyer", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "ws2", name: "Priya Das", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "ws3", name: "Sneha Reddy", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 }
-                ],
-                matches: [
-                    { id: "m_ws1", team1Id: "ws1", team2Id: "ws2", team1Name: "Ananya Iyer", team2Name: "Priya Das", sets1: 3, sets2: 0, setHistory: ["11-5", "11-7", "11-6"], timestamp: new Date(Date.now() - 7200000).toLocaleString() }
-                ]
-            },
-            womens_doubles: {
-                title: "Womens Doubles",
-                teams: [
-                    { id: "wd1", name: "Ananya I. / Priya D.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "wd2", name: "Sneha R. / Meera K.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 }
-                ],
-                matches: []
-            },
-            mix_doubles: {
-                title: "Mix Doubles",
-                teams: [
-                    { id: "mx1", name: "Rahul S. / Ananya I.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "mx2", name: "Amit P. / Priya D.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 },
-                    { id: "mx3", name: "Vikram M. / Sneha R.", played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0 }
-                ],
-                matches: []
-            }
-        };
+                mix_doubles: {
+                    title: "Mixed Doubles",
+                    teams: [],
+                    matches: [],
+                },
+            };
 
-        // Active global runtime state variables
-        let currentCategory = "mens_singles";
-        let tournamentState = {};
+            /* ---------------------------------- */
+            /* ACTIVE STATE */
+            /* ---------------------------------- */
 
-        // Live scoring workspace object
-        let liveMatch = {
-            team1Id: "",
-            team2Id: "",
-            points1: 0,
-            points2: 0,
-            sets1: 0,
-            sets2: 0,
-            setHistory: []
-        };
+            let currentCategory = "mens_singles";
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadTournamentData();
-            renderDashboard();
-        });
+            let tournamentState = {};
 
-        function loadTournamentData() {
-            const savedState = localStorage.getItem('pingpong_state_categories_v2');
-            if (savedState) {
-                try {
-                    tournamentState = JSON.parse(savedState);
-                    if (!tournamentState.mens_singles) {
-                        initDefaultState();
-                    }
-                } catch (e) {
-                    initDefaultState();
+            let liveMatch = {
+                team1Id: "",
+                team2Id: "",
+
+                points1: 0,
+                points2: 0,
+
+                sets1: 0,
+                sets2: 0,
+
+                setHistory: [],
+                
+                matchFormat: 5,
+            };
+
+            /* ---------------------------------- */
+            /* PAGE BOOTSTRAP */
+            /* ---------------------------------- */
+
+            window.addEventListener(
+                "DOMContentLoaded",
+
+                () => {
+                    loadTournamentData();
                 }
-            } else {
-                initDefaultState();
-            }
+            );
 
-            Object.keys(tournamentState).forEach(catKey => {
-                recalculateStandingsFromHistory(catKey);
-            });
-            
-            initLiveScoringSelections();
-        }
+            /* ---------------------------------- */
+            /* STORAGE */
+            /* ---------------------------------- */
 
-        function initDefaultState() {
-            tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
-            saveStateToStorage();
-        }
+            function loadTournamentData() {
+                const saved = localStorage.getItem("acsii_tt_v1");
 
-        function saveStateToStorage() {
-            localStorage.setItem('pingpong_state_categories_v2', JSON.stringify(tournamentState));
-        }
-
-        function resetTournamentData() {
-            if(confirm("Are you sure you want to clear all data and reset configurations for all five categories back to defaults?")) {
-                localStorage.removeItem('pingpong_state_categories_v2');
-                initDefaultState();
-                initLiveScoringSelections();
-                renderDashboard();
-            }
-        }
-
-        function switchCategory(categoryKey) {
-            const categories = ['mens_singles', 'mens_doubles', 'womens_singles', 'womens_doubles', 'mix_doubles'];
-            categories.forEach(cat => {
-                const btn = document.getElementById(`btn-${cat}`);
-                if (cat === categoryKey) {
-                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-amber-500 text-slate-950 shadow-md";
+                if (saved) {
+                    tournamentState = JSON.parse(saved);
                 } else {
-                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all duration-150 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white";
+                    tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
                 }
-            });
 
-            currentCategory = categoryKey;
-            initLiveScoringSelections();
-            renderDashboard();
-        }
+                renderDashboard();
 
-        function initLiveScoringSelections() {
-            const catData = tournamentState[currentCategory];
-            const select1 = document.getElementById('live-team-1');
-            const select2 = document.getElementById('live-team-2');
-            
-            let htmlOptions = "";
-            catData.teams.forEach(t => {
-                htmlOptions += `<option value="${t.id}">${t.name}</option>`;
-            });
+                initLiveSelectors();
 
-            select1.innerHTML = htmlOptions;
-            select2.innerHTML = htmlOptions;
-
-            if (catData.teams.length >= 2) {
-                liveMatch.team1Id = catData.teams.id;
-                liveMatch.team2Id = catData.teams.id;
-            } else {
-                liveMatch.team1Id = "";
-                liveMatch.team2Id = "";
+                updateLiveScoreDOM();
             }
 
-            select1.value = liveMatch.team1Id;
-            select2.value = liveMatch.team2Id;
+            function saveTournamentData() {
+                localStorage.setItem(
+                    "acsii_tt_v1",
 
-            resetLiveScoringSession();
-        }
-
-        function resetLiveScoringSession() {
-            liveMatch.points1 = 0;
-            liveMatch.points2 = 0;
-            liveMatch.sets1 = 0;
-            liveMatch.sets2 = 0;
-            liveMatch.setHistory = [];
-            updateLiveScoreDOM();
-        }
-
-        function updateLiveMatchSetup() {
-            const select1 = document.getElementById('live-team-1');
-            const select2 = document.getElementById('live-team-2');
-            
-            if (select1.value === select2.value && select1.value !== "") {
-                alert("A competitor cannot play a match against themselves. Adjust selections.");
-                select1.value = liveMatch.team1Id;
-                select2.value = liveMatch.team2Id;
-                return;
+                    JSON.stringify(tournamentState)
+                );
             }
 
-            liveMatch.team1Id = select1.value;
-            liveMatch.team2Id = select2.value;
-            resetLiveScoringSession();
-        }
-
-        function adjustPoints(teamNumber, delta) {
-            if (!liveMatch.team1Id || !liveMatch.team2Id) return;
-            if (teamNumber === 1) {
-                liveMatch.points1 = Math.max(0, liveMatch.points1 + delta);
-            } else {
-                liveMatch.points2 = Math.max(0, liveMatch.points2 + delta);
-            }
-            updateLiveScoreDOM();
-        }
-
-        function confirmSetWinner() {
-            if (!liveMatch.team1Id || !liveMatch.team2Id) return;
-            const p1 = liveMatch.points1;
-            const p2 = liveMatch.points2;
-
-            if (p1 === 0 && p2 === 0) return;
-
-            if ((p1 >= 11 || p2 >= 11) && Math.abs(p1 - p2) >= 2) {
-                // valid set score threshold reached
-            } else {
-                if(!confirm(`Score layout (${p1}-${p2}) doesn't reflect official table tennis rules (at least 11 points and win by 2 difference). Conclude set anyway?`)) {
+            function resetTournamentData() {
+                if (!confirm("Reset all tournament data?")) {
                     return;
                 }
+
+                localStorage.removeItem("acsii_tt_v1");
+
+                location.reload();
             }
 
-            liveMatch.setHistory.push(`${p1}-${p2}`);
-            if (p1 > p2) {
-                liveMatch.sets1++;
-            } else {
-                liveMatch.sets2++;
+            /* ---------------------------------- */
+            /* MATCH FORMAT */
+            /* ---------------------------------- */
+
+            function setMatchFormat(format) {
+                liveMatch.matchFormat = format;
+                
+                document.getElementById("btn-best-5").classList.toggle("bg-blue-500/20", format === 5);
+                document.getElementById("btn-best-5").classList.toggle("border-blue-500/40", format === 5);
+                document.getElementById("btn-best-5").classList.toggle("text-blue-400", format === 5);
+                document.getElementById("btn-best-5").classList.toggle("bg-slate-700/50", format === 5 ? false : true);
+                document.getElementById("btn-best-5").classList.toggle("border-slate-600/50", format === 5 ? false : true);
+                document.getElementById("btn-best-5").classList.toggle("text-slate-400", format === 5 ? false : true);
+
+                document.getElementById("btn-best-7").classList.toggle("bg-blue-500/20", format === 7);
+                document.getElementById("btn-best-7").classList.toggle("border-blue-500/40", format === 7);
+                document.getElementById("btn-best-7").classList.toggle("text-blue-400", format === 7);
+                document.getElementById("btn-best-7").classList.toggle("bg-slate-700/50", format === 7 ? false : true);
+                document.getElementById("btn-best-7").classList.toggle("border-slate-600/50", format === 7 ? false : true);
+                document.getElementById("btn-best-7").classList.toggle("text-slate-400", format === 7 ? false : true);
+
+                document.getElementById("match-format-display").innerText = format === 5 ? "Best Of 5 Sets" : "Best Of 7 Sets";
+            }
+            /* ---------------------------------- */
+            /* CATEGORY SWITCHING */
+            /* ---------------------------------- */
+
+            function switchCategory(category) {
+                currentCategory = category;
+
+                document.querySelectorAll(".category-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-${category}`).classList.remove("bg-slate-800", "text-slate-300");
+
+                document.getElementById(`btn-${category}`).classList.add("bg-blue-500", "text-white");
+
+                renderDashboard();
+                initLiveSelectors();
+                updateLiveScoreDOM();
             }
 
-            liveMatch.points1 = 0;
-            liveMatch.points2 = 0;
-            
-            updateLiveScoreDOM();
-        }
+            /* ---------------------------------- */
+            /* LIVE DROPDOWNS */
+            /* ---------------------------------- */
 
-        function submitCompletedMatch() {
-            if (!liveMatch.team1Id || !liveMatch.team2Id) return;
-            
-            if (liveMatch.points1 > 0 || liveMatch.points2 > 0) {
-                if(confirm("Log current trailing points into the match history sequence before saving?")) {
-                    liveMatch.setHistory.push(`${liveMatch.points1}-${liveMatch.points2}`);
-                    if (liveMatch.points1 > liveMatch.points2) {
-                        liveMatch.sets1++;
-                    } else {
-                        liveMatch.sets2++;
-                    }
+            function initLiveSelectors() {
+                const category = tournamentState[currentCategory];
+
+                const select1 = document.getElementById("live-team-1");
+
+                const select2 = document.getElementById("live-team-2");
+
+                select1.innerHTML = "";
+                select2.innerHTML = "";
+
+                category.teams.forEach((team) => {
+                    select1.innerHTML += `<option value="${team.id}">
+${team.name}
+</option>`;
+
+                    select2.innerHTML += `<option value="${team.id}">
+${team.name}
+</option>`;
+                });
+
+                if (category.teams.length >= 2) {
+                    liveMatch.team1Id = category.teams[0].id;
+
+                    liveMatch.team2Id = category.teams[1].id;
                 }
+
+                select1.value = liveMatch.team1Id;
+
+                select2.value = liveMatch.team2Id;
             }
 
-            const catData = tournamentState[currentCategory];
-            const t1 = catData.teams.find(t => t.id === liveMatch.team1Id);
-            const t2 = catData.teams.find(t => t.id === liveMatch.team2Id);
+            /* ---------------------------------- */
+            /* ADD TEAM */
+            /* ---------------------------------- */
 
-            if (!t1 || !t2) {
-                alert("Invalid configuration context.");
-                return;
+            function createNewTeam(event) {
+                event.preventDefault();
+
+                const input = document.getElementById("new-team-name");
+
+                const name = input.value.trim();
+
+                if (!name) return;
+
+                const category = tournamentState[currentCategory];
+
+                category.teams.push({
+                    id: "t_" + Date.now(),
+
+                    name: name,
+                });
+
+                input.value = "";
+
+                saveTournamentData();
+
+                renderDashboard();
+
+                initLiveSelectors();
             }
 
-            if (liveMatch.sets1 === 0 && liveMatch.sets2 === 0) {
-                alert("Cannot log a match with 0 sets won.");
-                return;
-            }
+            /* ---------------------------------- */
+            /* EDIT TEAM */
+            /* ---------------------------------- */
 
-            const finalizedMatchObj = {
-                id: "m_" + Date.now(),
-                team1Id: t1.id,
-                team2Id: t2.id,
-                team1Name: t1.name,
-                team2Name: t2.name,
-                sets1: liveMatch.sets1,
-                sets2: liveMatch.sets2,
-                setHistory: [...liveMatch.setHistory],
-                timestamp: new Date().toLocaleString()
-            };
+            function editTeam(teamId) {
+                const category = tournamentState[currentCategory];
 
-            catData.matches.unshift(finalizedMatchObj);
-            
-            recalculateStandingsFromHistory(currentCategory);
-            saveStateToStorage();
-            resetLiveScoringSession();
-            renderDashboard();
-        }
+                const team = category.teams.find((t) => t.id === teamId);
 
-        function recalculateStandingsFromHistory(catKey) {
-            const catData = tournamentState[catKey];
-            if (!catData) return;
+                if (!team) return;
 
-            catData.teams.forEach(t => {
-                t.played = 0; t.wins = 0; t.losses = 0; t.setWins = 0; t.setLosses = 0; t.points = 0;
-            });
+                const newName = prompt("Edit Team Name", team.name);
 
-            catData.matches.forEach(m => {
-                const t1 = catData.teams.find(t => t.id === m.team1Id);
-                const t2 = catData.teams.find(t => t.id === m.team2Id);
-
-                if (t1 && t2) {
-                    t1.played++; t2.played++;
-                    t1.setWins += m.sets1; t1.setLosses += m.sets2;
-                    t2.setWins += m.sets2; t2.setLosses += m.sets1;
-
-                    if (m.sets1 > m.sets2) {
-                        t1.wins++; t1.points += 3;
-                        t2.losses++; t2.points += 1;
-                    } else {
-                        t2.wins++; t2.points += 3;
-                        t1.losses++; t1.points += 1;
-                    }
+                if (!newName || !newName.trim()) {
+                    return;
                 }
-            });
-        }
 
-        function createNewTeam(event) {
-            event.preventDefault();
-            const inputElement = document.getElementById('new-team-name');
-            const name = inputElement.value.trim();
-            if (!name) return;
+                team.name = newName.trim();
 
-            const catData = tournamentState[currentCategory];
-            const alreadyExists = catData.teams.some(t => t.name.toLowerCase() === name.toLowerCase());
-            if (alreadyExists) {
-                alert("A match layout with this name already exists in this category view.");
-                return;
+                category.matches.forEach((match) => {
+                    if (match.team1Id === teamId) {
+                        match.team1Name = team.name;
+                    }
+
+                    if (match.team2Id === teamId) {
+                        match.team2Name = team.name;
+                    }
+                });
+
+                saveTournamentData();
+
+                renderDashboard();
+
+                initLiveSelectors();
             }
 
-            const newTeamObj = {
-                id: "t_" + Date.now(),
-                name: name,
-                played: 0, wins: 0, losses: 0, setWins: 0, setLosses: 0, points: 0
-            };
+            /* ---------------------------------- */
+            /* DELETE TEAM */
+            /* ---------------------------------- */
 
-            catData.teams.push(newTeamObj);
-            saveStateToStorage();
-            inputElement.value = "";
-            
-            // Refresh selections dropdown cleanly
-            const select1 = document.getElementById('live-team-1');
-            const select2 = document.getElementById('live-team-2');
-            const oldVal1 = select1.value;
-            const oldVal2 = select2.value;
+            function deleteTeam(teamId) {
+                const category = tournamentState[currentCategory];
 
-            let htmlOptions = "";
-            catData.teams.forEach(t => {
-                htmlOptions += `<option value="${t.id}">${t.name}</option>`;
-            });
-            select1.innerHTML = htmlOptions;
-            select2.innerHTML = htmlOptions;
+                if (category.teams.length <= 1) {
+                    alert("Cannot delete last competitor.");
+                    return;
+                }
 
-            select1.value = oldVal1 || newTeamObj.id;
-            select2.value = oldVal2 || catData.teams.id;
-            liveMatch.team1Id = select1.value;
-            liveMatch.team2Id = select2.value;
+                const team = category.teams.find((t) => t.id === teamId);
 
-            updateLiveScoreDOM();
-            renderDashboard();
-        }
+                if (!team) return;
 
-        function updateLiveScoreDOM() {
-            const catData = tournamentState[currentCategory];
-            const t1 = catData.teams.find(t => t.id === liveMatch.team1Id);
-            const t2 = catData.teams.find(t => t.id === liveMatch.team2Id);
+                if (!confirm(`Delete ${team.name}?`)) {
+                    return;
+                }
 
-            document.getElementById('display-name-1').innerText = t1 ? t1.name : "Select Competitor";
-            document.getElementById('display-name-2').innerText = t2 ? t2.name : "Select Competitor";
+                category.matches = category.matches.filter(
+                    (match) => match.team1Id !== teamId && match.team2Id !== teamId
+                );
 
-            document.getElementById('live-points-1').innerText = liveMatch.points1;
-            document.getElementById('live-points-2').innerText = liveMatch.points2;
-            document.getElementById('live-sets-1').innerText = liveMatch.sets1;
-            document.getElementById('live-sets-2').innerText = liveMatch.sets2;
+                category.teams = category.teams.filter((team) => team.id !== teamId);
 
-            const logContainer = document.getElementById('set-history-log');
-            if (liveMatch.setHistory.length === 0) {
-                logContainer.innerText = "No sets completed yet";
-                logContainer.classList.add('text-slate-500');
-            } else {
-                logContainer.innerText = `Sets Log: [ ${liveMatch.setHistory.join(' | ')} ]`;
-                logContainer.classList.remove('text-slate-500');
+                saveTournamentData();
+
+                renderDashboard();
+
+                initLiveSelectors();
             }
-        }
 
-        function renderDashboard() {
-            const catData = tournamentState[currentCategory];
-            document.getElementById('current-view-title').innerText = catData.title;
+            /* ---------------------------------- */
+            /* SCOREBOARD */
+            /* ---------------------------------- */
 
-            // Sort standings grid matrix
-            const sortedTeams = [...catData.teams].sort((a, b) => {
-                if (b.points !== a.points) return b.points - a.points;
-                const aDiff = a.setWins - a.setLosses;
-                const bDiff = b.setWins - b.setLosses;
-                if (bDiff !== aDiff) return bDiff - aDiff;
-                return b.wins - a.wins;
-            });
+            function adjustPoints(team, amount) {
+                if (team === 1) {
+                    liveMatch.points1 = Math.max(0, liveMatch.points1 + amount);
+                } else {
+                    liveMatch.points2 = Math.max(0, liveMatch.points2 + amount);
+                }
 
-            const tbody = document.getElementById('standings-table-body');
-            tbody.innerHTML = "";
+                updateLiveScoreDOM();
+            }
 
-            if (sortedTeams.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500 text-xs">No registered competitors found in this category layer yet.</td></tr>`;
-            } else {
-                sortedTeams.forEach((team, index) => {
-                    const setDiff = team.setWins - team.setLosses;
-                    const diffSign = setDiff > 0 ? `+${setDiff}` : setDiff;
-                    
-                    let rankBadge = `<span class="text-slate-400 font-mono">${index + 1}</span>`;
-                    if (index === 0) rankBadge = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold border border-amber-500/30">1</span>`;
-                    if (index === 1) rankBadge = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-400/20 text-slate-300 text-xs font-bold border border-slate-400/30">2</span>`;
-                    if (index === 2) rankBadge = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-700/20 text-amber-600 text-xs font-bold border border-amber-700/30">3</span>`;
+            function updatePointsFromInput(team) {
+                const input = document.getElementById(`live-points-${team}`);
+                const value = parseInt(input.value) || 0;
+
+                if (team === 1) {
+                    liveMatch.points1 = Math.max(0, value);
+                } else {
+                    liveMatch.points2 = Math.max(0, value);
+                }
+
+                updateLiveScoreDOM();
+            }
+
+            function updateLiveScoreDOM() {
+                const category = tournamentState[currentCategory];
+
+                const team1 = category.teams.find((t) => t.id === liveMatch.team1Id);
+
+                const team2 = category.teams.find((t) => t.id === liveMatch.team2Id);
+
+                document.getElementById("display-name-1").innerText = team1 ? team1.name : "Player 1";
+
+                document.getElementById("display-name-2").innerText = team2 ? team2.name : "Player 2";
+
+                document.getElementById("live-points-1").value = liveMatch.points1;
+
+                document.getElementById("live-points-2").value = liveMatch.points2;
+
+                document.getElementById("live-sets-1").innerText = liveMatch.sets1;
+
+                document.getElementById("live-sets-2").innerText = liveMatch.sets2;
+
+                document.getElementById("set-history-log").innerText = liveMatch.setHistory.length
+                    ? `Sets: ${liveMatch.setHistory.join(" | ")}`
+                    : "No Sets Completed Yet";
+            }
+
+            /* ---------------------------------- */
+            /* SET LOGGING */
+            /* ---------------------------------- */
+
+            function clearHistory() {
+                if (!confirm("Clear all set history for this match?")) {
+                    return;
+                }
+
+                liveMatch.setHistory = [];
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+                liveMatch.sets1 = 0;
+                liveMatch.sets2 = 0;
+
+                updateLiveScoreDOM();
+            }
+
+            function confirmSetWinner() {
+                if (liveMatch.points1 === 0 && liveMatch.points2 === 0) {
+                    return;
+                }
+
+                liveMatch.setHistory.push(`${liveMatch.points1}-${liveMatch.points2}`);
+
+                if (liveMatch.points1 > liveMatch.points2) {
+                    liveMatch.sets1++;
+                } else {
+                    liveMatch.sets2++;
+                }
+
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+
+                updateLiveScoreDOM();
+            }
+
+            /* ---------------------------------- */
+            /* SAVE MATCH */
+            /* ---------------------------------- */
+
+            function submitCompletedMatch() {
+                const category = tournamentState[currentCategory];
+
+                const team1 = category.teams.find((t) => t.id === liveMatch.team1Id);
+
+                const team2 = category.teams.find((t) => t.id === liveMatch.team2Id);
+
+                if (!team1 || !team2) {
+                    return;
+                }
+
+                if (liveMatch.sets1 === 0 && liveMatch.sets2 === 0) {
+                    alert("No completed sets.");
+
+                    return;
+                }
+
+                category.matches.unshift({
+                    id: "m_" + Date.now(),
+
+                    team1Id: team1.id,
+
+                    team2Id: team2.id,
+
+                    team1Name: team1.name,
+
+                    team2Name: team2.name,
+
+                    sets1: liveMatch.sets1,
+
+                    sets2: liveMatch.sets2,
+
+                    setHistory: [...liveMatch.setHistory],
+
+                    timestamp: new Date().toLocaleString(),
+                });
+
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+
+                liveMatch.sets1 = 0;
+                liveMatch.sets2 = 0;
+
+                liveMatch.setHistory = [];
+
+                saveTournamentData();
+
+                renderDashboard();
+
+                updateLiveScoreDOM();
+            }
+
+            /* ---------------------------------- */
+            /* EDIT AND DELETE MATCHES */
+            /* ---------------------------------- */
+
+            function editMatch(matchIndex) {
+                const category = tournamentState[currentCategory];
+                const match = category.matches[matchIndex];
+
+                if (!match) return;
+
+                const sets1 = prompt("Enter sets for team 1:", match.sets1);
+                if (sets1 === null) return;
+
+                const sets2 = prompt("Enter sets for team 2:", match.sets2);
+                if (sets2 === null) return;
+
+                match.sets1 = parseInt(sets1) || 0;
+                match.sets2 = parseInt(sets2) || 0;
+
+                saveTournamentData();
+                renderDashboard();
+            }
+
+            function deleteMatch(matchIndex) {
+                const category = tournamentState[currentCategory];
+                
+                if (!confirm("Delete this match?")) return;
+
+                category.matches.splice(matchIndex, 1);
+
+                saveTournamentData();
+                renderDashboard();
+            }
+
+            function calculateStats(team) {
+                const category = tournamentState[currentCategory];
+
+                let played = 0;
+                let wins = 0;
+                let losses = 0;
+                let points = 0;
+
+                category.matches.forEach((match) => {
+                    if (match.team1Id !== team.id && match.team2Id !== team.id) {
+                        return;
+                    }
+
+                    played++;
+
+                    const winner = match.sets1 > match.sets2 ? match.team1Id : match.team2Id;
+
+                    if (winner === team.id) {
+                        wins++;
+                        points += 3;
+                    } else {
+                        losses++;
+                        points += 1;
+                    }
+                });
+
+                return {
+                    played,
+                    wins,
+                    losses,
+                    points,
+                };
+            }
+
+            /* ---------------------------------- */
+            /* RENDER */
+            /* ---------------------------------- */
+
+            function renderDashboard() {
+                const category = tournamentState[currentCategory];
+
+                document.getElementById("current-view-title").innerText = category.title;
+
+                const tbody = document.getElementById("standings-table-body");
+
+                tbody.innerHTML = "";
+
+                category.teams.forEach((team, index) => {
+                    const stats = calculateStats(team);
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-800/30 transition-colors duration-150">
-                            <td class="py-3 px-4 text-center font-medium">${rankBadge}</td>
-                            <td class="py-3 px-4 font-semibold text-white">${team.name}</td>
-                            <td class="py-3 px-3 text-center text-slate-300 font-mono">${team.played}</td>
-                            <td class="py-3 px-3 text-center text-emerald-400 font-semibold font-mono">${team.wins}</td>
-                            <td class="py-3 px-3 text-center text-slate-400 font-mono">${team.losses}</td>
-                            <td class="py-3 px-3 text-center font-mono text-xs ${setDiff > 0 ? 'text-emerald-500' : setDiff < 0 ? 'text-rose-500' : 'text-slate-500'}">${diffSign}</td>
-                            <td class="py-3 px-4 text-center font-bold text-amber-400 text-base font-mono">${team.points}</td>
-                        </tr>
-                    `;
-                });
-            }
 
-            // Compile Category matches list
-            const historyContainer = document.getElementById('match-history-list');
-            document.getElementById('match-count-badge').innerText = `${catData.matches.length} Matches`;
-            historyContainer.innerHTML = "";
+<tr class="border-b border-slate-800">
 
-            if (catData.matches.length === 0) {
-                historyContainer.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs font-medium">No match records logged within this category yet.</div>`;
-            } else {
-                catData.matches.forEach(match => {
-                    const t1Winner = match.sets1 > match.sets2;
-                    historyContainer.innerHTML += `
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition hover:border-slate-700/60">
-                            <div class="flex-1 w-full sm:w-auto">
-                                <div class="flex items-center justify-between sm:justify-start sm:space-x-4">
-                                    <div class="text-xs text-slate-500 font-mono">${match.timestamp}</div>
-                                    <div class="flex space-x-1">
-                                        ${match.setHistory.map(s => `<span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-400">${s}</span>`).join('')}
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 mt-1.5 text-xs">
-                                    <div class="flex items-center space-x-2 truncate">
-                                        <span class="w-1.5 h-1.5 rounded-full ${t1Winner ? 'bg-amber-400' : 'bg-transparent'}"></span>
-                                        <span class="${t1Winner ? 'font-bold text-white' : 'text-slate-400 truncate'}">${match.team1Name}</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2 truncate">
-                                        <span class="w-1.5 h-1.5 rounded-full ${!t1Winner ? 'bg-amber-400' : 'bg-transparent'}"></span>
-                                        <span class="${!t1Winner ? 'font-bold text-white' : 'text-slate-400 truncate'}">${match.team2Name}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 text-sm font-black font-mono self-end sm:self-center">
-                                <span class="${t1Winner ? 'text-amber-400' : 'text-slate-500'}">${match.sets1}</span>
-                                <span class="text-slate-600 font-normal">:</span>
-                                <span class="${!t1Winner ? 'text-amber-400' : 'text-slate-500'}">${match.sets2}</span>
-                            </div>
-                        </div>
-                    `;
+<td class="py-4 px-4 text-center">
+${index + 1}
+</td>
+
+<td class="py-4 px-4">
+${team.name}
+</td>
+
+<td class="py-4 px-4">
+
+<div class="flex gap-2 justify-center">
+
+<button
+onclick="editTeam('${team.id}')"
+class="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs hover:bg-blue-500/20 transition">
+
+Edit
+
+</button>
+
+<button
+onclick="deleteTeam('${team.id}')"
+class="px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs hover:bg-red-500/20 transition">
+
+Delete
+
+</button>
+
+</div>
+
+</td>
+
+<td class="py-4 px-4 text-center">
+${stats.played}
+</td>
+
+<td class="py-4 px-4 text-center">
+${stats.wins}
+</td>
+
+<td class="py-4 px-4 text-center">
+${stats.losses}
+</td>
+
+<td class="py-4 px-4 text-center">
+${stats.wins - stats.losses}
+</td>
+
+<td class="py-4 px-4 text-center text-blue-400 font-bold">
+${stats.points}
+</td>
+
+</tr>
+
+`;
                 });
+
+                const history = document.getElementById("match-history-list");
+
+                history.innerHTML = "";
+
+                document.getElementById("match-count-badge").innerText = `${category.matches.length} Matches`;
+
+                category.matches.forEach((match, index) => {
+                    history.innerHTML += `
+
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+
+<div class="flex justify-between items-start mb-2">
+<div class="text-xs text-slate-500">
+${match.timestamp}
+</div>
+
+<button
+onclick="deleteMatch(${index})"
+class="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs hover:bg-red-500/20 transition">
+Delete
+</button>
+</div>
+
+<div class="font-semibold">
+
+${match.team1Name}
+&nbsp;
+
+${match.sets1}
+
+:
+
+${match.sets2}
+
+&nbsp;
+${match.team2Name}
+
+</div>
+
+<div class="text-xs text-slate-400 mt-2">
+${match.setHistory.join(" | ")}
+</div>
+
+</div>
+
+`;
+                });
+
+                saveTournamentData();
             }
-        }
-    </script>
-</body>
+        </script>
+    </body>
 </html>
