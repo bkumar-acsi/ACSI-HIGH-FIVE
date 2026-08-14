@@ -39,53 +39,6 @@
     </head>
 
     <body class="min-h-screen pb-10">
-        <!-- GITHUB TOKEN SETUP MODAL -->
-        <div id="setup-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style="display: flex;">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full mx-4">
-                <h2 class="text-2xl font-bold mb-4">GitHub Setup</h2>
-                <p class="text-slate-400 text-sm mb-6">
-                    To save your tournament data to GitHub, you need a Personal Access Token. (Optional)
-                </p>
-                
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">GitHub Token</label>
-                        <input
-                            type="password"
-                            id="github-token"
-                            placeholder="ghp_xxxxxxxxxxxxx"
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-                    <p class="text-xs text-slate-500">
-                        <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-400 hover:underline">
-                            Create a token here
-                        </a>
-                        (with gist scope)
-                    </p>
-                </div>
-
-                <div class="flex gap-3">
-                    <button
-                        onclick="setupGitHub()"
-                        class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold transition hover:shadow-lg hover:shadow-blue-500/50"
-                    >
-                        Save & Continue
-                    </button>
-                    <button
-                        onclick="skipSetup()"
-                        class="flex-1 py-3 rounded-xl bg-slate-800 text-slate-300 font-semibold transition hover:bg-slate-700"
-                    >
-                        Skip
-                    </button>
-                </div>
-
-                <p class="text-xs text-slate-500 mt-4">
-                    Your token is stored locally in your browser only, never sent elsewhere.
-                </p>
-            </div>
-        </div>
-
         <!-- HEADER -->
 
         <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/80 border-b border-slate-800">
@@ -511,41 +464,24 @@
             /* GITHUB GIST STORAGE */
             /* ---------------------------------- */
 
-            let githubToken = localStorage.getItem("github_token");
+            // Get token from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const TOKEN_FROM_URL = urlParams.get('token');
+            
+            let githubToken = TOKEN_FROM_URL;
             let gistId = localStorage.getItem("acsii_tt_gist_id");
 
-            function setupGitHub() {
-                const token = document.getElementById("github-token").value.trim();
-                
-                if (!token) {
-                    alert("Please enter a GitHub token");
-                    return;
-                }
-
-                localStorage.setItem("github_token", token);
-                githubToken = token;
-
-                const modal = document.getElementById("setup-modal");
-                modal.style.display = "none";
-                
-                // Clear the input
-                document.getElementById("github-token").value = "";
-                
-                // Load data after a small delay to ensure modal is hidden
-                setTimeout(() => {
-                    loadTournamentData();
-                }, 100);
-            }
-
-            function skipSetup() {
-                localStorage.setItem("github_setup_skipped", "true");
-                const modal = document.getElementById("setup-modal");
-                modal.style.display = "none";
-                
-                // Load data after a small delay
-                setTimeout(() => {
-                    loadTournamentData();
-                }, 100);
+            function showTokenWarning() {
+                // Add warning banner at the top
+                const warning = document.createElement("div");
+                warning.className = "fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50 font-bold";
+                warning.innerHTML = `
+                    ⚠️ <strong>Admin Token Required!</strong> Use URL format: 
+                    <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">
+                        https://yourdomain.com/index.html?token=ghp_yourtoken
+                    </code>
+                `;
+                document.body.prepend(warning);
             }
 
             /* ---------------------------------- */
@@ -739,33 +675,17 @@
                 "DOMContentLoaded",
 
                 () => {
-                    console.log("Page loaded - checking GitHub token");
+                    console.log("Page loaded");
+                    console.log("GitHub Token:", githubToken ? "Present" : "Missing - buttons will be disabled");
                     
-                    // Check for token in URL parameter
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const urlToken = urlParams.get('token');
-                    
-                    if (urlToken) {
-                        console.log("Token found in URL");
-                        localStorage.setItem("github_token", urlToken);
-                        githubToken = urlToken;
-                        
-                        // Remove token from URL for security (don't expose in history)
-                        window.history.replaceState({}, document.title, window.location.pathname);
+                    // Check if token is present
+                    if (!githubToken) {
+                        disableAllButtons();
+                        showTokenWarning();
                     }
                     
-                    console.log("GitHub Token:", githubToken ? "Set" : "Not set");
-                    console.log("Setup skipped:", localStorage.getItem("github_setup_skipped"));
-                    
-                    const skipped = localStorage.getItem("github_setup_skipped");
-                    if (githubToken || skipped) {
-                        // Skip modal and load data directly
-                        document.getElementById("setup-modal").style.display = "none";
-                        loadTournamentData();
-                    } else {
-                        // Show modal
-                        showSetupModal();
-                    }
+                    // Load data directly
+                    loadTournamentData();
                     
                     // Restore live match visibility
                     restoreLiveMatchVisibility();
@@ -776,6 +696,54 @@
                     document.addEventListener("change", recordAdminActivity);
                 }
             );
+
+            function disableAllButtons() {
+                // Disable all buttons on the page
+                const buttons = document.querySelectorAll("button");
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.pointerEvents = "none";
+                    btn.style.opacity = "0.5";
+                    btn.style.cursor = "not-allowed";
+                    btn.title = "Token is required. Use: ?token=your_github_token";
+                });
+                
+                // Disable all input fields
+                const inputs = document.querySelectorAll("input, select, textarea");
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    input.style.pointerEvents = "none";
+                    input.style.opacity = "0.5";
+                    input.style.cursor = "not-allowed";
+                    input.title = "Token is required. Use: ?token=your_github_token";
+                });
+                
+                // Disable all forms
+                const forms = document.querySelectorAll("form");
+                forms.forEach(form => {
+                    form.style.pointerEvents = "none";
+                });
+            }
+
+            function saveTournamentData() {
+                // Check if token is present before saving
+                if (!githubToken) {
+                    console.warn("Cannot save: No GitHub token provided");
+                    alert("⚠️ Token is required to save!\n\nUse URL: ?token=ghp_your_token");
+                    return;
+                }
+                
+                localStorage.setItem("acsii_tt_v1", JSON.stringify(tournamentState));
+                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
+
+                // Save to GitHub if token is available
+                if (githubToken) {
+                    saveToGitHub({
+                        tournament: tournamentState,
+                        liveMatch: liveMatch
+                    });
+                }
+            }
 
             /* ---------------------------------- */
             /* STORAGE */
@@ -826,20 +794,6 @@
                 initLiveSelectors();
 
                 updateLiveScoreDOM();
-            }
-
-            function saveTournamentData() {
-                // Save to local storage first
-                localStorage.setItem("acsii_tt_v1", JSON.stringify(tournamentState));
-                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
-
-                // Save to GitHub if token is available
-                if (githubToken) {
-                    saveToGitHub({
-                        tournament: tournamentState,
-                        liveMatch: liveMatch
-                    });
-                }
             }
 
             function resetTournamentData() {
