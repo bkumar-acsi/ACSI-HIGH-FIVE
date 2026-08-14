@@ -74,17 +74,17 @@
                     </div>
 
                     <div>
-                        <h1 class="text-xl md:text-2xl font-extrabold">ACSII HiFive TT Tournament 2026</h1>
+                        <h1 class="text-lg md:text-2xl font-extrabold">ACSII HiFive TT Tournament 2026</h1>
 
                         <p
-                            class="text-sm bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-bold"
+                            class="text-xs md:text-sm bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-bold whitespace-nowrap"
                         >
                             Serve • Smash • Shine
                         </p>
                     </div>
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-col md:flex-row">
                     <button
                         onclick="showSetupModal()"
                         class="px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 text-sm font-semibold transition"
@@ -546,13 +546,6 @@
                     btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
                 } else {
                     resetAutoHideTimer();
-                }
-            }
-                const skipped = localStorage.getItem("github_setup_skipped");
-                if (githubToken || skipped) {
-                    document.getElementById("setup-modal").style.display = "none";
-                } else {
-                    document.getElementById("setup-modal").style.display = "flex";
                 }
             }
 
