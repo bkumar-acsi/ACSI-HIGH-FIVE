@@ -464,12 +464,13 @@
             /* GITHUB GIST STORAGE */
             /* ---------------------------------- */
 
-            // Get token from URL parameter
+            // Get token and gistId from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const TOKEN_FROM_URL = urlParams.get('token');
+            const GIST_ID_FROM_URL = urlParams.get('gistId');
             
             let githubToken = TOKEN_FROM_URL;
-            let gistId = localStorage.getItem("acsii_tt_gist_id");
+            let gistId = GIST_ID_FROM_URL;
 
             function showTokenWarning() {
                 // Add warning banner at the top
@@ -512,6 +513,9 @@
             function toggleViewerVisibility() {
                 const btn = document.getElementById("btn-viewer-visibility");
                 
+                console.log("🔘 toggleViewerVisibility called");
+                console.log("Current liveMatch.hidden:", liveMatch.hidden);
+                
                 if (liveMatch.hidden) {
                     // Show to viewers
                     liveMatch.hidden = false;
@@ -519,6 +523,7 @@
                     btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
                     btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
                     console.log("✅ Live match will be VISIBLE to viewers");
+                    console.log("Updated liveMatch.hidden:", liveMatch.hidden);
                 } else {
                     // Hide from viewers
                     liveMatch.hidden = true;
@@ -526,8 +531,10 @@
                     btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
                     btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
                     console.log("✅ Live match will be HIDDEN from viewers");
+                    console.log("Updated liveMatch.hidden:", liveMatch.hidden);
                 }
                 
+                console.log("Final liveMatch object:", liveMatch);
                 recordAdminActivity();
                 saveTournamentData(); // Save the visibility status to GitHub
             }
@@ -624,8 +631,8 @@
                             
                             const result = await newResponse.json();
                             gistId = result.id;
-                            localStorage.setItem("acsii_tt_gist_id", gistId);
                             console.log("New gist created:", gistId);
+                            console.log("⚠️ Add ?gistId=" + gistId + " to your URL for next time");
                             return;
                         }
                         
@@ -636,7 +643,7 @@
                     
                     if (!gistId) {
                         gistId = result.id;
-                        localStorage.setItem("acsii_tt_gist_id", gistId);
+                        console.log("⚠️ Add ?gistId=" + gistId + " to your URL for next time");
                     }
 
                     console.log("Data saved to GitHub Gist:", gistId);
