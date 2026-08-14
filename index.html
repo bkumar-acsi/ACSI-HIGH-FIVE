@@ -40,11 +40,11 @@
 
     <body class="min-h-screen pb-10">
         <!-- GITHUB TOKEN SETUP MODAL -->
-        <div id="setup-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div id="setup-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style="display: flex;">
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full mx-4">
                 <h2 class="text-2xl font-bold mb-4">GitHub Setup</h2>
                 <p class="text-slate-400 text-sm mb-6">
-                    To save your tournament data to GitHub, you need a Personal Access Token.
+                    To save your tournament data to GitHub, you need a Personal Access Token. (Optional)
                 </p>
                 
                 <div class="space-y-4 mb-6">
@@ -65,12 +65,20 @@
                     </p>
                 </div>
 
-                <button
-                    onclick="setupGitHub()"
-                    class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold transition hover:shadow-lg hover:shadow-blue-500/50"
-                >
-                    Save & Continue
-                </button>
+                <div class="flex gap-3">
+                    <button
+                        onclick="setupGitHub()"
+                        class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold transition hover:shadow-lg hover:shadow-blue-500/50"
+                    >
+                        Save & Continue
+                    </button>
+                    <button
+                        onclick="skipSetup()"
+                        class="flex-1 py-3 rounded-xl bg-slate-800 text-slate-300 font-semibold transition hover:bg-slate-700"
+                    >
+                        Skip
+                    </button>
+                </div>
 
                 <p class="text-xs text-slate-500 mt-4">
                     Your token is stored locally in your browser only, never sent elsewhere.
@@ -506,8 +514,15 @@
                 loadTournamentData();
             }
 
+            function skipSetup() {
+                localStorage.setItem("github_setup_skipped", "true");
+                document.getElementById("setup-modal").style.display = "none";
+                loadTournamentData();
+            }
+
             function showSetupModal() {
-                if (githubToken) {
+                const skipped = localStorage.getItem("github_setup_skipped");
+                if (githubToken || skipped) {
                     document.getElementById("setup-modal").style.display = "none";
                 } else {
                     document.getElementById("setup-modal").style.display = "flex";
