@@ -322,7 +322,7 @@
             });
 
             async function loadTournamentData() {
-                // Try to load from public GitHub Gist first
+                // Try to load from public GitHub Gist ONLY
                 if (PUBLIC_GIST_ID && PUBLIC_GIST_ID !== "YOUR_PUBLIC_GIST_ID_HERE") {
                     const githubData = await loadFromGitHub();
                     if (githubData) {
@@ -337,28 +337,14 @@
                         updateLiveScoreDOM();
                         applyLiveMatchVisibility();
                         return;
+                    } else {
+                        console.error("❌ Failed to load from GitHub Gist - check your Gist ID!");
+                        return;
                     }
-                }
-
-                // Fall back to local storage
-                console.log("⚠️ Loading from localStorage (Gist failed)");
-                const saved = localStorage.getItem("acsii_tt_v1");
-
-                if (saved) {
-                    tournamentState = JSON.parse(saved);
                 } else {
-                    tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
+                    console.error("❌ Gist ID not configured!");
+                    return;
                 }
-
-                // Load live match state
-                const savedLiveMatch = localStorage.getItem("acsii_tt_live_match");
-                if (savedLiveMatch) {
-                    liveMatch = JSON.parse(savedLiveMatch);
-                }
-
-                renderDashboard();
-                updateLiveScoreDOM();
-                applyLiveMatchVisibility();
             }
 
             /* ---------------------------------- */
