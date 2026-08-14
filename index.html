@@ -511,7 +511,6 @@
                     // Show it
                     section.style.display = "";
                     liveMatch.hidden = false;
-                    localStorage.setItem("live_match_hidden", "false");
                     btn.innerText = "Hide";
                     btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
                     btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
@@ -519,7 +518,6 @@
                     // Hide it
                     section.style.display = "none";
                     liveMatch.hidden = true;
-                    localStorage.setItem("live_match_hidden", "true");
                     btn.innerText = "Show";
                     btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
                     btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
@@ -529,18 +527,17 @@
             }
 
             function restoreLiveMatchVisibility() {
-                const hidden = localStorage.getItem("live_match_hidden");
-                if (hidden === "true") {
-                    // Simulate toggle to set it to hidden state
-                    const section = document.getElementById("live-match-section");
-                    const btn = document.getElementById("toggle-live-btn");
-                    section.style.display = "none";
-                    btn.innerText = "Show";
-                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
-                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
-                } else {
-                    resetAutoHideTimer();
-                }
+                const section = document.getElementById("live-match-section");
+                const btn = document.getElementById("toggle-live-btn");
+                
+                // Always show for admin (never hide the editing interface)
+                section.style.display = "";
+                btn.innerText = "Hide";
+                btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                
+                // Start auto-hide timer
+                resetAutoHideTimer();
             }
 
             async function saveToGitHub(data) {
@@ -741,7 +738,7 @@
                 console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
                 console.log("Gist ID:", gistId ? "✅ Present" : "❌ Missing");
 
-                // Try to load from GitHub first
+                // Try to load from GitHub first if both token and gistId are available
                 if (githubToken && gistId) {
                     console.log("📡 Attempting to load from GitHub...");
                     const githubData = await loadFromGitHub();
@@ -752,6 +749,12 @@
                         
                         tournamentState = githubData.tournament;
                         liveMatch = githubData.liveMatch;
+                        
+                        // Store gistId for future use
+                        if (githubData.gistId) {
+                            gistId = githubData.gistId;
+                            localStorage.setItem("acsii_tt_gist_id", gistId);
+                        }
                         
                         // Also save to local storage for offline access
                         localStorage.setItem("acsii_tt_v1", JSON.stringify(tournamentState));
