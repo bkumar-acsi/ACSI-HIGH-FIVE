@@ -86,12 +86,6 @@
 
                 <div class="flex gap-2 flex-col md:flex-row">
                     <button
-                        onclick="showSetupModal()"
-                        class="px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 text-sm font-semibold transition"
-                    >
-                        GitHub Setup
-                    </button>
-                    <button
                         disabled
                         class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm font-semibold opacity-50 cursor-not-allowed"
                     >
@@ -743,11 +737,7 @@
             /* ---------------------------------- */
 
             async function loadTournamentData() {
-                // Show loading state
-                const setupModal = document.getElementById("setup-modal");
-                if (setupModal.style.display === "none") {
-                    console.log("Loading tournament data...");
-                }
+                console.log("Loading tournament data...");
 
                 // Try to load from GitHub first
                 if (githubToken && gistId) {
