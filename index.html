@@ -86,6 +86,12 @@
 
                 <div class="flex gap-2 flex-col md:flex-row">
                     <button
+                        onclick="refreshData()"
+                        class="px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 text-green-400 text-sm font-semibold transition"
+                    >
+                        🔄 Refresh Data
+                    </button>
+                    <button
                         disabled
                         class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm font-semibold opacity-50 cursor-not-allowed"
                     >
@@ -160,11 +166,11 @@
 
                             <div class="flex gap-2">
                                 <button
-                                    onclick="toggleLiveMatch()"
-                                    id="toggle-live-btn"
+                                    onclick="toggleViewerVisibility()"
+                                    id="btn-viewer-visibility"
                                     class="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition"
                                 >
-                                    Hide
+                                    Hide from Viewers
                                 </button>
                                 <button
                                     onclick="setMatchFormat(5)"
@@ -503,38 +509,53 @@
                 }, INACTIVITY_TIMEOUT);
             }
 
-            function toggleLiveMatch() {
-                const section = document.getElementById("live-match-section");
-                const btn = document.getElementById("toggle-live-btn");
+            function toggleViewerVisibility() {
+                const btn = document.getElementById("btn-viewer-visibility");
                 
-                if (section.style.display === "none") {
-                    // Show it
-                    section.style.display = "";
+                if (liveMatch.hidden) {
+                    // Show to viewers
                     liveMatch.hidden = false;
-                    btn.innerText = "Hide";
+                    btn.innerText = "Hide from Viewers";
                     btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
                     btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    console.log("✅ Live match will be VISIBLE to viewers");
                 } else {
-                    // Hide it
-                    section.style.display = "none";
+                    // Hide from viewers
                     liveMatch.hidden = true;
-                    btn.innerText = "Show";
+                    btn.innerText = "Show to Viewers";
                     btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
                     btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    console.log("✅ Live match will be HIDDEN from viewers");
                 }
+                
+                recordAdminActivity();
+                saveTournamentData(); // Save the visibility status to GitHub
+            }
+
+            function toggleLiveMatch() {
+                // Admin page - no toggle button, just control the hidden flag for viewers
+                liveMatch.hidden = !liveMatch.hidden;
                 recordAdminActivity();
                 saveTournamentData(); // Save the hidden status to GitHub
             }
 
             function restoreLiveMatchVisibility() {
                 const section = document.getElementById("live-match-section");
-                const btn = document.getElementById("toggle-live-btn");
+                const btn = document.getElementById("btn-viewer-visibility");
                 
                 // Always show for admin (never hide the editing interface)
                 section.style.display = "";
-                btn.innerText = "Hide";
-                btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
-                btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                
+                // Restore button state based on liveMatch.hidden
+                if (liveMatch.hidden) {
+                    btn.innerText = "Show to Viewers";
+                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                } else {
+                    btn.innerText = "Hide from Viewers";
+                    btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                }
                 
                 // Start auto-hide timer
                 resetAutoHideTimer();
@@ -678,8 +699,19 @@
                     document.addEventListener("click", recordAdminActivity);
                     document.addEventListener("input", recordAdminActivity);
                     document.addEventListener("change", recordAdminActivity);
+                    
+                    // Auto-refresh data every 10 seconds from Gist
+                    setInterval(() => {
+                        console.log("⏰ Auto-refreshing data from Gist...");
+                        loadTournamentData();
+                    }, 10000);
                 }
             );
+
+            function refreshData() {
+                console.log("🔄 Manual refresh triggered");
+                loadTournamentData();
+            }
 
             function disableAllButtons() {
                 // Disable all buttons on the page
@@ -717,16 +749,11 @@
                     return;
                 }
                 
-                localStorage.setItem("acsii_tt_v1", JSON.stringify(tournamentState));
-                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
-
-                // Save to GitHub if token is available
-                if (githubToken) {
-                    saveToGitHub({
-                        tournament: tournamentState,
-                        liveMatch: liveMatch
-                    });
-                }
+                // Save ONLY to GitHub Gist - never to localStorage
+                saveToGitHub({
+                    tournament: tournamentState,
+                    liveMatch: liveMatch
+                });
             }
 
             /* ---------------------------------- */
@@ -734,62 +761,38 @@
             /* ---------------------------------- */
 
             async function loadTournamentData() {
-                console.log("Loading tournament data...");
+                console.log("=== LOADING TOURNAMENT DATA ===");
                 console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
-                console.log("Gist ID:", gistId ? "✅ Present" : "❌ Missing");
+                console.log("Gist ID:", gistId ? "✅ " + gistId : "❌ Missing");
 
-                // Try to load from GitHub first if both token and gistId are available
-                if (githubToken && gistId) {
-                    console.log("📡 Attempting to load from GitHub...");
-                    const githubData = await loadFromGitHub();
-                    if (githubData) {
-                        console.log("✅ Successfully loaded from GitHub!");
-                        console.log("Tournament data:", githubData.tournament);
-                        console.log("Live match data:", githubData.liveMatch);
-                        
-                        tournamentState = githubData.tournament;
-                        liveMatch = githubData.liveMatch;
-                        
-                        // Store gistId for future use
-                        if (githubData.gistId) {
-                            gistId = githubData.gistId;
-                            localStorage.setItem("acsii_tt_gist_id", gistId);
-                        }
-                        
-                        // Also save to local storage for offline access
-                        localStorage.setItem("acsii_tt_v1", JSON.stringify(tournamentState));
-                        localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
-                        
-                        renderDashboard();
-                        initLiveSelectors();
-                        updateLiveScoreDOM();
-                        return;
-                    } else {
-                        console.warn("⚠️ Failed to load from GitHub, falling back to localStorage");
-                    }
-                } else {
-                    console.warn("⚠️ Skipping GitHub - Token or Gist ID missing");
+                // Must load from GitHub - no localhost fallback
+                if (!githubToken || !gistId) {
+                    console.error("❌ CANNOT LOAD: Token or Gist ID missing!");
+                    console.error("Token:", githubToken ? "OK" : "MISSING");
+                    console.error("Gist ID:", gistId ? "OK" : "MISSING");
+                    return;
                 }
 
-                // Fall back to local storage
-                console.log("📦 Loading from localStorage...");
-                const saved = localStorage.getItem("acsii_tt_v1");
-
-                if (saved) {
-                    console.log("✅ Found saved data in localStorage");
-                    tournamentState = JSON.parse(saved);
-                } else {
-                    console.log("📋 Using seed data");
-                    tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
+                console.log("📡 Loading from GitHub Gist...");
+                const githubData = await loadFromGitHub();
+                
+                if (!githubData) {
+                    console.error("❌ Failed to load from GitHub Gist!");
+                    return;
                 }
 
-                // Load live match state
-                const savedLiveMatch = localStorage.getItem("acsii_tt_live_match");
-                if (savedLiveMatch) {
-                    console.log("✅ Found saved live match data");
-                    liveMatch = JSON.parse(savedLiveMatch);
-                }
-
+                console.log("✅ Successfully loaded from GitHub!");
+                console.log("Raw Gist data:", githubData);
+                console.log("Tournament data keys:", Object.keys(githubData.tournament || {}));
+                console.log("Live match data:", githubData.liveMatch);
+                
+                tournamentState = githubData.tournament;
+                liveMatch = githubData.liveMatch;
+                
+                console.log("📋 After assignment - tournamentState:", tournamentState);
+                console.log("📋 After assignment - liveMatch:", liveMatch);
+                
+                console.log("✅ Calling renderDashboard with fresh data from GitHub");
                 renderDashboard();
                 initLiveSelectors();
                 updateLiveScoreDOM();
