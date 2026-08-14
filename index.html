@@ -518,14 +518,27 @@
                 localStorage.setItem("github_token", token);
                 githubToken = token;
 
-                document.getElementById("setup-modal").style.display = "none";
-                loadTournamentData();
+                const modal = document.getElementById("setup-modal");
+                modal.style.display = "none";
+                
+                // Clear the input
+                document.getElementById("github-token").value = "";
+                
+                // Load data after a small delay to ensure modal is hidden
+                setTimeout(() => {
+                    loadTournamentData();
+                }, 100);
             }
 
             function skipSetup() {
                 localStorage.setItem("github_setup_skipped", "true");
-                document.getElementById("setup-modal").style.display = "none";
-                loadTournamentData();
+                const modal = document.getElementById("setup-modal");
+                modal.style.display = "none";
+                
+                // Load data after a small delay
+                setTimeout(() => {
+                    loadTournamentData();
+                }, 100);
             }
 
             function showSetupModal() {
@@ -627,6 +640,20 @@
 
                 () => {
                     console.log("Page loaded - checking GitHub token");
+                    
+                    // Check for token in URL parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlToken = urlParams.get('token');
+                    
+                    if (urlToken) {
+                        console.log("Token found in URL");
+                        localStorage.setItem("github_token", urlToken);
+                        githubToken = urlToken;
+                        
+                        // Remove token from URL for security (don't expose in history)
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                    
                     console.log("GitHub Token:", githubToken ? "Set" : "Not set");
                     console.log("Setup skipped:", localStorage.getItem("github_setup_skipped"));
                     showSetupModal();
