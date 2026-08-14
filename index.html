@@ -738,11 +738,18 @@
 
             async function loadTournamentData() {
                 console.log("Loading tournament data...");
+                console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
+                console.log("Gist ID:", gistId ? "✅ Present" : "❌ Missing");
 
                 // Try to load from GitHub first
                 if (githubToken && gistId) {
+                    console.log("📡 Attempting to load from GitHub...");
                     const githubData = await loadFromGitHub();
                     if (githubData) {
+                        console.log("✅ Successfully loaded from GitHub!");
+                        console.log("Tournament data:", githubData.tournament);
+                        console.log("Live match data:", githubData.liveMatch);
+                        
                         tournamentState = githubData.tournament;
                         liveMatch = githubData.liveMatch;
                         
@@ -754,28 +761,34 @@
                         initLiveSelectors();
                         updateLiveScoreDOM();
                         return;
+                    } else {
+                        console.warn("⚠️ Failed to load from GitHub, falling back to localStorage");
                     }
+                } else {
+                    console.warn("⚠️ Skipping GitHub - Token or Gist ID missing");
                 }
 
                 // Fall back to local storage
+                console.log("📦 Loading from localStorage...");
                 const saved = localStorage.getItem("acsii_tt_v1");
 
                 if (saved) {
+                    console.log("✅ Found saved data in localStorage");
                     tournamentState = JSON.parse(saved);
                 } else {
+                    console.log("📋 Using seed data");
                     tournamentState = JSON.parse(JSON.stringify(SEED_DATA));
                 }
 
                 // Load live match state
                 const savedLiveMatch = localStorage.getItem("acsii_tt_live_match");
                 if (savedLiveMatch) {
+                    console.log("✅ Found saved live match data");
                     liveMatch = JSON.parse(savedLiveMatch);
                 }
 
                 renderDashboard();
-
                 initLiveSelectors();
-
                 updateLiveScoreDOM();
             }
 
