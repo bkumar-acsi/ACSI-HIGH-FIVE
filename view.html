@@ -241,7 +241,7 @@
             <div id="fixtures-section" style="display: none;">
                 <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
                     <div class="p-5 border-b border-slate-800">
-                        <h2 class="font-bold text-lg">Fixtures & Groups - Men's Singles</h2>
+                        <h2 class="font-bold text-lg">Fixtures & Groups - <span id="fixtures-title">Men's Singles</span></h2>
                     </div>
                     
                     <div class="p-5 space-y-8">
@@ -308,7 +308,7 @@
             };
 
             let currentCategory = "mens_singles";
-            let currentTab = "standings";
+            let currentTab = "fixtures"; // Changed from "standings" to "fixtures"
 
             /* ---------------------------------- */
             /* FIXTURES DATA */
@@ -374,6 +374,105 @@
                             { group: "Group D", match: "Saurabh vs Ajinkya" }
                         ]
                     }
+                },
+                mens_doubles: {
+                    groups: {
+                        "Group A": ["Balachander & Sachin", "Suresh & Prem", "Suraj & Rishabh"],
+                        "Group B": ["Kshitij & Saurabh", "Tushar & Brajesh", "Sanket & Amit"],
+                        "Group C": ["Anurag & Shekhar", "Akshay & Santosh", "Sagar & Aditya"],
+                        "Group D": ["Jinish & Birju", "Rahul & Mandar", "Shreyas & Ambuj"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Balachander & Sachin vs Suresh & Prem" },
+                            { number: "2", group: "Group B", match: "Kshitij & Saurabh vs Tushar & Brajesh" },
+                            { number: "3", group: "Group C", match: "Anurag & Shekhar vs Akshay & Santosh" },
+                            { number: "4", group: "Group D", match: "Jinish & Birju vs Rahul & Mandar" },
+                            { number: "5", group: "Group A", match: "Suresh & Prem vs Suraj & Rishabh" },
+                            { number: "6", group: "Group B", match: "Tushar & Brajesh vs Sanket & Amit" },
+                            { number: "7", group: "Group C", match: "Akshay & Santosh vs Sagar & Aditya" },
+                            { number: "8", group: "Group D", match: "Rahul & Mandar vs Shreyas & Ambuj" },
+                            { number: "9", group: "Group A", match: "Balachander & Sachin vs Suraj & Rishabh" },
+                            { number: "10", group: "Group B", match: "Kshitij & Saurabh vs Sanket & Amit" },
+                            { number: "11", group: "Group C", match: "Anurag & Shekhar vs Sagar & Aditya" },
+                            { number: "12", group: "Group D", match: "Jinish & Birju vs Shreyas & Ambuj" }
+                        ]
+                    }
+                },
+                womens_singles: {
+                    groups: {
+                        "Group A": ["Sheetal Pare", "Ankita Sharma", "Shivangi Agarwal", "Siddhi"],
+                        "Group B": ["Sneha", "Shivangi Nigam", "Pratishtha", "Payal Umekar"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Sheetal Pare vs Ankita Sharma" },
+                            { number: "2", group: "Group A", match: "Shivangi Agarwal vs Siddhi" },
+                            { number: "3", group: "Group B", match: "Sneha vs Shivangi Nigam" },
+                            { number: "4", group: "Group B", match: "Pratishtha vs Payal Umekar" },
+                            { number: "5", group: "Group A", match: "Sheetal Pare vs Shivangi Agarwal" },
+                            { number: "6", group: "Group A", match: "Ankita Sharma vs Siddhi" },
+                            { number: "7", group: "Group B", match: "Sneha vs Pratishtha" },
+                            { number: "8", group: "Group B", match: "Shivangi Nigam vs Payal Umekar" },
+                            { number: "9", group: "Group A", match: "Sheetal Pare vs Siddhi" },
+                            { number: "10", group: "Group A", match: "Ankita Sharma vs Shivangi Agarwal" },
+                            { number: "11", group: "Group B", match: "Sneha vs Payal Umekar" },
+                            { number: "12", group: "Group B", match: "Shivangi Nigam vs Pratishtha" }
+                        ]
+                    }
+                },
+                womens_doubles: {
+                    groups: {
+                        "All Teams": ["Ankita & Sheetal", "Shivangi A & Siddhi", "Sneha & Harshali", "Payal & Vimla", "Shivangi N & Pratishtha"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { number: "1", match: "Ankita & Sheetal vs Shivangi A & Siddhi", bye: "Sneha & Harshali" },
+                            { number: "2", match: "Payal & Vimla vs Shivangi N & Pratishtha", bye: "" }
+                        ],
+                        "Round 2": [
+                            { number: "3", match: "Ankita & Sheetal vs Payal & Vimla", bye: "Shivangi A & Siddhi" },
+                            { number: "4", match: "Shivangi N & Pratishtha vs Sneha & Harshali", bye: "" }
+                        ],
+                        "Round 3": [
+                            { number: "5", match: "Ankita & Sheetal vs Shivangi N & Pratishtha", bye: "Payal & Vimla" },
+                            { number: "6", match: "Shivangi A & Siddhi vs Sneha & Harshali", bye: "" }
+                        ],
+                        "Round 4": [
+                            { number: "7", match: "Ankita & Sheetal vs Sneha & Harshali", bye: "Shivangi N & Pratishtha" },
+                            { number: "8", match: "Shivangi A & Siddhi vs Payal & Vimla", bye: "" }
+                        ],
+                        "Round 5": [
+                            { number: "9", match: "Shivangi A & Siddhi vs Shivangi N & Pratishtha", bye: "Ankita & Sheetal" },
+                            { number: "10", match: "Payal & Vimla vs Sneha & Harshali", bye: "" }
+                        ]
+                    }
+                },
+                mix_doubles: {
+                    groups: {
+                        "Group A": ["Kshitij Babar & Sheetal Pare", "Suresh Rankhamb & Sneha", "Saurabh Kulkarni & Ankita Sharma", "Sachin Sonone & Siddhi Joshi", "Ajinkya & Harshali"],
+                        "Group B": ["Brajesh Kumar & Shivangi Nigam", "Amit Sharma & Shivangi Agarwal", "Shekhar & Payal Umekar", "Rahul & Vimla"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Kshitij & Sheetal vs Suresh & Sneha" },
+                            { number: "2", group: "Group A", match: "Saurabh & Ankita vs Sachin & Siddhi" },
+                            { number: "3", group: "Group B", match: "Brajesh & Shivangi N vs Amit & Shivangi A" },
+                            { number: "4", group: "Group B", match: "Shekhar & Payal vs Rahul & Vimla" },
+                            { number: "5", group: "Group A", match: "Kshitij & Sheetal vs Saurabh & Ankita" },
+                            { number: "6", group: "Group A", match: "Sachin & Siddhi vs Ajinkya & Harshali" },
+                            { number: "7", group: "Group B", match: "Brajesh & Shivangi N vs Shekhar & Payal" },
+                            { number: "8", group: "Group B", match: "Amit & Shivangi A vs Rahul & Vimla" },
+                            { number: "9", group: "Group A", match: "Kshitij & Sheetal vs Sachin & Siddhi" },
+                            { number: "10", group: "Group A", match: "Suresh & Sneha vs Ajinkya & Harshali" },
+                            { number: "11", group: "Group B", match: "Brajesh & Shivangi N vs Rahul & Vimla" },
+                            { number: "12", group: "Group B", match: "Amit & Shivangi A vs Shekhar & Payal" },
+                            { number: "13", group: "Group A", match: "Kshitij & Sheetal vs Ajinkya & Harshali" },
+                            { number: "14", group: "Group A", match: "Suresh & Sneha vs Saurabh & Ankita" },
+                            { number: "15", group: "Group A", match: "Suresh & Sneha vs Sachin & Siddhi" },
+                            { number: "16", group: "Group A", match: "Saurabh & Ankita vs Ajinkya & Harshali" }
+                        ]
+                    }
                 }
             };
 
@@ -430,6 +529,11 @@
                 
                 // Load data immediately from public Gist
                 loadTournamentData();
+                
+                // Initialize fixtures view as default
+                setTimeout(() => {
+                    switchTab("fixtures");
+                }, 100);
                 
                 // Auto-refresh every 5 seconds
                 setInterval(() => {
@@ -503,8 +607,23 @@
                 document.getElementById(`btn-${category}`).classList.remove("bg-slate-800", "text-slate-300");
                 document.getElementById(`btn-${category}`).classList.add("bg-blue-500", "text-white");
 
-                renderDashboard();
-                updateLiveScoreDOM();
+                // Update fixtures title
+                const categoryNames = {
+                    mens_singles: "Men's Singles",
+                    womens_singles: "Women's Singles",
+                    mens_doubles: "Men's Doubles",
+                    womens_doubles: "Women's Doubles",
+                    mix_doubles: "Mixed Doubles"
+                };
+                document.getElementById("fixtures-title").innerText = categoryNames[category] || category;
+
+                // Refresh fixtures if on that tab
+                if (currentTab === "fixtures") {
+                    renderFixtures();
+                } else {
+                    renderDashboard();
+                    updateLiveScoreDOM();
+                }
             }
 
             function switchTab(tab) {
@@ -530,34 +649,62 @@
             }
 
             function renderFixtures() {
-                const fixtures = FIXTURES_DATA.mens_singles;
+                const category = tournamentState[currentCategory];
+                const fixtures = FIXTURES_DATA[currentCategory];
                 
-                // Render groups
+                if (!category || !fixtures) {
+                    console.log("No data for", currentCategory);
+                    return;
+                }
+                
+                // Render groups from database
                 const groupsContainer = document.getElementById("fixtures-groups");
                 groupsContainer.innerHTML = "";
                 
-                Object.entries(fixtures.groups).forEach(([groupName, players]) => {
+                // Get unique groups from teams in database
+                const groupedTeams = {};
+                category.teams.forEach(team => {
+                    const group = team.group || "No Group";
+                    if (!groupedTeams[group]) {
+                        groupedTeams[group] = [];
+                    }
+                    groupedTeams[group].push(team.name);
+                });
+                
+                // Render groups from database
+                Object.entries(groupedTeams).forEach(([groupName, teamNames]) => {
                     groupsContainer.innerHTML += `
                         <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                             <h4 class="font-bold text-blue-400 mb-3">${groupName}</h4>
                             <ul class="space-y-2 text-sm">
-                                ${players.map(player => `<li class="text-slate-300">• ${player}</li>`).join('')}
+                                ${teamNames.map(name => `<li class="text-slate-300">• ${name}</li>`).join('')}
                             </ul>
                         </div>
                     `;
                 });
 
-                // Render matches
+                // Render matches from fixtures
                 const matchesContainer = document.getElementById("fixtures-matches");
                 matchesContainer.innerHTML = "";
                 
                 Object.entries(fixtures.matches).forEach(([roundName, matches]) => {
                     let roundHTML = `<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                         <h4 class="font-bold text-blue-400 mb-3">${roundName}</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">`;
+                        <div class="space-y-2">`;
                     
-                    matches.forEach(({ group, match }) => {
-                        roundHTML += `<div class="text-sm text-slate-300 p-2 bg-slate-900 rounded">${match}</div>`;
+                    matches.forEach(({ number, group, match, bye }) => {
+                        const displayText = number ? `${number}. ${match}` : match;
+                        let byeText = '';
+                        if (bye && bye.trim()) {
+                            byeText = `<span class="text-amber-400 text-xs ml-2">Bye: ${bye}</span>`;
+                        }
+                        roundHTML += `<div class="text-sm text-slate-300 p-2 bg-slate-900 rounded">
+                            <div class="flex justify-between items-start">
+                                <span>${displayText}</span>
+                                <span class="text-slate-500 text-xs">${group || ''}</span>
+                            </div>
+                            ${byeText ? `<div class="mt-1">${byeText}</div>` : ''}
+                        </div>`;
                     });
                     
                     roundHTML += `</div></div>`;
@@ -643,6 +790,7 @@
             /* View page is read-only, no toggle button needed */
             /* Live match visibility is controlled by admin in index.html */
 
+        </table>
             function renderDashboard() {
                 // Render standings for all categories
                 const container = document.getElementById("all-standings-container");
@@ -665,55 +813,90 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 `;
                 });
 
-                // Render all categories standings
+                // Render all categories standings with groups
                 Object.keys(tournamentState).forEach((categoryKey) => {
                     const category = tournamentState[categoryKey];
+                    
+                    if (!category.teams || category.teams.length === 0) {
+                        return;
+                    }
+                    
+                    // Group teams by their group
+                    const groupedTeams = {};
+                    category.teams.forEach(team => {
+                        const group = team.group || "No Group";
+                        if (!groupedTeams[group]) {
+                            groupedTeams[group] = [];
+                        }
+                        groupedTeams[group].push(team);
+                    });
                     
                     let standings = `
 <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
     <div class="p-5 border-b border-slate-800 flex justify-between">
         <div>
             <h2 class="font-bold text-lg">${category.title} Standings</h2>
-            <p class="text-slate-500 text-sm">Rankings update automatically</p>
+            <p class="text-slate-500 text-sm">Group-wise rankings</p>
         </div>
         <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
             ${category.matches.length} Matches
         </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead>
-                <tr class="border-b border-slate-800 text-slate-400 text-sm">
-                    <th class="py-4 px-4 text-center">#</th>
-                    <th class="py-4 px-4">Team / Player</th>
-                    <th class="py-4 px-4 text-center">Played</th>
-                    <th class="py-4 px-4 text-center">Wins</th>
-                    <th class="py-4 px-4 text-center">Losses</th>
-                    <th class="py-4 px-4 text-center">Set Diff</th>
-                    <th class="py-4 px-4 text-center">Points</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="p-5 space-y-4">
 `;
 
-                    category.teams.forEach((team, index) => {
-                        const stats = calculateStats(team);
+                    // Render standings for each group
+                    Object.keys(groupedTeams).forEach(groupName => {
                         standings += `
-<tr class="border-b border-slate-800">
-    <td class="py-4 px-4 text-center">${index + 1}</td>
-                    <td class="py-4 px-4 font-semibold">${team.name}</td>
-                    <td class="py-4 px-4 text-center">${stats.played}</td>
-                    <td class="py-4 px-4 text-center text-green-400">${stats.wins}</td>
-                    <td class="py-4 px-4 text-center text-red-400">${stats.losses}</td>
-                    <td class="py-4 px-4 text-center">${stats.wins - stats.losses}</td>
-                    <td class="py-4 px-4 text-center text-blue-400 font-bold">${stats.points}</td>
-                </tr>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+            <h3 class="font-bold text-blue-400 mb-3 text-sm">${groupName}</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400">
+                            <th class="py-2 px-2 text-center">#</th>
+                            <th class="py-2 px-2 text-left">Team / Player</th>
+                            <th class="py-2 px-2 text-center">Played</th>
+                            <th class="py-2 px-2 text-center">Wins</th>
+                            <th class="py-2 px-2 text-center">Losses</th>
+                            <th class="py-2 px-2 text-center">Diff</th>
+                            <th class="py-2 px-2 text-center">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+`;
+
+                        groupedTeams[groupName].forEach((team, index) => {
+                            const stats = calculateStats(team);
+                            standings += `
+                        <tr class="border-b border-slate-700">
+                            <td class="py-2 px-2 text-center text-xs">${index + 1}</td>
+                            <td class="py-2 px-2 text-slate-300 text-xs">${team.name}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.played}</td>
+                            <td class="py-2 px-2 text-center text-green-400 text-xs">${stats.wins}</td>
+                            <td class="py-2 px-2 text-center text-red-400 text-xs">${stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.wins - stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-blue-400 text-xs font-bold">${stats.points}</td>
+                        </tr>
+`;
+                        });
+
+                        standings += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
 `;
                     });
 
                     standings += `
-            </tbody>
-        </table>
+    </div>
+</div>
+`;
+
+                    container.innerHTML += standings;
+                });
+            }
     </div>
 </div>
 `;
