@@ -115,15 +115,6 @@
                     🏠 Home
                 </button>
                 
-                <!-- STANDINGS TAB -->
-                <button
-                    id="btn-standings-tab"
-                    onclick="switchTab('standings')"
-                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
-                >
-                    Standings
-                </button>
-                
                 <!-- FIXTURES TAB -->
                 <button
                     id="btn-fixtures-tab"
@@ -131,6 +122,15 @@
                     class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
                 >
                     Fixtures
+                </button>
+                
+                <!-- STANDINGS TAB -->
+                <button
+                    id="btn-standings-tab"
+                    onclick="switchTab('standings')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Standings
                 </button>
             </div>
         </section>
@@ -185,42 +185,6 @@
         <main class="max-w-7xl mx-auto px-4 mt-6">
             <!-- HOME SECTION (DEFAULT VIEW) -->
             <div id="home-section" style="display: block;">
-                <!-- UPCOMING MATCHES -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
-                    <div class="p-5 border-b border-slate-800">
-                        <h2 class="font-bold text-lg">🎯 Upcoming Matches</h2>
-                        <p class="text-slate-500 text-sm mt-1">Tomorrow - 19 August 2026</p>
-                    </div>
-                    
-                    <div class="p-5 overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-700 text-slate-400">
-                                    <th class="py-3 px-3 text-left">Match</th>
-                                    <th class="py-3 px-3 text-center">Start Time</th>
-                                    <th class="py-3 px-3 text-center">End Time</th>
-                                    <th class="py-3 px-3 text-left">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody id="upcoming-matches-list">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ALL GROUPS BY CATEGORY -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                    <div class="p-5 border-b border-slate-800">
-                        <h2 class="font-bold text-lg">📊 All Groups</h2>
-                        <p class="text-slate-500 text-sm mt-1">Teams organized by category and group</p>
-                    </div>
-                    
-                    <div id="all-groups-container" class="p-5 space-y-8"></div>
-                </div>
-            </div> <!-- End home-section -->
-
-            <!-- STANDINGS SECTION -->
-            <div id="standings-section" style="display: none;">
                 <!-- LIVE SCOREBOARD -->
 
                 <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
@@ -267,7 +231,43 @@
                 </div>
             </div>
 
-            <!-- STANDINGS FOR ALL CATEGORIES -->
+                <!-- UPCOMING MATCHES -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">🎯 Upcoming Matches</h2>
+                        <p class="text-slate-500 text-sm mt-1">Tomorrow - 19 August 2026</p>
+                    </div>
+                    
+                    <div class="p-5 overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-slate-400">
+                                    <th class="py-3 px-3 text-left">Match</th>
+                                    <th class="py-3 px-3 text-center">Start Time</th>
+                                    <th class="py-3 px-3 text-center">End Time</th>
+                                    <th class="py-3 px-3 text-left">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="upcoming-matches-list">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ALL GROUPS BY CATEGORY -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">📊 All Groups</h2>
+                        <p class="text-slate-500 text-sm mt-1">Teams organized by category and group</p>
+                    </div>
+                    
+                    <div id="all-groups-container" class="p-5 space-y-8"></div>
+                </div>
+            </div> <!-- End home-section -->
+
+            <!-- STANDINGS SECTION -->
+            <div id="standings-section" style="display: none;">
+                <!-- STANDINGS FOR ALL CATEGORIES -->
 
             <div id="all-standings-container" class="space-y-6"></div>
 
@@ -284,7 +284,46 @@
 
             <!-- FIXTURES SECTION -->
             <div id="fixtures-section" style="display: none;">
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                <!-- FIXTURES CATEGORY NAV -->
+                <section id="fixtures-nav" class="bg-slate-900 border-b border-slate-800 rounded-t-3xl p-5 flex gap-2 overflow-x-auto">
+                    <button
+                        id="btn-fixtures-mens_singles"
+                        onclick="switchFixturesCategory('mens_singles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white whitespace-nowrap"
+                    >
+                        Men's Singles
+                    </button>
+                    <button
+                        id="btn-fixtures-mens_doubles"
+                        onclick="switchFixturesCategory('mens_doubles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Men's Doubles
+                    </button>
+                    <button
+                        id="btn-fixtures-womens_singles"
+                        onclick="switchFixturesCategory('womens_singles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Women's Singles
+                    </button>
+                    <button
+                        id="btn-fixtures-womens_doubles"
+                        onclick="switchFixturesCategory('womens_doubles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Women's Doubles
+                    </button>
+                    <button
+                        id="btn-fixtures-mix_doubles"
+                        onclick="switchFixturesCategory('mix_doubles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Mixed Doubles
+                    </button>
+                </section>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-b-3xl overflow-hidden">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">Fixtures & Groups - <span id="fixtures-title">Men's Singles</span></h2>
                     </div>
@@ -353,6 +392,7 @@
             };
 
             let currentCategory = "mens_singles";
+            let currentFixturesCategory = "mens_singles";
             let currentTab = "fixtures"; // Changed from "standings" to "fixtures"
 
             /* ---------------------------------- */
@@ -751,13 +791,24 @@
                         groupedTeams[group].push(team.name);
                     });
                     
+                    // Sort groups in order A, B, C, D, All Teams
+                    const groupOrder = ["Group A", "Group B", "Group C", "Group D", "All Teams"];
+                    const sortedGroups = Object.keys(groupedTeams).sort((a, b) => {
+                        const aIndex = groupOrder.indexOf(a);
+                        const bIndex = groupOrder.indexOf(b);
+                        if (aIndex === -1) return 1;
+                        if (bIndex === -1) return 1;
+                        return aIndex - bIndex;
+                    });
+                    
                     let categoryHTML = `
 <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
     <h3 class="font-bold text-blue-400 mb-4">${categoryNames[categoryKey] || categoryKey}</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 `;
                     
-                    Object.entries(groupedTeams).forEach(([groupName, teamNames]) => {
+                    sortedGroups.forEach((groupName) => {
+                        const teamNames = groupedTeams[groupName];
                         categoryHTML += `
         <div class="bg-slate-900 rounded-lg p-3 border border-slate-700">
             <h4 class="text-sm font-semibold text-slate-300 mb-2">${groupName}</h4>
@@ -776,14 +827,40 @@
                 });
             }
 
+            function switchFixturesCategory(category) {
+                currentFixturesCategory = category;
+
+                // Update button styles
+                document.querySelectorAll(".fixtures-cat-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-fixtures-${category}`).classList.remove("bg-slate-800", "text-slate-300");
+                document.getElementById(`btn-fixtures-${category}`).classList.add("bg-blue-500", "text-white");
+
+                // Render fixtures for selected category
+                renderFixtures();
+            }
+
             function renderFixtures() {
-                const category = tournamentState[currentCategory];
-                const fixtures = FIXTURES_DATA[currentCategory];
+                const category = tournamentState[currentFixturesCategory];
+                const fixtures = FIXTURES_DATA[currentFixturesCategory];
                 
                 if (!category || !fixtures) {
-                    console.log("No data for", currentCategory);
+                    console.log("No data for", currentFixturesCategory);
                     return;
                 }
+                
+                // Update title
+                const categoryNames = {
+                    mens_singles: "Men's Singles",
+                    womens_singles: "Women's Singles",
+                    mens_doubles: "Men's Doubles",
+                    womens_doubles: "Women's Doubles",
+                    mix_doubles: "Mixed Doubles"
+                };
+                document.getElementById("fixtures-title").innerText = categoryNames[currentFixturesCategory] || currentFixturesCategory;
                 
                 // Render groups from database
                 const groupsContainer = document.getElementById("fixtures-groups");
@@ -799,8 +876,19 @@
                     groupedTeams[group].push(team.name);
                 });
                 
-                // Render groups from database
-                Object.entries(groupedTeams).forEach(([groupName, teamNames]) => {
+                // Sort groups in order A, B, C, D, All Teams
+                const groupOrder = ["Group A", "Group B", "Group C", "Group D", "All Teams"];
+                const sortedGroups = Object.keys(groupedTeams).sort((a, b) => {
+                    const aIndex = groupOrder.indexOf(a);
+                    const bIndex = groupOrder.indexOf(b);
+                    if (aIndex === -1) return 1;
+                    if (bIndex === -1) return 1;
+                    return aIndex - bIndex;
+                });
+                
+                // Render groups from database in sorted order
+                sortedGroups.forEach((groupName) => {
+                    const teamNames = groupedTeams[groupName];
                     groupsContainer.innerHTML += `
                         <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                             <h4 class="font-bold text-blue-400 mb-3">${groupName}</h4>
