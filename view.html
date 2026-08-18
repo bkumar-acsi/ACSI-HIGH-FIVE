@@ -678,7 +678,6 @@
                             renderFixtures();
                         }
                         
-                        updateLiveScoreDOM();
                         applyLiveMatchVisibility();
                         return;
                     } else {
@@ -1021,29 +1020,9 @@
             /* ---------------------------------- */
 
             function updateLiveScoreDOM() {
-                const category = tournamentState[currentCategory];
-
-                const team1 = category.teams.find((t) => t.id === liveMatch.team1Id);
-                const team2 = category.teams.find((t) => t.id === liveMatch.team2Id);
-
-                document.getElementById("display-name-1").innerText = team1 ? team1.name : "Player 1";
-                document.getElementById("display-name-2").innerText = team2 ? team2.name : "Player 2";
-
-                document.getElementById("live-points-1").innerText = liveMatch.points1;
-                document.getElementById("live-points-2").innerText = liveMatch.points2;
-
-                document.getElementById("live-sets-1").innerText = liveMatch.sets1;
-                document.getElementById("live-sets-2").innerText = liveMatch.sets2;
-
-                document.getElementById("set-history-log").innerText = liveMatch.setHistory.length
-                    ? `Sets: ${liveMatch.setHistory.join(" | ")}`
-                    : "No Sets Completed Yet";
-
-                // Update match format from liveScore
-                if (liveScore && liveScore.matchFormat) {
-                    const formatText = `Best Of ${liveScore.matchFormat}`;
-                    document.getElementById("match-format-display").innerText = formatText;
-                }
+                // This function is no longer needed - updateLiveScoreDisplay handles it
+                // Keep for backward compatibility but do nothing
+                console.log("updateLiveScoreDOM called (deprecated)");
             }
 
             /* ---------------------------------- */
