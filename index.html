@@ -215,7 +215,6 @@
                                     type="number"
                                     id="live-points-1"
                                     min="0"
-                                    onchange="updatePointsFromInput(1)"
                                     class="score-glow text-[3rem] font-black leading-none w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl px-2 py-1 focus:outline-none focus:border-blue-500"
                                     value="0"
                                 />
@@ -250,7 +249,6 @@
                                     type="number"
                                     id="live-points-2"
                                     min="0"
-                                    onchange="updatePointsFromInput(2)"
                                     class="score-glow text-[3rem] font-black leading-none w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl px-2 py-1 focus:outline-none focus:border-blue-500"
                                     value="0"
                                 />
@@ -277,6 +275,16 @@
                                     <div id="live-sets-2" class="text-xl font-bold text-blue-400">0</div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- UPDATE LIVE BUTTON -->
+                        <div class="mt-4">
+                            <button
+                                onclick="updateLiveScore()"
+                                class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-sm hover:from-green-600 hover:to-emerald-600 transition"
+                            >
+                                ✓ Update Live Score
+                            </button>
                         </div>
                         <!-- SET HISTORY -->
 
@@ -974,10 +982,10 @@
                     // Restore live match visibility
                     restoreLiveMatchVisibility();
                     
-                    // Add global activity tracking
-                    document.addEventListener("click", recordAdminActivity);
-                    document.addEventListener("input", recordAdminActivity);
-                    document.addEventListener("change", recordAdminActivity);
+                    // Add global activity tracking - DISABLED to prevent continuous API calls
+                    // document.addEventListener("click", recordAdminActivity);
+                    // document.addEventListener("input", recordAdminActivity);
+                    // document.addEventListener("change", recordAdminActivity);
                     
                     // DON'T auto-refresh on admin page - would reset scores while typing
                     // Auto-refresh is disabled because:
@@ -985,17 +993,19 @@
                     // 2. Admin page is for editing, not just viewing
                     // 3. Data is only modified by this page, not external sources
                     
-                    // Auto-refresh every 5 seconds to sync with live-data.json changes
-                    let isLoading = false;
-                    setInterval(() => {
-                        if (!isLoading) {
-                            isLoading = true;
-                            console.log("🔄 Auto-refreshing live data from Gist...");
-                            loadTournamentData().finally(() => {
-                                isLoading = false;
-                            });
-                        }
-                    }, 5000);
+                    // Auto-refresh DISABLED on admin page
+                    // Reason: Auto-refresh would reset form inputs and interfere with score entry
+                    // Admin page is write-only, doesn't need live updates
+                    // let isLoading = false;
+                    // setInterval(() => {
+                    //     if (!isLoading) {
+                    //         isLoading = true;
+                    //         console.log("🔄 Auto-refreshing live data from Gist...");
+                    //         loadTournamentData().finally(() => {
+                    //             isLoading = false;
+                    //         });
+                    //     }
+                    // }, 5000);
                 }
             );
 
@@ -1265,13 +1275,7 @@
                     updateLiveScoreDOM();
                 });
                 
-                // Add event listeners for points inputs
-                document.getElementById("live-points-1").addEventListener("change", () => {
-                    updatePointsFromInput(1);
-                });
-                document.getElementById("live-points-2").addEventListener("change", () => {
-                    updatePointsFromInput(2);
-                });
+                // Event listeners removed - use "Update Live" button instead
             }
 
             function updateSelect2Options(excludeTeam) {
