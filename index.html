@@ -978,7 +978,8 @@
                 renderDashboard();
                 renderAdminFixtures();
                 restoreLiveMatchVisibility();
-                initLiveSelectors();
+                // Don't call initLiveSelectors() on auto-refresh - it resets dropdown selections
+                // initLiveSelectors() is only called when switching categories
                 updateLiveScoreDOM();
             }
 
@@ -1130,21 +1131,25 @@
                 select1.innerHTML = "";
                 select2.innerHTML = "";
 
+                // Add placeholder to both dropdowns
+                select1.innerHTML = `<option value="">Select Team 1</option>`;
+                select2.innerHTML = `<option value="">Select Team 2</option>`;
+
                 // Show all teams from the category
                 if (category && category.teams) {
                     category.teams.forEach((team) => {
                         select1.innerHTML += `<option value="${team.name}">${team.name}</option>`;
-                        select2.innerHTML += `<option value="${team.name}">${team.name}</option>`;
                     });
 
-                    // Set default values to first two teams
-                    if (category.teams.length >= 2) {
-                        select1.value = category.teams[0].name;
-                        select2.value = category.teams[1].name;
-                        liveMatch.team1Id = category.teams[0].name;
-                        liveMatch.team2Id = category.teams[1].name;
-                    }
+                    // For select2, we'll filter dynamically based on select1 selection
+                    category.teams.forEach((team) => {
+                        select2.innerHTML += `<option value="${team.name}" class="team-option">${team.name}</option>`;
+                    });
                 }
+
+                // Don't set default values - let user select
+                liveMatch.team1Id = "";
+                liveMatch.team2Id = "";
 
                 // Remove old event listeners by cloning and replacing
                 const newSelect1 = select1.cloneNode(true);
@@ -1155,7 +1160,12 @@
 
                 // Add event listeners to new elements
                 document.getElementById("live-team-1").addEventListener("change", () => {
-                    liveMatch.team1Id = document.getElementById("live-team-1").value;
+                    const selectedTeam1 = document.getElementById("live-team-1").value;
+                    liveMatch.team1Id = selectedTeam1;
+                    
+                    // Update select2 to exclude the selected team from select1
+                    updateSelect2Options(selectedTeam1);
+                    
                     saveTournamentData();
                     updateLiveScoreDOM();
                 });
@@ -1165,6 +1175,25 @@
                     saveTournamentData();
                     updateLiveScoreDOM();
                 });
+            }
+
+            function updateSelect2Options(excludeTeam) {
+                const select2 = document.getElementById("live-team-2");
+                const allOptions = select2.querySelectorAll(".team-option");
+                
+                allOptions.forEach((option) => {
+                    if (option.value === excludeTeam) {
+                        option.style.display = "none";
+                    } else {
+                        option.style.display = "";
+                    }
+                });
+
+                // If select2 is currently set to the excluded team, reset it
+                if (select2.value === excludeTeam) {
+                    select2.value = "";
+                    liveMatch.team2Id = "";
+                }
             }
 
             /* ---------------------------------- */
