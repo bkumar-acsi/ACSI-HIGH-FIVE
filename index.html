@@ -1258,22 +1258,6 @@
                 
                 select1.parentNode.replaceChild(newSelect1, select1);
                 select2.parentNode.replaceChild(newSelect2, select2);
-
-                // Add event listeners to new elements
-                document.getElementById("live-team-1").addEventListener("change", () => {
-                    const selectedTeam1 = document.getElementById("live-team-1").value;
-                    
-                    // Update select2 to exclude the selected team from select1
-                    updateSelect2Options(selectedTeam1);
-                    
-                    updateLiveScore(); // Save live data only
-                    updateLiveScoreDOM();
-                });
-
-                document.getElementById("live-team-2").addEventListener("change", () => {
-                    updateLiveScore(); // Save live data only
-                    updateLiveScoreDOM();
-                });
                 
                 // Event listeners removed - use "Update Live" button instead
             }
