@@ -816,38 +816,57 @@
 
                     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/live-data.json`;
 
-                    // Get current file SHA for update
-                    const getResponse = await fetch(url, {
-                        headers: {
-                            "Authorization": `token ${githubToken}`
-                        }
-                    });
-
+                    // Get current file SHA for update (with retry for 409 conflicts)
                     let sha = null;
-                    if (getResponse.ok) {
-                        const data = await getResponse.json();
-                        sha = data.sha;
+                    let retries = 3;
+                    
+                    while (retries > 0) {
+                        // Always get fresh SHA
+                        const getResponse = await fetch(url, {
+                            headers: {
+                                "Authorization": `token ${githubToken}`
+                            }
+                        });
+
+                        if (getResponse.ok) {
+                            const data = await getResponse.json();
+                            sha = data.sha;
+                            console.log("📝 Got SHA:", sha.substring(0, 8));
+                        } else {
+                            console.warn("Could not get SHA, will try without it");
+                            sha = null;
+                        }
+
+                        const response = await fetch(url, {
+                            method: "PUT",
+                            headers: {
+                                "Authorization": `token ${githubToken}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                message: "Update live scoring data",
+                                content: btoa(content),
+                                sha: sha
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            
+                            // If 409 conflict, retry with fresh SHA
+                            if (response.status === 409 && retries > 1) {
+                                console.warn("⚠️ 409 Conflict - retrying with fresh SHA...");
+                                retries--;
+                                await new Promise(r => setTimeout(r, 500)); // Wait 500ms before retry
+                                continue;
+                            }
+                            
+                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
+                        }
+
+                        console.log("✅ Live data saved to GitHub repo!");
+                        return; // Success
                     }
-
-                    const response = await fetch(url, {
-                        method: "PUT",
-                        headers: {
-                            "Authorization": `token ${githubToken}`,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            message: "Update live scoring data",
-                            content: btoa(content),
-                            sha: sha
-                        })
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`GitHub API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
-                    }
-
-                    console.log("✅ Live data saved to GitHub repo!");
                 } catch (error) {
                     console.error("Error saving to GitHub:", error);
                 }
@@ -920,11 +939,6 @@
             // Load standings separately
             async function loadStandingsData() {
                 console.log("📊 Loading standings from live-standings.json...");
-                
-                if (!githubToken) {
-                    console.warn("Cannot load standings - GitHub token missing");
-                    return;
-                }
 
                 const standings = await loadStandingsOnly();
                 if (standings) {
@@ -932,9 +946,11 @@
                     Object.keys(standings).forEach(categoryKey => {
                         if (tournamentState[categoryKey]) {
                             tournamentState[categoryKey].teams = standings[categoryKey].teams || [];
+                            console.log(`✅ Updated ${categoryKey} teams from standings`);
                         }
                     });
                     console.log("✅ Standings loaded and merged into tournamentState");
+                    console.log("Tournament state after merge:", tournamentState);
                     return standings;
                 } else {
                     console.warn("⚠️ Standings not found or failed to load");
@@ -1134,37 +1150,50 @@
 
                     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/match-history.json`;
 
-                    // Get current file SHA for update
-                    const getResponse = await fetch(url, {
-                        headers: {
-                            "Authorization": `token ${githubToken}`
+                    let retries = 3;
+                    while (retries > 0) {
+                        // Always get fresh SHA
+                        const getResponse = await fetch(url, {
+                            headers: {
+                                "Authorization": `token ${githubToken}`
+                            }
+                        });
+
+                        let sha = null;
+                        if (getResponse.ok) {
+                            const data = await getResponse.json();
+                            sha = data.sha;
                         }
-                    });
 
-                    let sha = null;
-                    if (getResponse.ok) {
-                        const data = await getResponse.json();
-                        sha = data.sha;
+                        const response = await fetch(url, {
+                            method: "PUT",
+                            headers: {
+                                "Authorization": `token ${githubToken}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                message: "Update match history",
+                                content: btoa(content),
+                                sha: sha
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            
+                            if (response.status === 409 && retries > 1) {
+                                console.warn("⚠️ 409 Conflict on match history - retrying...");
+                                retries--;
+                                await new Promise(r => setTimeout(r, 500));
+                                continue;
+                            }
+                            
+                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message}`);
+                        }
+
+                        console.log("✅ Match history saved!");
+                        return;
                     }
-
-                    const response = await fetch(url, {
-                        method: "PUT",
-                        headers: {
-                            "Authorization": `token ${githubToken}`,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            message: "Update match history",
-                            content: btoa(content),
-                            sha: sha
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`GitHub API error: ${response.status}`);
-                    }
-
-                    console.log("✅ Match history saved!");
                 } catch (error) {
                     console.error("Error saving match history:", error);
                 }
@@ -1202,37 +1231,50 @@
 
                     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/live-standings.json`;
 
-                    // Get current file SHA for update
-                    const getResponse = await fetch(url, {
-                        headers: {
-                            "Authorization": `token ${githubToken}`
+                    let retries = 3;
+                    while (retries > 0) {
+                        // Always get fresh SHA
+                        const getResponse = await fetch(url, {
+                            headers: {
+                                "Authorization": `token ${githubToken}`
+                            }
+                        });
+
+                        let sha = null;
+                        if (getResponse.ok) {
+                            const data = await getResponse.json();
+                            sha = data.sha;
                         }
-                    });
 
-                    let sha = null;
-                    if (getResponse.ok) {
-                        const data = await getResponse.json();
-                        sha = data.sha;
+                        const response = await fetch(url, {
+                            method: "PUT",
+                            headers: {
+                                "Authorization": `token ${githubToken}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                message: "Update standings",
+                                content: btoa(content),
+                                sha: sha
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            
+                            if (response.status === 409 && retries > 1) {
+                                console.warn("⚠️ 409 Conflict on standings - retrying...");
+                                retries--;
+                                await new Promise(r => setTimeout(r, 500));
+                                continue;
+                            }
+                            
+                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message}`);
+                        }
+
+                        console.log("✅ Standings saved!");
+                        return;
                     }
-
-                    const response = await fetch(url, {
-                        method: "PUT",
-                        headers: {
-                            "Authorization": `token ${githubToken}`,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            message: "Update standings",
-                            content: btoa(content),
-                            sha: sha
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`GitHub API error: ${response.status}`);
-                    }
-
-                    console.log("✅ Standings saved!");
                 } catch (error) {
                     console.error("Error saving standings:", error);
                 }
@@ -1896,6 +1938,9 @@
                     currentCategory,
                     ...categoryKeys.filter(key => key !== currentCategory)
                 ];
+                
+                console.log("📊 renderDashboard - Categories:", sortedKeys);
+                console.log("📊 currentCategory teams:", tournamentState[currentCategory]?.teams?.slice(0, 3));
 
                 sortedKeys.forEach((categoryKey) => {
                     const category = tournamentState[categoryKey];
