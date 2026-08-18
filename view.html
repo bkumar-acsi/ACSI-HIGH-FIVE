@@ -827,18 +827,16 @@
                 }
             }
 
-            // Load visibility from GitHub repo
+            // Load visibility from GitHub API (always fresh, no CDN cache)
             async function loadVisibilityStatus() {
                 try {
-                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
+                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/visibility-status.json`;
                     const response = await fetch(url);
-                    const content = await response.text();
-                    if (content) {
-                        const data = JSON.parse(content);
-                        console.log("✅ Visibility loaded from GitHub:", data.isActive);
-                        return data.isActive || false;
-                    }
-                    return false;
+                    if (!response.ok) return false;
+                    const data = await response.json();
+                    const content = JSON.parse(atob(data.content));
+                    console.log("✅ Visibility loaded from GitHub API:", content.isActive);
+                    return content.isActive || false;
                 } catch (error) {
                     console.error("Error loading visibility:", error);
                     return false;
@@ -921,14 +919,52 @@
                 // Always render home view first (static upcoming matches)
                 renderHomeView();
                 
-                // Load data from Gist (will update teams list)
+                // Load data
                 loadTournamentData();
                 
                 // Set tab to home
                 currentTab = "home";
                 
-                // Manual refresh only - users click "Refresh Live Data" button
-                console.log("🔘 Manual refresh enabled - click 'Refresh Live Data' button to update");
+                // Auto-refresh from Firebase every 5 seconds ONLY when live match is active
+                let isLoading = false;
+                setInterval(async () => {
+                    if (isLoading) return;
+                    
+                    // First check visibility from GitHub API
+                    const isLive = await loadVisibilityStatus();
+                    
+                    if (!isLive) {
+                        // If not live, hide the section and stop
+                        const section = document.getElementById("live-match-section");
+                        if (section) section.style.display = "none";
+                        return;
+                    }
+                    
+                    isLoading = true;
+                    
+                    // Refresh live score from Firebase
+                    const freshLiveScore = await firebaseGet('liveScore');
+                    if (freshLiveScore) {
+                        liveScore = freshLiveScore;
+                        liveScore.isVisible = true;
+                        updateLiveScoreDisplay();
+                    }
+                    
+                    // Refresh standings from Firebase
+                    const freshStandings = await firebaseGet('standings');
+                    if (freshStandings) {
+                        Object.keys(freshStandings).forEach(categoryKey => {
+                            if (tournamentState[categoryKey]) {
+                                tournamentState[categoryKey].teams = freshStandings[categoryKey].teams || [];
+                            }
+                        });
+                        if (currentTab === "standings") {
+                            renderDashboard();
+                        }
+                    }
+                    
+                    isLoading = false;
+                }, 5000);
             });
 
             /* ---------------------------------- */
