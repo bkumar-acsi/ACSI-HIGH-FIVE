@@ -102,9 +102,32 @@
             </div>
         </header>
 
-        <!-- CATEGORY NAV -->
+        <!-- NAV TABS -->
 
         <section class="sticky top-20 z-40 bg-slate-900 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
+                <!-- STANDINGS TAB -->
+                <button
+                    id="btn-standings-tab"
+                    onclick="switchTab('standings')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                >
+                    Standings
+                </button>
+                
+                <!-- FIXTURES TAB -->
+                <button
+                    id="btn-fixtures-tab"
+                    onclick="switchTab('fixtures')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Fixtures
+                </button>
+            </div>
+        </section>
+
+        <!-- CATEGORY NAV (for standings) -->
+        <section id="standings-nav" class="sticky top-32 z-40 bg-slate-900 border-b border-slate-800">
             <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
                 <button
                     id="btn-mens_singles"
@@ -151,9 +174,11 @@
         <!-- MAIN -->
 
         <main class="max-w-7xl mx-auto px-4 mt-6">
-            <!-- LIVE SCOREBOARD -->
+            <!-- STANDINGS SECTION -->
+            <div id="standings-section" style="display: block;">
+                <!-- LIVE SCOREBOARD -->
 
-            <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
+                <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
                 <div class="text-center mb-8">
                     <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
                     <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
@@ -210,6 +235,30 @@
 
                 <div id="match-history-list" class="p-5 space-y-3 max-h-[500px] overflow-y-auto"></div>
             </div>
+            </div> <!-- End standings-section -->
+
+            <!-- FIXTURES SECTION -->
+            <div id="fixtures-section" style="display: none;">
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">Fixtures & Groups - Men's Singles</h2>
+                    </div>
+                    
+                    <div class="p-5 space-y-8">
+                        <!-- GROUP STAGE -->
+                        <div>
+                            <h3 class="text-sm font-bold text-blue-400 mb-4">GROUP STAGE</h3>
+                            <div id="fixtures-groups" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                        </div>
+
+                        <!-- MATCHES -->
+                        <div>
+                            <h3 class="text-sm font-bold text-blue-400 mb-4">MATCHES</h3>
+                            <div id="fixtures-matches" class="space-y-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End fixtures-section -->
         </main>
 
         <script>
@@ -259,7 +308,74 @@
             };
 
             let currentCategory = "mens_singles";
-            let tournamentState = {};
+            let currentTab = "standings";
+
+            /* ---------------------------------- */
+            /* FIXTURES DATA */
+            /* ---------------------------------- */
+
+            const FIXTURES_DATA = {
+                mens_singles: {
+                    groups: {
+                        "Group A": ["Aniket Ghodake", "Kshitij Babar", "Balachander Srinivasalu", "Suraj Kendre", "Suresh Rankhamb"],
+                        "Group B": ["Rishabh Mishra", "Prem Tamang", "Brajesh Kumar", "Sachin Sonone", "Shekhar Kothawade"],
+                        "Group C": ["Sanket Pande", "Akshay Prabhune", "Santosh Daware", "Sagar Zanjad", "Aditya Dhage"],
+                        "Group D": ["Swapnil Walivkar", "Jinish Shah", "Rahul Singh", "Saurabh Kulkarni", "Ajinkya"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { group: "Group A", match: "Aniket vs Kshitij" },
+                            { group: "Group B", match: "Rishabh vs Prem" },
+                            { group: "Group C", match: "Sanket vs Akshay" },
+                            { group: "Group D", match: "Swapnil vs Jinish" },
+                            { group: "Group A", match: "Balachander vs Suraj" },
+                            { group: "Group B", match: "Brajesh vs Sachin" },
+                            { group: "Group C", match: "Santosh vs Sagar" },
+                            { group: "Group D", match: "Rahul vs Saurabh" }
+                        ],
+                        "Round 2": [
+                            { group: "Group A", match: "Aniket vs Balachander" },
+                            { group: "Group B", match: "Rishabh vs Brajesh" },
+                            { group: "Group C", match: "Sanket vs Santosh" },
+                            { group: "Group D", match: "Swapnil vs Rahul" },
+                            { group: "Group A", match: "Kshitij vs Suresh" },
+                            { group: "Group B", match: "Prem vs Shekhar" },
+                            { group: "Group C", match: "Akshay vs Aditya" },
+                            { group: "Group D", match: "Jinish vs Ajinkya" }
+                        ],
+                        "Round 3": [
+                            { group: "Group A", match: "Aniket vs Suraj" },
+                            { group: "Group B", match: "Rishabh vs Sachin" },
+                            { group: "Group C", match: "Sanket vs Sagar" },
+                            { group: "Group D", match: "Swapnil vs Saurabh" },
+                            { group: "Group A", match: "Balachander vs Suresh" },
+                            { group: "Group B", match: "Brajesh vs Shekhar" },
+                            { group: "Group C", match: "Santosh vs Aditya" },
+                            { group: "Group D", match: "Rahul vs Ajinkya" }
+                        ],
+                        "Round 4": [
+                            { group: "Group A", match: "Aniket vs Suresh" },
+                            { group: "Group B", match: "Rishabh vs Shekhar" },
+                            { group: "Group C", match: "Sanket vs Aditya" },
+                            { group: "Group D", match: "Swapnil vs Ajinkya" },
+                            { group: "Group A", match: "Kshitij vs Suraj" },
+                            { group: "Group B", match: "Prem vs Sachin" },
+                            { group: "Group C", match: "Akshay vs Sagar" },
+                            { group: "Group D", match: "Jinish vs Saurabh" }
+                        ],
+                        "Round 5": [
+                            { group: "Group A", match: "Kshitij vs Balachander" },
+                            { group: "Group B", match: "Prem vs Brajesh" },
+                            { group: "Group C", match: "Akshay vs Santosh" },
+                            { group: "Group D", match: "Jinish vs Rahul" },
+                            { group: "Group A", match: "Suraj vs Suresh" },
+                            { group: "Group B", match: "Sachin vs Shekhar" },
+                            { group: "Group C", match: "Sagar vs Aditya" },
+                            { group: "Group D", match: "Saurabh vs Ajinkya" }
+                        ]
+                    }
+                }
+            };
 
             let liveMatch = {
                 team1Id: "",
@@ -389,6 +505,64 @@
 
                 renderDashboard();
                 updateLiveScoreDOM();
+            }
+
+            function switchTab(tab) {
+                currentTab = tab;
+
+                // Update tab buttons
+                document.querySelectorAll(".tab-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-${tab}-tab`).classList.remove("bg-slate-800", "text-slate-300");
+                document.getElementById(`btn-${tab}-tab`).classList.add("bg-blue-500", "text-white");
+
+                // Show/hide sections
+                document.getElementById("standings-nav").style.display = tab === "standings" ? "" : "none";
+                document.getElementById("standings-section").style.display = tab === "standings" ? "" : "none";
+                document.getElementById("fixtures-section").style.display = tab === "fixtures" ? "" : "none";
+
+                if (tab === "fixtures") {
+                    renderFixtures();
+                }
+            }
+
+            function renderFixtures() {
+                const fixtures = FIXTURES_DATA.mens_singles;
+                
+                // Render groups
+                const groupsContainer = document.getElementById("fixtures-groups");
+                groupsContainer.innerHTML = "";
+                
+                Object.entries(fixtures.groups).forEach(([groupName, players]) => {
+                    groupsContainer.innerHTML += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                            <h4 class="font-bold text-blue-400 mb-3">${groupName}</h4>
+                            <ul class="space-y-2 text-sm">
+                                ${players.map(player => `<li class="text-slate-300">• ${player}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                // Render matches
+                const matchesContainer = document.getElementById("fixtures-matches");
+                matchesContainer.innerHTML = "";
+                
+                Object.entries(fixtures.matches).forEach(([roundName, matches]) => {
+                    let roundHTML = `<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <h4 class="font-bold text-blue-400 mb-3">${roundName}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">`;
+                    
+                    matches.forEach(({ group, match }) => {
+                        roundHTML += `<div class="text-sm text-slate-300 p-2 bg-slate-900 rounded">${match}</div>`;
+                    });
+                    
+                    roundHTML += `</div></div>`;
+                    matchesContainer.innerHTML += roundHTML;
+                });
             }
 
             /* ---------------------------------- */
