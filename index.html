@@ -160,8 +160,6 @@
                         <div class="flex justify-between items-center mb-6">
                             <div>
                                 <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
-
-                                <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
                             </div>
 
                             <div class="flex gap-2 items-center">
@@ -196,11 +194,13 @@
                         <div class="grid grid-cols-2 gap-4 mb-3">
                             <select
                                 id="live-team-1"
+                                onchange="updateLiveScore()"
                                 class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
                             ></select>
 
                             <select
                                 id="live-team-2"
+                                onchange="updateLiveScore()"
                                 class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
                             ></select>
                         </div>
@@ -648,10 +648,9 @@
             const urlParams = new URLSearchParams(window.location.search);
             const TOKEN_FROM_URL = urlParams.get('token');
             
-            // Default token for reading Gist (same old token)
-            const DEFAULT_TOKEN = "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";
+            // Get token from URL parameter - REQUIRED for admin page
+            let githubToken = TOKEN_FROM_URL;
             
-            let githubToken = TOKEN_FROM_URL || DEFAULT_TOKEN;
             
             // HARDCODED GIST ID - tournament data gist
             const HARDCODED_GIST_ID = "c0af02e95d49a4933b5846882f802e04";
