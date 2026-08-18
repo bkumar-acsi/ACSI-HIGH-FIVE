@@ -194,13 +194,11 @@
                         <div class="grid grid-cols-2 gap-4 mb-3">
                             <select
                                 id="live-team-1"
-                                onchange="updateLiveScore()"
                                 class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
                             ></select>
 
                             <select
                                 id="live-team-2"
-                                onchange="updateLiveScore()"
                                 class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
                             ></select>
                         </div>
@@ -937,6 +935,9 @@
                 
                 console.log("📋 After assignment - tournamentState keys:", Object.keys(tournamentState));
                 console.log("📋 After assignment - liveScore:", liveScore);
+                
+                console.log("✅ Initializing live score selectors");
+                initLiveSelectors();
                 
                 console.log("✅ Calling renderDashboard with fresh data from GitHub");
                 renderDashboard();
