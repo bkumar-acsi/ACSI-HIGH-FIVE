@@ -683,7 +683,7 @@
             /* ---------------------------------- */
             /* GITHUB INTEGRATION - GIST READ */
             /* ---------------------------------- */
-            // GitHub repository for unlimited bandwidth (no rate limits!)
+            // GitHub repository for tournament metadata
             const REPO_OWNER = "bkumar-acsi";
             const REPO_NAME = "ACSI-HIGH-FIVE-DATA";
             const REPO_BRANCH = "main";
@@ -691,6 +691,24 @@
 
             // Gist ID (keep for backwards compatibility)
             const PUBLIC_GIST_ID = "c0af02e95d49a4933b5846882f802e04";
+
+            /* ---------------------------------- */
+            /* FIREBASE - REAL-TIME DATA */
+            /* ---------------------------------- */
+            const FIREBASE_DB_URL = "https://tt-live-44a37-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+            // Firebase REST API helper - read data
+            async function firebaseGet(path) {
+                try {
+                    const url = `${FIREBASE_DB_URL}/${path}.json`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Firebase error: ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error(`❌ Firebase read error (${path}):`, error);
+                    return null;
+                }
+            }
 
             // Local storage caching to reduce API calls
             const CACHE_DURATION = 5 * 60 * 1000; // Cache for 5 minutes
@@ -828,87 +846,44 @@
             }
 
             // Load live data only from Gist (no token needed for public read)
+            // Load live data from Firebase (instant!)
             async function loadLiveDataOnly() {
-                try {
-                    // Use random parameter for aggressive cache-busting
-                    const url = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}&v=${Math.random()}`;
-                    console.log("🔄 Fetching live data from:", url);
-                    const response = await fetch(url, { cache: 'no-store' });
-                    const content = await response.text();
-                    
-                    if (content) {
-                        const liveData = JSON.parse(content);
-                        const liveScore = liveData.liveScore || {};
-                        console.log("✅ Live data loaded - team1:", liveScore.team1Name, "team2:", liveScore.team2Name);
-                        return liveScore;
-                    }
-                    
-                    return null;
-                } catch (error) {
-                    console.error("Error loading live data:", error);
-                    return null;
+                const data = await firebaseGet('liveScore');
+                if (data) {
+                    console.log("✅ Live data loaded from Firebase - team1:", data.team1Name, "team2:", data.team2Name);
+                    return data;
                 }
+                return null;
             }
 
-            // Load standings only from Gist
+            // Load standings from Firebase (instant!)
             async function loadStandingsOnly() {
-                try {
-                    const url = `${DATA_BASE_URL}/live-standings.json?t=${Date.now()}&v=${Math.random()}`;
-                    console.log("📊 Fetching standings from:", url);
-                    const response = await fetch(url, { cache: 'no-store' });
-                    const content = await response.text();
-                    
-                    if (content) {
-                        const standingsData = JSON.parse(content);
-                        console.log("✅ Standings loaded");
-                        return standingsData.standings || {};
-                    }
-                    
-                    return null;
-                } catch (error) {
-                    console.error("Error loading standings:", error);
-                    return null;
+                const data = await firebaseGet('standings');
+                if (data) {
+                    console.log("✅ Standings loaded from Firebase");
+                    return data;
                 }
+                return null;
             }
 
-            // Load visibility status from separate file
+            // Load visibility status from Firebase (instant!)
             async function loadVisibilityStatus() {
-                try {
-                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}&v=${Math.random()}`;
-                    const response = await fetch(url, { cache: 'no-store' });
-                    const content = await response.text();
-                    
-                    if (content) {
-                        const data = JSON.parse(content);
-                        console.log("✅ Visibility status loaded:", data.isActive);
-                        return data.isActive || false;
-                    }
-                    
-                    return false;
-                } catch (error) {
-                    console.error("Error loading visibility status:", error);
-                    return false;
+                const data = await firebaseGet('visibility');
+                if (data) {
+                    console.log("✅ Visibility loaded from Firebase:", data.isActive);
+                    return data.isActive || false;
                 }
+                return false;
             }
 
-            // Load match history only from Gist
+            // Load match history from Firebase (instant!)
             async function loadMatchHistoryOnly() {
-                try {
-                    const url = `${DATA_BASE_URL}/match-history.json?t=${Date.now()}&v=${Math.random()}`;
-                    const response = await fetch(url, { cache: 'no-store' });
-                    const content = await response.text();
-                    
-                    if (content) {
-                        const historyData = JSON.parse(content);
-                        console.log("✅ Match history loaded");
-                        return historyData.matchHistory || {};
-                    }
-                    
-                    return null;
-                } catch (error) {
-                    console.error("Error loading match history:", error);
-                    return null;
+                const data = await firebaseGet('matchHistory');
+                if (data) {
+                    console.log("✅ Match history loaded from Firebase");
+                    return data;
                 }
+                return null;
             }
 
             /* ---------------------------------- */
@@ -1130,71 +1105,37 @@
             }
 
             // Fresh load via GitHub API (bypasses CDN cache - always returns latest data)
-            async function fetchFreshFromAPI(filename) {
-                try {
-                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/${filename}`;
-                    console.log(`🔄 Fetching FRESH ${filename} via GitHub API...`);
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        console.warn(`⚠️ API fetch failed for ${filename}: ${response.status}`);
-                        return null;
-                    }
-                    
-                    const data = await response.json();
-                    // GitHub API returns base64 encoded content
-                    const content = atob(data.content);
-                    console.log(`✅ Fresh ${filename} loaded via API`);
-                    return JSON.parse(content);
-                } catch (error) {
-                    console.error(`Error fetching ${filename} via API:`, error);
-                    return null;
-                }
-            }
-
-            // Manual refresh function - uses GitHub API for FRESH data (bypasses CDN cache)
+            // Manual refresh function - loads ALL fresh data from Firebase (instant!)
             async function refreshLiveData() {
-                console.log("🔄 Refreshing ALL data via GitHub API (bypasses CDN cache)...");
+                console.log("🔄 Refreshing ALL data from Firebase...");
                 
-                // Fetch fresh live data via API
-                const freshLiveData = await fetchFreshFromAPI('live-data.json');
-                if (freshLiveData && freshLiveData.liveScore) {
-                    liveScore = freshLiveData.liveScore;
-                    console.log("✅ Live data refreshed:", liveScore);
+                // Fetch fresh live data
+                const freshLiveScore = await loadLiveDataOnly();
+                if (freshLiveScore) {
+                    liveScore = freshLiveScore;
                     updateLiveScoreDisplay();
                 }
                 
-                // Fetch fresh standings via API
-                const freshStandings = await fetchFreshFromAPI('live-standings.json');
-                if (freshStandings && freshStandings.standings) {
-                    // Merge standings into tournamentState
-                    Object.keys(freshStandings.standings).forEach(categoryKey => {
+                // Fetch fresh standings
+                const freshStandings = await loadStandingsData();
+                if (freshStandings && currentTab === "standings") {
+                    renderDashboard();
+                }
+                
+                // Fetch fresh match history
+                const freshHistory = await loadMatchHistoryOnly();
+                if (freshHistory) {
+                    Object.keys(freshHistory).forEach(categoryKey => {
                         if (tournamentState[categoryKey]) {
-                            tournamentState[categoryKey].teams = freshStandings.standings[categoryKey].teams || [];
+                            tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
                         }
                     });
-                    console.log("✅ Standings refreshed");
                     if (currentTab === "standings") {
                         renderDashboard();
                     }
                 }
                 
-                // Fetch fresh match history via API
-                const freshHistory = await fetchFreshFromAPI('match-history.json');
-                if (freshHistory && freshHistory.matchHistory) {
-                    // Merge match history into tournamentState
-                    Object.keys(freshHistory.matchHistory).forEach(categoryKey => {
-                        if (tournamentState[categoryKey]) {
-                            tournamentState[categoryKey].matches = freshHistory.matchHistory[categoryKey].matches || [];
-                        }
-                    });
-                    console.log("✅ Match history refreshed");
-                    if (currentTab === "standings") {
-                        renderDashboard();
-                    }
-                }
-                
-                console.log("✅ All data refreshed from GitHub API!");
+                console.log("✅ All data refreshed from Firebase!");
             }
 
             function renderHomeView() {
