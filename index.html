@@ -883,12 +883,17 @@
                     
                     // Initialize live selectors for default category (mens_singles)
                     setTimeout(() => {
-                        initLiveSelectors();
+                        if (tournamentState && Object.keys(tournamentState).length > 0) {
+                            initLiveSelectors();
+                        }
                     }, 100);
                     
                     // Set default match format to Best of 3
                     document.getElementById("match-format-select").value = "3";
-                    liveMatch.matchFormat = 3;
+                    if (!liveScore) {
+                        liveScore = {};
+                    }
+                    liveScore.matchFormat = 3;
                     
                     // Restore live match visibility
                     restoreLiveMatchVisibility();
@@ -979,14 +984,37 @@
                 console.log("✅ Successfully loaded from GitHub!");
                 console.log("Raw Gist data:", githubData);
                 console.log("Tournament data keys:", Object.keys(githubData.tournament || {}));
-                console.log("Live match data:", githubData.liveMatch);
+                console.log("Live score data:", githubData.liveScore);
                 
-                tournamentState = githubData.tournament;
-                liveMatch = githubData.liveMatch;
-                liveScore = githubData.liveScore || liveScore; // Load liveScore if available
+                // Load metadata
+                if (githubData.tournament) {
+                    tournamentState = githubData.tournament;
+                } else {
+                    console.warn("⚠️ Tournament metadata not found");
+                    tournamentState = {};
+                }
                 
-                console.log("📋 After assignment - tournamentState:", tournamentState);
-                console.log("📋 After assignment - liveMatch:", liveMatch);
+                // Load live data
+                if (githubData.liveScore) {
+                    liveScore = githubData.liveScore;
+                } else {
+                    console.warn("⚠️ Live score data not found");
+                    liveScore = {
+                        isActive: false,
+                        category: "mens_singles",
+                        team1Name: "",
+                        team2Name: "",
+                        team1Points: 0,
+                        team2Points: 0,
+                        team1Sets: 0,
+                        team2Sets: 0,
+                        setHistory: [],
+                        matchFormat: 3,
+                        timestamp: ""
+                    };
+                }
+                
+                console.log("📋 After assignment - tournamentState keys:", Object.keys(tournamentState));
                 console.log("📋 After assignment - liveScore:", liveScore);
                 
                 console.log("✅ Calling renderDashboard with fresh data from GitHub");
@@ -1011,15 +1039,18 @@
                     team2Name: document.getElementById("live-team-2").value,
                     team1Points: parseInt(document.getElementById("live-points-1").value) || 0,
                     team2Points: parseInt(document.getElementById("live-points-2").value) || 0,
-                    team1Sets: liveMatch.sets1,
-                    team2Sets: liveMatch.sets2,
-                    setHistory: liveMatch.setHistory,
-                    matchFormat: liveMatch.matchFormat,
+                    team1Sets: (liveScore && liveScore.team1Sets) || 0,
+                    team2Sets: (liveScore && liveScore.team2Sets) || 0,
+                    setHistory: (liveScore && liveScore.setHistory) || [],
+                    matchFormat: document.getElementById("match-format-select").value || 3,
                     timestamp: new Date().toISOString()
                 };
                 
                 // Save ONLY live-data.json (never touch tournament-metadata.json)
                 saveToGitHub(liveScore);
+                
+                // Update global liveScore for use by other functions
+                window.liveScore = liveScore;
             }
 
             function resetTournamentData() {
@@ -1186,15 +1217,15 @@
                     });
                 }
 
-                // Restore previously selected teams from liveMatch if they exist
-                if (liveMatch.team1Id) {
-                    select1.value = liveMatch.team1Id;
+                // Restore previously selected teams from liveScore if they exist
+                if (liveScore && liveScore.team1Name) {
+                    select1.value = liveScore.team1Name;
                 }
-                if (liveMatch.team2Id) {
-                    select2.value = liveMatch.team2Id;
+                if (liveScore && liveScore.team2Name) {
+                    select2.value = liveScore.team2Name;
                     // Update select2 to exclude selected team1
-                    if (liveMatch.team1Id) {
-                        updateSelect2Options(liveMatch.team1Id);
+                    if (liveScore.team1Name) {
+                        updateSelect2Options(liveScore.team1Name);
                     }
                 }
 
@@ -1208,18 +1239,16 @@
                 // Add event listeners to new elements
                 document.getElementById("live-team-1").addEventListener("change", () => {
                     const selectedTeam1 = document.getElementById("live-team-1").value;
-                    liveMatch.team1Id = selectedTeam1;
                     
                     // Update select2 to exclude the selected team from select1
                     updateSelect2Options(selectedTeam1);
                     
-                    saveTournamentData();
+                    updateLiveScore(); // Save live data only
                     updateLiveScoreDOM();
                 });
 
                 document.getElementById("live-team-2").addEventListener("change", () => {
-                    liveMatch.team2Id = document.getElementById("live-team-2").value;
-                    saveTournamentData();
+                    updateLiveScore(); // Save live data only
                     updateLiveScoreDOM();
                 });
                 
