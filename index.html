@@ -1087,8 +1087,9 @@
             }
 
             function saveTournamentData() {
-                // Save standings data to live-standings.json
-                saveStandingsData();
+                // Standings are now saved together with live data in saveToGitHub()
+                // This function is kept for compatibility but does nothing
+                console.log("ℹ️ Standings are saved automatically with live data");
             }
 
             /* ---------------------------------- */
