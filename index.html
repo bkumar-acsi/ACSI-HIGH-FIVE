@@ -1,326 +1,1763 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACSII TT Tournament 2026 - Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: "Plus Jakarta Sans", sans-serif; }
-        .score-glow {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-            transition: box-shadow 0.3s;
-        }
-        .score-glow:focus {
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-        }
-    </style>
-</head>
-<body class="bg-slate-950 text-slate-100">
-    <!-- TOKEN WARNING -->
-    <div id="token-warning" class="hidden fixed top-0 left-0 right-0 bg-red-900/80 border-b border-red-700 p-4 text-center z-50">
-        <div class="text-red-200">⚠️ <strong>Token Required:</strong> Use URL: <code class="bg-black/30 px-2 py-1 rounded">?token=ghp_your_token</code></div>
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- HEADER -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-black text-white mb-2">🏓 ACSII TT Tournament 2026</h1>
-            <p class="text-slate-400">Admin Control Panel - Live Scoring</p>
-        </div>
+        <title>ACSII HiFive TT Tournament 2026</title>
 
-        <!-- CATEGORY BUTTONS -->
-        <div class="flex flex-wrap gap-2 mb-8">
-            <button id="btn-mens_singles" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold category-btn" onclick="switchCategory('mens_singles')">Men's Singles</button>
-            <button id="btn-mens_doubles" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold category-btn" onclick="switchCategory('mens_doubles')">Men's Doubles</button>
-            <button id="btn-womens_singles" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold category-btn" onclick="switchCategory('womens_singles')">Women's Singles</button>
-            <button id="btn-womens_doubles" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold category-btn" onclick="switchCategory('womens_doubles')">Women's Doubles</button>
-            <button id="btn-mix_doubles" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold category-btn" onclick="switchCategory('mix_doubles')">Mixed Doubles</button>
-        </div>
+        <script src="https://cdn.tailwindcss.com"></script>
 
-        <!-- LIVE SCORE SECTION -->
-        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-8">
-            <div class="text-center mb-8">
-                <div class="text-blue-400 font-bold text-sm">LIVE MATCH SCORING</div>
-                <div class="text-slate-500 text-xs" id="match-format-display">Best Of 3 Sets</div>
-            </div>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
-            <!-- TEAM SELECTION -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div>
-                    <label class="text-sm text-slate-400 mb-2 block">Team 1</label>
-                    <select id="live-team-1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white">
-                        <option value="">Select Team 1</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-sm text-slate-400 mb-2 block">Team 2</label>
-                    <select id="live-team-2" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white">
-                        <option value="">Select Team 2</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- MATCH FORMAT -->
-            <div class="mb-8">
-                <label class="text-sm text-slate-400 mb-2 block">Match Format</label>
-                <select id="match-format-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white" onchange="setMatchFormat(this.value)">
-                    <option value="3">Best of 3</option>
-                    <option value="5">Best of 5</option>
-                    <option value="7">Best of 7</option>
-                </select>
-            </div>
-
-            <!-- SCOREBOARD -->
-            <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <div id="display-name-1" class="text-lg font-bold mb-4">Team 1</div>
-                    <input type="number" id="live-points-1" min="0" value="0" class="score-glow text-5xl font-black w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl p-2 mb-4"/>
-                    <div class="text-sm text-slate-500 mb-2">Points</div>
-                    <div class="flex justify-center gap-2 mb-4">
-                        <button onclick="adjustPoints(1, -1)" class="w-12 h-12 rounded-lg bg-slate-800 text-xl">-</button>
-                        <button onclick="adjustPoints(1, 1)" class="w-16 h-12 rounded-lg bg-blue-500 text-white text-2xl font-bold">+</button>
-                    </div>
-                    <div class="text-sm text-slate-500">Sets Won</div>
-                    <div id="live-sets-1" class="text-2xl font-bold text-blue-400">0</div>
-                </div>
-
-                <div>
-                    <div id="display-name-2" class="text-lg font-bold mb-4">Team 2</div>
-                    <input type="number" id="live-points-2" min="0" value="0" class="score-glow text-5xl font-black w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl p-2 mb-4"/>
-                    <div class="text-sm text-slate-500 mb-2">Points</div>
-                    <div class="flex justify-center gap-2 mb-4">
-                        <button onclick="adjustPoints(2, -1)" class="w-12 h-12 rounded-lg bg-slate-800 text-xl">-</button>
-                        <button onclick="adjustPoints(2, 1)" class="w-16 h-12 rounded-lg bg-blue-500 text-white text-2xl font-bold">+</button>
-                    </div>
-                    <div class="text-sm text-slate-500">Sets Won</div>
-                    <div id="live-sets-2" class="text-2xl font-bold text-blue-400">0</div>
-                </div>
-            </div>
-
-            <!-- SET HISTORY -->
-            <div id="set-history-log" class="mt-8 p-4 rounded-xl bg-slate-950 border border-slate-800 text-center text-slate-300">
-                No Sets Completed Yet
-            </div>
-        </div>
-
-        <!-- STATUS -->
-        <div id="status" class="text-center text-slate-500 text-sm">Loading tournament data...</div>
-    </main>
-
-    <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        const HARDCODED_GIST_ID = "07976ee644e8d7bd84da31758de0ad74";
-        let githubToken = new URLSearchParams(window.location.search).get("token");
-        let gistId = HARDCODED_GIST_ID;
-
-        // ============================================
-        // STATE
-        // ============================================
-        let tournamentState = {};
-        let liveScore = {};
-        let currentCategory = "mens_singles";
-        let dataFullyLoaded = false;
-
-        // ============================================
-        // GITHUB API
-        // ============================================
-        async function loadFromGitHub() {
-            if (!githubToken || !gistId) {
-                console.warn("❌ Token or Gist ID missing");
-                return null;
+            body {
+                font-family: "Plus Jakarta Sans", sans-serif;
+                background: #0f172a;
+                color: #f8fafc;
             }
 
-            try {
-                console.log("📥 Loading from Gist...");
-                const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-                    headers: { "Authorization": `token ${githubToken}` }
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #1e293b;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #475569;
+                border-radius: 999px;
+            }
+
+            .score-glow {
+                text-shadow:
+                    0 0 20px rgba(59, 130, 246, 0.8),
+                    0 0 40px rgba(59, 130, 246, 0.4);
+            }
+        </style>
+    </head>
+
+    <body class="min-h-screen pb-10">
+        <!-- HEADER -->
+
+        <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/80 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <!-- TT LOGO -->
+
+                    <div
+                        class="bg-gradient-to-tr from-blue-500 to-cyan-500 p-3 rounded-2xl shadow-lg shadow-blue-500/20"
+                    >
+                        <svg width="34" height="34" viewBox="0 0 64 64">
+                            <circle cx="26" cy="24" r="16" fill="#2563EB" />
+                            <circle cx="26" cy="24" r="12" fill="#60A5FA" />
+
+                            <rect x="22" y="38" width="8" height="18" rx="4" fill="#E2E8F0" />
+
+                            <circle cx="50" cy="14" r="6" fill="#FFFFFF" />
+
+                            <path
+                                d="M37 18C41 13 45 12 50 14"
+                                stroke="#FFFFFF"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M39 26C45 24 50 26 56 32"
+                                stroke="#A5F3FC"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h1 class="text-lg md:text-2xl font-extrabold">ACSII HiFive TT Tournament 2026</h1>
+
+                        <p
+                            class="text-xs md:text-sm bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-bold whitespace-nowrap"
+                        >
+                            Serve • Smash • Shine
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 flex-col md:flex-row">
+                    <button
+                        onclick="refreshData()"
+                        class="px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 text-green-400 text-sm font-semibold transition"
+                    >
+                        🔄 Refresh Data
+                    </button>
+                    <button
+                        disabled
+                        class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm font-semibold opacity-50 cursor-not-allowed"
+                    >
+                        Reset Tournament
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CATEGORY NAV -->
+
+        <section class="sticky top-20 z-40 bg-slate-900 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
+                <button
+                    id="btn-mens_singles"
+                    onclick="switchCategory('mens_singles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                >
+                    Men Singles
+                </button>
+
+                <button
+                    id="btn-mens_doubles"
+                    onclick="switchCategory('mens_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Men Doubles
+                </button>
+
+                <button
+                    id="btn-womens_singles"
+                    onclick="switchCategory('womens_singles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Women Singles
+                </button>
+
+                <button
+                    id="btn-womens_doubles"
+                    onclick="switchCategory('womens_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Women Doubles
+                </button>
+
+                <button
+                    id="btn-mix_doubles"
+                    onclick="switchCategory('mix_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Mixed Doubles
+                </button>
+            </div>
+        </section>
+
+        <!-- MAIN -->
+
+        <main class="max-w-7xl mx-auto px-4 mt-6">
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                <!-- LIVE SCOREBOARD -->
+
+                <div id="live-match-section" class="xl:col-span-2 space-y-6">
+                    <div
+                        class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl"
+                    >
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
+
+                                <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
+                            </div>
+
+                            <div class="flex gap-2 items-center">
+                                <button
+                                    onclick="toggleViewerVisibility()"
+                                    id="btn-viewer-visibility"
+                                    class="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition"
+                                >
+                                    Show to Viewers
+                                </button>
+                                
+                                <select
+                                    id="match-format-select"
+                                    onchange="setMatchFormat(parseInt(this.value))"
+                                    class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-semibold transition hover:bg-blue-500/30 cursor-pointer"
+                                >
+                                    <option value="3">Best of 3</option>
+                                    <option value="5">Best of 5</option>
+                                    <option value="7">Best of 7</option>
+                                </select>
+                            </div>
+
+                            <div
+                                class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold"
+                            >
+                                SCORING ACTIVE
+                            </div>
+                        </div>
+
+                        <!-- PLAYER SELECTION -->
+
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <select
+                                id="live-team-1"
+                                class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
+                            ></select>
+
+                            <select
+                                id="live-team-2"
+                                class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm"
+                            ></select>
+                        </div>
+
+                        <!-- SCOREBOARD -->
+
+                        <div class="grid grid-cols-2 gap-4 text-center relative">
+                            <div>
+                                <div id="display-name-1" class="text-lg font-bold mb-4">Player 1</div>
+
+                                <input
+                                    type="number"
+                                    id="live-points-1"
+                                    min="0"
+                                    onchange="updatePointsFromInput(1)"
+                                    class="score-glow text-[3rem] font-black leading-none w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl px-2 py-1 focus:outline-none focus:border-blue-500"
+                                    value="0"
+                                />
+
+                                <div class="mt-6 flex justify-center gap-3">
+                                    <button
+                                        onclick="adjustPoints(1,-1)"
+                                        class="w-12 h-12 rounded-xl bg-slate-800 text-xl"
+                                    >
+                                        -
+                                    </button>
+
+                                    <button
+                                        onclick="adjustPoints(1,1)"
+                                        class="w-16 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 text-3xl font-black"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
+                                <div class="mt-2">
+                                    <div class="text-sm text-slate-500">Sets Won</div>
+
+                                    <div id="live-sets-1" class="text-xl font-bold text-blue-400">0</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div id="display-name-2" class="text-lg font-bold mb-4">Player 2</div>
+
+                                <input
+                                    type="number"
+                                    id="live-points-2"
+                                    min="0"
+                                    onchange="updatePointsFromInput(2)"
+                                    class="score-glow text-[3rem] font-black leading-none w-full text-center bg-slate-900 border-2 border-slate-700 rounded-xl px-2 py-1 focus:outline-none focus:border-blue-500"
+                                    value="0"
+                                />
+
+                                <div class="mt-6 flex justify-center gap-3">
+                                    <button
+                                        onclick="adjustPoints(2,-1)"
+                                        class="w-12 h-12 rounded-xl bg-slate-800 text-xl"
+                                    >
+                                        -
+                                    </button>
+
+                                    <button
+                                        onclick="adjustPoints(2,1)"
+                                        class="w-16 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 text-3xl font-black"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
+                                <div class="mt-2">
+                                    <div class="text-sm text-slate-500">Sets Won</div>
+
+                                    <div id="live-sets-2" class="text-xl font-bold text-blue-400">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SET HISTORY -->
+
+                        <div
+                            id="set-history-log"
+                            class="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800 text-center text-sm text-slate-300 min-h-[32px] flex items-center justify-center"
+                        >
+                            No Sets Completed Yet
+                        </div>
+
+                        <!-- MATCH ACTIONS -->
+
+                        <div class="grid grid-cols-2 gap-3 mt-4">
+                            <button
+                                onclick="confirmSetWinner()"
+                                class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-semibold transition"
+                            >
+                                End Current Set
+                            </button>
+
+                            <button
+                                onclick="submitCompletedMatch()"
+                                class="py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold text-sm transition"
+                            >
+                                Save Match
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ADD TEAM PANEL -->
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <h3 class="text-lg font-bold mb-4">Add Competitor</h3>
+
+                        <form id="add-team-form" onsubmit="createNewTeam(event)" class="flex gap-3">
+                            <input
+                                id="new-team-name"
+                                required
+                                type="text"
+                                placeholder="Enter player or pair name"
+                                class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3"
+                            />
+
+                            <button type="submit" class="px-5 py-3 rounded-xl bg-blue-500 text-white font-semibold">
+                                Add
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE -->
+
+                <div class="xl:col-span-2 space-y-6">
+                    <!-- STANDINGS FOR ALL CATEGORIES -->
+
+                    <div id="all-standings-container" class="space-y-6"></div>
+
+                    <!-- MATCH HISTORY -->
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-800 flex justify-between">
+                            <h2 class="font-bold text-lg">Match History</h2>
+
+                            <div id="match-count-badge" class="text-sm text-slate-400">0 Matches</div>
+                        </div>
+
+                        <div id="match-history-list" class="p-5 space-y-3 max-h-[420px] overflow-y-auto"></div>
+                    </div>
+
+                    <!-- FIXTURES -->
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-800">
+                            <h2 class="font-bold text-lg">Fixtures & Groups</h2>
+                            <p class="text-slate-500 text-sm">Current Category: <span id="admin-fixtures-title">Men's Singles</span></p>
+                        </div>
+                        
+                        <div class="p-5 space-y-8">
+                            <!-- GROUP STAGE -->
+                            <div>
+                                <h3 class="text-sm font-bold text-blue-400 mb-4">GROUPS</h3>
+                                <div id="admin-fixtures-groups" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                            </div>
+
+                            <!-- MATCHES -->
+                            <div>
+                                <h3 class="text-sm font-bold text-blue-400 mb-4">MATCHES</h3>
+                                <div id="admin-fixtures-matches" class="space-y-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            /* ---------------------------------- */
+            /* TOURNAMENT DATA */
+            /* ---------------------------------- */
+
+            const FIXTURES_DATA = {
+                mens_singles: {
+                    groups: {
+                        "Group A": ["Aniket Ghodake", "Kshitij Babar", "Balachander Srinivasalu", "Suraj Kendre", "Suresh Rankhamb"],
+                        "Group B": ["Rishabh Mishra", "Prem Tamang", "Brajesh Kumar", "Sachin Sonone", "Shekhar Kothawade"],
+                        "Group C": ["Sanket Pande", "Akshay Prabhune", "Santosh Daware", "Sagar Zanjad", "Aditya Dhage"],
+                        "Group D": ["Swapnil Walivkar", "Jinish Shah", "Rahul Singh", "Saurabh Kulkarni", "Ajinkya"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { group: "Group A", match: "Aniket vs Kshitij" },
+                            { group: "Group B", match: "Rishabh vs Prem" },
+                            { group: "Group C", match: "Sanket vs Akshay" },
+                            { group: "Group D", match: "Swapnil vs Jinish" },
+                            { group: "Group A", match: "Balachander vs Suraj" },
+                            { group: "Group B", match: "Brajesh vs Sachin" },
+                            { group: "Group C", match: "Santosh vs Sagar" },
+                            { group: "Group D", match: "Rahul vs Saurabh" }
+                        ],
+                        "Round 2": [
+                            { group: "Group A", match: "Aniket vs Balachander" },
+                            { group: "Group B", match: "Rishabh vs Brajesh" },
+                            { group: "Group C", match: "Sanket vs Santosh" },
+                            { group: "Group D", match: "Swapnil vs Rahul" },
+                            { group: "Group A", match: "Kshitij vs Suresh" },
+                            { group: "Group B", match: "Prem vs Shekhar" },
+                            { group: "Group C", match: "Akshay vs Aditya" },
+                            { group: "Group D", match: "Jinish vs Ajinkya" }
+                        ],
+                        "Round 3": [
+                            { group: "Group A", match: "Aniket vs Suraj" },
+                            { group: "Group B", match: "Rishabh vs Sachin" },
+                            { group: "Group C", match: "Sanket vs Sagar" },
+                            { group: "Group D", match: "Swapnil vs Saurabh" },
+                            { group: "Group A", match: "Balachander vs Suresh" },
+                            { group: "Group B", match: "Brajesh vs Shekhar" },
+                            { group: "Group C", match: "Santosh vs Aditya" },
+                            { group: "Group D", match: "Rahul vs Ajinkya" }
+                        ],
+                        "Round 4": [
+                            { group: "Group A", match: "Aniket vs Suresh" },
+                            { group: "Group B", match: "Rishabh vs Shekhar" },
+                            { group: "Group C", match: "Sanket vs Aditya" },
+                            { group: "Group D", match: "Swapnil vs Ajinkya" },
+                            { group: "Group A", match: "Kshitij vs Suraj" },
+                            { group: "Group B", match: "Prem vs Sachin" },
+                            { group: "Group C", match: "Akshay vs Sagar" },
+                            { group: "Group D", match: "Jinish vs Saurabh" }
+                        ],
+                        "Round 5": [
+                            { group: "Group A", match: "Kshitij vs Balachander" },
+                            { group: "Group B", match: "Prem vs Brajesh" },
+                            { group: "Group C", match: "Akshay vs Santosh" },
+                            { group: "Group D", match: "Jinish vs Rahul" },
+                            { group: "Group A", match: "Suraj vs Suresh" },
+                            { group: "Group B", match: "Sachin vs Shekhar" },
+                            { group: "Group C", match: "Sagar vs Aditya" },
+                            { group: "Group D", match: "Saurabh vs Ajinkya" }
+                        ]
+                    }
+                },
+                mens_doubles: {
+                    groups: {
+                        "Group A": ["Balachander & Sachin", "Suresh & Prem", "Suraj & Rishabh"],
+                        "Group B": ["Kshitij & Saurabh", "Tushar & Brajesh", "Sanket & Amit"],
+                        "Group C": ["Anurag & Shekhar", "Akshay & Santosh", "Sagar & Aditya"],
+                        "Group D": ["Jinish & Birju", "Rahul & Mandar", "Shreyas & Ambuj"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Balachander & Sachin vs Suresh & Prem" },
+                            { number: "2", group: "Group B", match: "Kshitij & Saurabh vs Tushar & Brajesh" },
+                            { number: "3", group: "Group C", match: "Anurag & Shekhar vs Akshay & Santosh" },
+                            { number: "4", group: "Group D", match: "Jinish & Birju vs Rahul & Mandar" },
+                            { number: "5", group: "Group A", match: "Suresh & Prem vs Suraj & Rishabh" },
+                            { number: "6", group: "Group B", match: "Tushar & Brajesh vs Sanket & Amit" },
+                            { number: "7", group: "Group C", match: "Akshay & Santosh vs Sagar & Aditya" },
+                            { number: "8", group: "Group D", match: "Rahul & Mandar vs Shreyas & Ambuj" },
+                            { number: "9", group: "Group A", match: "Balachander & Sachin vs Suraj & Rishabh" },
+                            { number: "10", group: "Group B", match: "Kshitij & Saurabh vs Sanket & Amit" },
+                            { number: "11", group: "Group C", match: "Anurag & Shekhar vs Sagar & Aditya" },
+                            { number: "12", group: "Group D", match: "Jinish & Birju vs Shreyas & Ambuj" }
+                        ]
+                    }
+                },
+                womens_singles: {
+                    groups: {
+                        "Group A": ["Sheetal Pare", "Ankita Sharma", "Shivangi Agarwal", "Siddhi"],
+                        "Group B": ["Sneha", "Shivangi Nigam", "Pratishtha", "Payal Umekar"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Sheetal Pare vs Ankita Sharma" },
+                            { number: "2", group: "Group A", match: "Shivangi Agarwal vs Siddhi" },
+                            { number: "3", group: "Group B", match: "Sneha vs Shivangi Nigam" },
+                            { number: "4", group: "Group B", match: "Pratishtha vs Payal Umekar" },
+                            { number: "5", group: "Group A", match: "Sheetal Pare vs Shivangi Agarwal" },
+                            { number: "6", group: "Group A", match: "Ankita Sharma vs Siddhi" },
+                            { number: "7", group: "Group B", match: "Sneha vs Pratishtha" },
+                            { number: "8", group: "Group B", match: "Shivangi Nigam vs Payal Umekar" },
+                            { number: "9", group: "Group A", match: "Sheetal Pare vs Siddhi" },
+                            { number: "10", group: "Group A", match: "Ankita Sharma vs Shivangi Agarwal" },
+                            { number: "11", group: "Group B", match: "Sneha vs Payal Umekar" },
+                            { number: "12", group: "Group B", match: "Shivangi Nigam vs Pratishtha" }
+                        ]
+                    }
+                },
+                womens_doubles: {
+                    groups: {
+                        "All Teams": ["Ankita & Sheetal", "Shivangi A & Siddhi", "Sneha & Harshali", "Payal & Vimla", "Shivangi N & Pratishtha"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { number: "1", match: "Ankita & Sheetal vs Shivangi A & Siddhi" },
+                            { number: "2", match: "Payal & Vimla vs Shivangi N & Pratishtha" }
+                        ],
+                        "Round 2": [
+                            { number: "3", match: "Ankita & Sheetal vs Payal & Vimla" },
+                            { number: "4", match: "Shivangi N & Pratishtha vs Sneha & Harshali" }
+                        ],
+                        "Round 3": [
+                            { number: "5", match: "Ankita & Sheetal vs Shivangi N & Pratishtha" },
+                            { number: "6", match: "Shivangi A & Siddhi vs Sneha & Harshali" }
+                        ],
+                        "Round 4": [
+                            { number: "7", match: "Ankita & Sheetal vs Sneha & Harshali" },
+                            { number: "8", match: "Shivangi A & Siddhi vs Payal & Vimla" }
+                        ],
+                        "Round 5": [
+                            { number: "9", match: "Shivangi A & Siddhi vs Shivangi N & Pratishtha" },
+                            { number: "10", match: "Payal & Vimla vs Sneha & Harshali" }
+                        ]
+                    }
+                },
+                mix_doubles: {
+                    groups: {
+                        "Group A": ["Kshitij Babar & Sheetal Pare", "Suresh Rankhamb & Sneha", "Saurabh Kulkarni & Ankita Sharma", "Sachin Sonone & Siddhi Joshi", "Ajinkya & Harshali"],
+                        "Group B": ["Brajesh Kumar & Shivangi Nigam", "Amit Sharma & Shivangi Agarwal", "Shekhar & Payal Umekar", "Rahul & Vimla"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Kshitij & Sheetal vs Suresh & Sneha" },
+                            { number: "2", group: "Group A", match: "Saurabh & Ankita vs Sachin & Siddhi" },
+                            { number: "3", group: "Group B", match: "Brajesh & Shivangi N vs Amit & Shivangi A" },
+                            { number: "4", group: "Group B", match: "Shekhar & Payal vs Rahul & Vimla" },
+                            { number: "5", group: "Group A", match: "Kshitij & Sheetal vs Saurabh & Ankita" },
+                            { number: "6", group: "Group A", match: "Sachin & Siddhi vs Ajinkya & Harshali" },
+                            { number: "7", group: "Group B", match: "Brajesh & Shivangi N vs Shekhar & Payal" },
+                            { number: "8", group: "Group B", match: "Amit & Shivangi A vs Rahul & Vimla" },
+                            { number: "9", group: "Group A", match: "Kshitij & Sheetal vs Sachin & Siddhi" },
+                            { number: "10", group: "Group A", match: "Suresh & Sneha vs Ajinkya & Harshali" },
+                            { number: "11", group: "Group B", match: "Brajesh & Shivangi N vs Rahul & Vimla" },
+                            { number: "12", group: "Group B", match: "Amit & Shivangi A vs Shekhar & Payal" },
+                            { number: "13", group: "Group A", match: "Kshitij & Sheetal vs Ajinkya & Harshali" },
+                            { number: "14", group: "Group A", match: "Suresh & Sneha vs Saurabh & Ankita" },
+                            { number: "15", group: "Group A", match: "Suresh & Sneha vs Sachin & Siddhi" },
+                            { number: "16", group: "Group A", match: "Saurabh & Ankita vs Ajinkya & Harshali" }
+                        ]
+                    }
+                }
+            };
+
+            const SEED_DATA = {
+                mens_singles: {
+                    title: "Men Singles",
+                    teams: [
+                        {
+                            id: "ms1",
+                            name: "Rahul Sharma",
+                        },
+                        {
+                            id: "ms2",
+                            name: "Brajesh Kumar",
+                        },
+                    ],
+                    matches: [],
+                },
+
+                mens_doubles: {
+                    title: "Men Doubles",
+                    teams: [],
+                    matches: [],
+                },
+
+                womens_singles: {
+                    title: "Women Singles",
+                    teams: [
+                        { id: "ws1", name: "Sheetal Pare" },
+                        { id: "ws2", name: "Ankita Sharma" },
+                        { id: "ws3", name: "Shivangi Agarwal" },
+                        { id: "ws4", name: "Siddhi" },
+                        { id: "ws5", name: "Sneha" },
+                        { id: "ws6", name: "Shivangi Nigam" },
+                        { id: "ws7", name: "Pratishtha" },
+                        { id: "ws8", name: "Payal Umekar" }
+                    ],
+                    matches: [],
+                },
+
+                womens_doubles: {
+                    title: "Women Doubles",
+                    teams: [],
+                    matches: [],
+                },
+
+                mix_doubles: {
+                    title: "Mixed Doubles",
+                    teams: [],
+                    matches: [],
+                },
+            };
+
+            /* ---------------------------------- */
+            /* ACTIVE STATE */
+            /* ---------------------------------- */
+
+            let currentCategory = "mens_singles";
+
+            let tournamentState = {};
+            let dataFullyLoaded = false;  // Flag to prevent saving before data is loaded
+
+            let liveMatch = {
+                team1Id: "",
+                team2Id: "",
+
+                points1: 0,
+                points2: 0,
+
+                sets1: 0,
+                sets2: 0,
+
+                setHistory: [],
+                
+                matchFormat: 3,
+                hidden: true,
+            };
+
+            let liveScore = {
+                isActive: false,
+                category: "",
+                team1Name: "",
+                team2Name: "",
+                team1Points: 0,
+                team2Points: 0,
+                team1Sets: 0,
+                team2Sets: 0,
+                setHistory: [],
+                matchFormat: 3,
+                timestamp: ""
+            };
+
+            // Women's Singles Teams
+            const WOMENS_SINGLES_TEAMS = [
+                { id: "ws1", name: "Sheetal Pare" },
+                { id: "ws2", name: "Ankita Sharma" },
+                { id: "ws3", name: "Shivangi Agarwal" },
+                { id: "ws4", name: "Siddhi" },
+                { id: "ws5", name: "Sneha" },
+                { id: "ws6", name: "Shivangi Nigam" },
+                { id: "ws7", name: "Pratishtha" },
+                { id: "ws8", name: "Payal Umekar" }
+            ];
+
+            /* ---------------------------------- */
+            /* GITHUB GIST STORAGE */
+            /* ---------------------------------- */
+
+            // Get token from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const TOKEN_FROM_URL = urlParams.get('token');
+            
+            let githubToken = TOKEN_FROM_URL;
+            
+            // HARDCODED GIST ID - tournament data gist
+            const HARDCODED_GIST_ID = "406cd9f16be8697ef329ccfc643a5558";
+            let gistId = HARDCODED_GIST_ID;
+
+            function showTokenWarning() {
+                // Add warning banner at the top
+                const warning = document.createElement("div");
+                warning.className = "fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50 font-bold";
+                warning.innerHTML = `
+                    ⚠️ <strong>Admin Token Required!</strong> Use URL format: 
+                    <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">
+                        https://yourdomain.com/index.html?token=ghp_yourtoken
+                    </code>
+                `;
+                document.body.prepend(warning);
+            }
+
+            /* ---------------------------------- */
+            /* TOGGLE LIVE MATCH */
+            /* ---------------------------------- */
+
+            let lastAdminActivity = Date.now();
+            const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+            let autoHideTimer;
+
+            function recordAdminActivity() {
+                lastAdminActivity = Date.now();
+                resetAutoHideTimer();
+            }
+
+            function resetAutoHideTimer() {
+                // Don't auto-hide until data is fully loaded
+                if (!dataFullyLoaded) {
+                    return;
+                }
+                
+                clearTimeout(autoHideTimer);
+                autoHideTimer = setTimeout(() => {
+                    // Auto-hide live match if admin hasn't done anything for 5 minutes
+                    const hidden = localStorage.getItem("live_match_hidden");
+                    if (hidden !== "true") {
+                        console.log("Auto-hiding live match due to inactivity");
+                        toggleLiveMatch();
+                    }
+                }, INACTIVITY_TIMEOUT);
+            }
+
+            function toggleViewerVisibility() {
+                const btn = document.getElementById("btn-viewer-visibility");
+                
+                console.log("🔘 toggleViewerVisibility called");
+                console.log("Current liveMatch.hidden:", liveMatch.hidden);
+                
+                if (liveMatch.hidden) {
+                    // Show to viewers
+                    liveMatch.hidden = false;
+                    btn.innerText = "Hide from Viewers";
+                    btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    console.log("✅ Live match will be VISIBLE to viewers");
+                    console.log("Updated liveMatch.hidden:", liveMatch.hidden);
+                } else {
+                    // Hide from viewers
+                    liveMatch.hidden = true;
+                    btn.innerText = "Show to Viewers";
+                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    console.log("✅ Live match will be HIDDEN from viewers");
+                    console.log("Updated liveMatch.hidden:", liveMatch.hidden);
+                }
+                
+                console.log("Final liveMatch object:", liveMatch);
+                recordAdminActivity();
+                saveTournamentData(); // Save the visibility status to GitHub
+            }
+
+            function toggleLiveMatch() {
+                // Only allow toggle if data is fully loaded
+                if (!dataFullyLoaded) {
+                    console.warn("⚠️ Cannot toggle - data not fully loaded yet");
+                    return;
+                }
+                
+                // Admin page - no toggle button, just control the hidden flag for viewers
+                liveMatch.hidden = !liveMatch.hidden;
+                recordAdminActivity();
+                saveTournamentData(); // Save the hidden status to GitHub
+            }
+
+            function restoreLiveMatchVisibility() {
+                const section = document.getElementById("live-match-section");
+                const btn = document.getElementById("btn-viewer-visibility");
+                
+                // Always show for admin (never hide the editing interface)
+                section.style.display = "";
+                
+                // Restore button state based on liveMatch.hidden
+                if (liveMatch.hidden) {
+                    btn.innerText = "Show to Viewers";
+                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                } else {
+                    btn.innerText = "Hide from Viewers";
+                    btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                }
+                
+                // Restore match format dropdown
+                const formatSelect = document.getElementById("match-format-select");
+                if (formatSelect) {
+                    formatSelect.value = liveMatch.matchFormat || 5;
+                }
+                
+                // Start auto-hide timer
+                resetAutoHideTimer();
+            }
+
+            async function saveToGitHub(liveScore) {
+                if (!githubToken) {
+                    console.warn("GitHub token not set, cannot save");
+                    return;
+                }
+
+                try {
+                    // IMPORTANT: Only save LIVE DATA, never modify METADATA
+                    const gistData = {
+                        description: "ACSII TT Tournament 2026 - Live Scoring Data",
+                        public: false,
+                        files: {
+                            "live-data.json": {
+                                content: JSON.stringify({
+                                    liveScore: liveScore || {}
+                                }, null, 2)
+                            }
+                        }
+                    };
+
+                    let url = "https://api.github.com/gists";
+                    let method = "POST";
+
+                    if (gistId) {
+                        url = `https://api.github.com/gists/${gistId}`;
+                        method = "PATCH";
+                    }
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            "Authorization": `token ${githubToken}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(gistData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`GitHub API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
+                    }
+
+                    console.log("✅ Live data saved to GitHub");
+                    const result = await response.json();
+                    
+                    if (!gistId) {
+                        gistId = result.id;
+                        console.log("⚠️ Add ?gistId=" + gistId + " to your URL for next time");
+                    }
+
+                    console.log("Data saved to GitHub Gist:", gistId);
+                } catch (error) {
+                    console.error("Error saving to GitHub:", error);
+                    // Don't alert on every save, just log it
+                    // Users can still use the app with local storage
+                }
+            }
+
+            async function loadFromGitHub() {
+                if (!githubToken || !gistId) {
+                    console.warn("⚠️ Cannot load - token or gistId missing");
+                    return null;
+                }
+
+                try {
+                    console.log("📥 Loading from GitHub Gist:", gistId);
+                    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                        headers: {
+                            "Authorization": `token ${githubToken}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`GitHub API error: ${response.status}`);
+                    }
+
+                    const gist = await response.json();
+                    console.log("📦 Gist files:", Object.keys(gist.files));
+                    
+                    // Load METADATA (tournament structure - static)
+                    const metadataContent = gist.files["tournament-metadata.json"]?.content;
+                    const metadata = metadataContent ? JSON.parse(metadataContent) : null;
+                    console.log("📋 Metadata loaded:", metadata ? `${Object.keys(metadata.tournament || {}).length} categories` : "MISSING");
+                    
+                    // Load LIVE DATA (scores - dynamic)
+                    const liveContent = gist.files["live-data.json"]?.content;
+                    const liveData = liveContent ? JSON.parse(liveContent) : null;
+                    console.log("🔴 Live data loaded:", liveData ? "OK" : "MISSING");
+                    
+                    const result = {
+                        tournament: metadata?.tournament || {},
+                        liveScore: liveData?.liveScore || {}
+                    };
+                    
+                    console.log("✅ GitHub data loaded successfully");
+                    console.log("   Tournament categories:", Object.keys(result.tournament));
+                    return result;
+                    
+                } catch (error) {
+                    console.error("❌ Error loading from GitHub:", error);
+                    return null;
+                }
+            }
+
+            /* ---------------------------------- */
+            /* PAGE BOOTSTRAP */
+            /* ---------------------------------- */
+
+            window.addEventListener(
+                "DOMContentLoaded",
+
+                () => {
+                    console.log("Page loaded");
+                    console.log("GitHub Token:", githubToken ? "Present" : "Missing - buttons will be disabled");
+                    
+                    // Check if token is present
+                    if (!githubToken) {
+                        disableAllButtons();
+                        showTokenWarning();
+                    }
+                    
+                    // Load data directly
+                    loadTournamentData();
+                    
+                    // Initialize live selectors for default category (mens_singles)
+                    setTimeout(() => {
+                        if (tournamentState && Object.keys(tournamentState).length > 0) {
+                            initLiveSelectors();
+                        }
+                    }, 100);
+                    
+                    // Set default match format to Best of 3
+                    document.getElementById("match-format-select").value = "3";
+                    if (!liveScore) {
+                        liveScore = {};
+                    }
+                    liveScore.matchFormat = 3;
+                    
+                    // Restore live match visibility
+                    restoreLiveMatchVisibility();
+                    
+                    // Add global activity tracking
+                    document.addEventListener("click", recordAdminActivity);
+                    document.addEventListener("input", recordAdminActivity);
+                    document.addEventListener("change", recordAdminActivity);
+                    
+                    // DON'T auto-refresh on admin page - would reset scores while typing
+                    // Auto-refresh is disabled because:
+                    // 1. It resets form inputs while admin is scoring
+                    // 2. Admin page is for editing, not just viewing
+                    // 3. Data is only modified by this page, not external sources
+                    
+                    // If needed for sync in future, use selective refresh only for read-only sections
+                    // setInterval(() => {
+                    //     console.log("⏰ Auto-refreshing data from Gist...");
+                    //     loadTournamentData();
+                    // }, 10000);
+                }
+            );
+
+            function refreshData() {
+                console.log("🔄 Manual refresh triggered");
+                loadTournamentData();
+            }
+
+            function addWomensSinglesCategory() {
+                // Add Women's Singles to tournament state
+                tournamentState.womens_singles = {
+                    title: "Women Singles",
+                    teams: [
+                        { id: "ws1", name: "Sheetal Pare" },
+                        { id: "ws2", name: "Ankita Sharma" },
+                        { id: "ws3", name: "Shivangi Agarwal" },
+                        { id: "ws4", name: "Siddhi" },
+                        { id: "ws5", name: "Sneha" },
+                        { id: "ws6", name: "Shivangi Nigam" },
+                        { id: "ws7", name: "Pratishtha" },
+                        { id: "ws8", name: "Payal Umekar" }
+                    ],
+                    matches: []
+                };
+                
+                console.log("✅ Women's Singles added to tournament state");
+                console.log("Saving to Gist...");
+                
+                // Save to Gist immediately
+                saveTournamentData();
+                
+                alert("✅ Women's Singles category added and saved to Gist!");
+            }
+
+            function saveTournamentData() {
+                // ADMIN PAGE NEVER SAVES METADATA
+                // Metadata is static and only loaded from GitHub
+                // Use updateLiveScore() to save live data instead
+                console.log("ℹ️ Use updateLiveScore() to save live data");
+                console.log("ℹ️ Metadata is never modified from admin page");
+            }
+
+            /* ---------------------------------- */
+            /* STORAGE */
+            /* ---------------------------------- */
+
+            async function loadTournamentData() {
+                console.log("=== LOADING TOURNAMENT DATA ===");
+                console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
+                console.log("Gist ID:", gistId ? "✅ " + gistId : "❌ Missing");
+
+                // Must load from GitHub - no localhost fallback
+                if (!githubToken || !gistId) {
+                    console.error("❌ CANNOT LOAD: Token or Gist ID missing!");
+                    console.error("Token:", githubToken ? "OK" : "MISSING");
+                    console.error("Gist ID:", gistId ? "OK" : "MISSING");
+                    return;
+                }
+
+                console.log("📡 Loading from GitHub Gist...");
+                const githubData = await loadFromGitHub();
+                
+                if (!githubData) {
+                    console.error("❌ Failed to load from GitHub Gist!");
+                    return;
+                }
+
+                console.log("✅ Successfully loaded from GitHub!");
+                console.log("Raw Gist data:", githubData);
+                console.log("Tournament data keys:", Object.keys(githubData.tournament || {}));
+                console.log("Live score data:", githubData.liveScore);
+                
+                // Load metadata
+                if (githubData.tournament) {
+                    tournamentState = githubData.tournament;
+                } else {
+                    console.warn("⚠️ Tournament metadata not found");
+                    tournamentState = {};
+                }
+                
+                // Load live data
+                if (githubData.liveScore) {
+                    liveScore = githubData.liveScore;
+                } else {
+                    console.warn("⚠️ Live score data not found");
+                    liveScore = {
+                        isActive: false,
+                        category: "mens_singles",
+                        team1Name: "",
+                        team2Name: "",
+                        team1Points: 0,
+                        team2Points: 0,
+                        team1Sets: 0,
+                        team2Sets: 0,
+                        setHistory: [],
+                        matchFormat: 3,
+                        timestamp: ""
+                    };
+                }
+                
+                console.log("📋 After assignment - tournamentState keys:", Object.keys(tournamentState));
+                console.log("📋 After assignment - liveScore:", liveScore);
+                
+                console.log("✅ Calling renderDashboard with fresh data from GitHub");
+                renderDashboard();
+                renderAdminFixtures();
+                restoreLiveMatchVisibility();
+                // Don't call initLiveSelectors() on auto-refresh - it resets dropdown selections
+                // initLiveSelectors() is only called when switching categories
+                updateLiveScoreDOM();
+                
+                // Mark data as fully loaded - this allows saves to proceed
+                dataFullyLoaded = true;
+                console.log("✅ Data fully loaded - saves now enabled");
+            }
+
+            // Update liveScore table with current admin screen
+            function updateLiveScore() {
+                const liveScore = {
+                    isActive: document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== "",
+                    category: currentCategory,
+                    team1Name: document.getElementById("live-team-1").value,
+                    team2Name: document.getElementById("live-team-2").value,
+                    team1Points: parseInt(document.getElementById("live-points-1").value) || 0,
+                    team2Points: parseInt(document.getElementById("live-points-2").value) || 0,
+                    team1Sets: (liveScore && liveScore.team1Sets) || 0,
+                    team2Sets: (liveScore && liveScore.team2Sets) || 0,
+                    setHistory: (liveScore && liveScore.setHistory) || [],
+                    matchFormat: document.getElementById("match-format-select").value || 3,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save ONLY live-data.json (never touch tournament-metadata.json)
+                saveToGitHub(liveScore);
+                
+                // Update global liveScore for use by other functions
+                window.liveScore = liveScore;
+            }
+
+            function resetTournamentData() {
+                if (!confirm("Reset all tournament data?")) {
+                    return;
+                }
+
+                localStorage.removeItem("acsii_tt_v1");
+
+                location.reload();
+            }
+
+            /* ---------------------------------- */
+            /* MATCH FORMAT */
+            /* ---------------------------------- */
+
+            function setMatchFormat(format) {
+                liveMatch.matchFormat = format;
+                
+                // Update dropdown value
+                document.getElementById("match-format-select").value = format;
+                
+                // Update display text
+                const formatText = format === 3 ? "Best Of 3 Sets" : format === 5 ? "Best Of 5 Sets" : "Best Of 7 Sets";
+                document.getElementById("match-format-display").innerText = formatText;
+                
+                console.log("Match format changed to:", format);
+                recordAdminActivity();
+                updateLiveScore(); // Update liveScore table with new format
+            }
+            /* ---------------------------------- */
+            /* CATEGORY SWITCHING */
+            /* ---------------------------------- */
+
+            function switchCategory(category) {
+                currentCategory = category;
+
+                document.querySelectorAll(".category-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+
+                    btn.classList.add("bg-slate-800", "text-slate-300");
                 });
 
-                if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+                document.getElementById(`btn-${category}`).classList.remove("bg-slate-800", "text-slate-300");
 
-                const gist = await response.json();
-                console.log("📦 Files available:", Object.keys(gist.files));
+                document.getElementById(`btn-${category}`).classList.add("bg-blue-500", "text-white");
 
-                // Load metadata
-                const metadataContent = gist.files["tournament-metadata.json"]?.content;
-                const metadata = metadataContent ? JSON.parse(metadataContent) : null;
+                renderDashboard();
+                renderAdminFixtures();
+                initLiveSelectors();
+                updateLiveScoreDOM();
+            }
 
-                // Load live data
-                const liveContent = gist.files["live-data.json"]?.content;
-                const liveData = liveContent ? JSON.parse(liveContent) : null;
+            function renderAdminFixtures() {
+                const category = tournamentState[currentCategory];
+                const fixtures = FIXTURES_DATA[currentCategory];
+                
+                if (!category || !category.teams || !fixtures) {
+                    console.log("⚠️ No fixtures for", currentCategory, "- category:", !!category, "teams:", category?.teams?.length);
+                    return;
+                }
+                
+                // Update title
+                const categoryNames = {
+                    mens_singles: "Men's Singles",
+                    womens_singles: "Women's Singles",
+                    mens_doubles: "Men's Doubles",
+                    womens_doubles: "Women's Doubles",
+                    mix_doubles: "Mixed Doubles"
+                };
+                document.getElementById("admin-fixtures-title").innerText = categoryNames[currentCategory] || currentCategory;
+                
+                // Render groups from database
+                const groupsContainer = document.getElementById("admin-fixtures-groups");
+                groupsContainer.innerHTML = "";
+                
+                // Get unique groups from teams in database
+                const groupedTeams = {};
+                category.teams.forEach(team => {
+                    const group = team.group || "No Group";
+                    if (!groupedTeams[group]) {
+                        groupedTeams[group] = [];
+                    }
+                    groupedTeams[group].push(team.name);
+                });
+                
+                // Sort groups in order A, B, C, D, All Teams
+                const groupOrder = ["Group A", "Group B", "Group C", "Group D", "All Teams"];
+                const sortedGroups = Object.keys(groupedTeams).sort((a, b) => {
+                    const aIndex = groupOrder.indexOf(a);
+                    const bIndex = groupOrder.indexOf(b);
+                    if (aIndex === -1) return 1;
+                    if (bIndex === -1) return 1;
+                    return aIndex - bIndex;
+                });
+                
+                // Render groups in sorted order
+                sortedGroups.forEach(groupName => {
+                    groupsContainer.innerHTML += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                            <h4 class="font-bold text-blue-400 mb-3">${groupName}</h4>
+                            <ul class="space-y-2 text-sm">
+                                ${groupedTeams[groupName].map(name => `<li class="text-slate-300">• ${name}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                // Render matches from fixtures
+                const matchesContainer = document.getElementById("admin-fixtures-matches");
+                matchesContainer.innerHTML = "";
+                
+                Object.entries(fixtures.matches).forEach(([roundName, matches]) => {
+                    let roundHTML = `<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <h4 class="font-bold text-blue-400 mb-3">${roundName}</h4>
+                        <div class="space-y-2">`;
+                    
+                    matches.forEach(({ number, group, match, bye }) => {
+                        const displayText = number ? `${number}. ${match}` : match;
+                        let byeText = '';
+                        if (bye && bye.trim()) {
+                            byeText = `<span class="text-amber-400 text-xs ml-2">Bye: ${bye}</span>`;
+                        }
+                        roundHTML += `<div class="text-sm text-slate-300 p-2 bg-slate-900 rounded">
+                            <div class="flex justify-between items-start">
+                                <span>${displayText}</span>
+                                <span class="text-slate-500 text-xs">${group || ''}</span>
+                            </div>
+                            ${byeText ? `<div class="mt-1">${byeText}</div>` : ''}
+                        </div>`;
+                    });
+                    
+                    roundHTML += `</div></div>`;
+                    matchesContainer.innerHTML += roundHTML;
+                });
+            }
+
+            /* ---------------------------------- */
+            /* LIVE DROPDOWNS */
+            /* ---------------------------------- */
+
+            function initLiveSelectors() {
+                const category = tournamentState[currentCategory];
+
+                const select1 = document.getElementById("live-team-1");
+                const select2 = document.getElementById("live-team-2");
+
+                select1.innerHTML = "";
+                select2.innerHTML = "";
+
+                // Add placeholder to both dropdowns
+                select1.innerHTML = `<option value="">Select Team 1</option>`;
+                select2.innerHTML = `<option value="">Select Team 2</option>`;
+
+                // Show all teams from the category
+                if (category && category.teams) {
+                    category.teams.forEach((team) => {
+                        select1.innerHTML += `<option value="${team.name}">${team.name}</option>`;
+                    });
+
+                    // For select2, we'll filter dynamically based on select1 selection
+                    category.teams.forEach((team) => {
+                        select2.innerHTML += `<option value="${team.name}" class="team-option">${team.name}</option>`;
+                    });
+                }
+
+                // Restore previously selected teams from liveScore if they exist
+                if (liveScore && liveScore.team1Name) {
+                    select1.value = liveScore.team1Name;
+                }
+                if (liveScore && liveScore.team2Name) {
+                    select2.value = liveScore.team2Name;
+                    // Update select2 to exclude selected team1
+                    if (liveScore.team1Name) {
+                        updateSelect2Options(liveScore.team1Name);
+                    }
+                }
+
+                // Remove old event listeners by cloning and replacing
+                const newSelect1 = select1.cloneNode(true);
+                const newSelect2 = select2.cloneNode(true);
+                
+                select1.parentNode.replaceChild(newSelect1, select1);
+                select2.parentNode.replaceChild(newSelect2, select2);
+
+                // Add event listeners to new elements
+                document.getElementById("live-team-1").addEventListener("change", () => {
+                    const selectedTeam1 = document.getElementById("live-team-1").value;
+                    
+                    // Update select2 to exclude the selected team from select1
+                    updateSelect2Options(selectedTeam1);
+                    
+                    updateLiveScore(); // Save live data only
+                    updateLiveScoreDOM();
+                });
+
+                document.getElementById("live-team-2").addEventListener("change", () => {
+                    updateLiveScore(); // Save live data only
+                    updateLiveScoreDOM();
+                });
+                
+                // Add event listeners for points inputs
+                document.getElementById("live-points-1").addEventListener("change", () => {
+                    updatePointsFromInput(1);
+                });
+                document.getElementById("live-points-2").addEventListener("change", () => {
+                    updatePointsFromInput(2);
+                });
+            }
+
+            function updateSelect2Options(excludeTeam) {
+                const select2 = document.getElementById("live-team-2");
+                const allOptions = select2.querySelectorAll(".team-option");
+                
+                allOptions.forEach((option) => {
+                    if (option.value === excludeTeam) {
+                        option.style.display = "none";
+                    } else {
+                        option.style.display = "";
+                    }
+                });
+
+                // If select2 is currently set to the excluded team, reset it
+                if (select2.value === excludeTeam) {
+                    select2.value = "";
+                    liveMatch.team2Id = "";
+                }
+            }
+
+            /* ---------------------------------- */
+            /* ADD TEAM */
+            /* ---------------------------------- */
+
+            function createNewTeam(event) {
+                event.preventDefault();
+                
+                console.log("Creating new team...");
+
+                const input = document.getElementById("new-team-name");
+
+                const name = input.value.trim();
+                
+                console.log("Team name:", name);
+
+                if (!name) {
+                    console.log("Name is empty");
+                    return;
+                }
+
+                const category = tournamentState[currentCategory];
+                
+                console.log("Current category:", currentCategory);
+                console.log("Category exists:", !!category);
+
+                category.teams.push({
+                    id: "t_" + Date.now(),
+
+                    name: name,
+                });
+                
+                console.log("Team added. Total teams:", category.teams.length);
+
+                input.value = "";
+
+                saveTournamentData();
+                
+                console.log("Data saved");
+
+                renderDashboard();
+                
+                console.log("Dashboard rendered");
+
+                initLiveSelectors();
+                
+                console.log("Selectors initialized");
+            }
+
+            /* ---------------------------------- */
+            /* EDIT TEAM */
+            /* ---------------------------------- */
+
+            function editTeam(teamId) {
+                const category = tournamentState[currentCategory];
+
+                const team = category.teams.find((t) => t.id === teamId);
+
+                if (!team) return;
+
+                const newName = prompt("Edit Team Name", team.name);
+
+                if (!newName || !newName.trim()) {
+                    return;
+                }
+
+                team.name = newName.trim();
+
+                category.matches.forEach((match) => {
+                    if (match.team1Id === teamId) {
+                        match.team1Name = team.name;
+                    }
+
+                    if (match.team2Id === teamId) {
+                        match.team2Name = team.name;
+                    }
+                });
+
+                saveTournamentData();
+
+                renderDashboard();
+
+                initLiveSelectors();
+            }
+
+            /* ---------------------------------- */
+            /* DELETE TEAM */
+            /* ---------------------------------- */
+
+            function deleteTeam(teamId) {
+                const category = tournamentState[currentCategory];
+
+                if (category.teams.length <= 1) {
+                    alert("Cannot delete last competitor.");
+                    return;
+                }
+
+                const team = category.teams.find((t) => t.id === teamId);
+
+                if (!team) return;
+
+                if (!confirm(`Delete ${team.name}?`)) {
+                    return;
+                }
+
+                category.matches = category.matches.filter(
+                    (match) => match.team1Id !== teamId && match.team2Id !== teamId
+                );
+
+                category.teams = category.teams.filter((team) => team.id !== teamId);
+
+                saveTournamentData();
+
+                renderDashboard();
+
+                initLiveSelectors();
+            }
+
+            /* ---------------------------------- */
+            /* SCOREBOARD */
+            /* ---------------------------------- */
+
+            function adjustPoints(team, amount) {
+                if (team === 1) {
+                    liveMatch.points1 = Math.max(0, liveMatch.points1 + amount);
+                } else {
+                    liveMatch.points2 = Math.max(0, liveMatch.points2 + amount);
+                }
+
+                updateLiveScoreDOM();
+                updateLiveScore(); // Save to liveScore table
+            }
+
+            function updatePointsFromInput(team) {
+                const input = document.getElementById(`live-points-${team}`);
+                const value = parseInt(input.value) || 0;
+
+                if (team === 1) {
+                    liveMatch.points1 = Math.max(0, value);
+                } else {
+                    liveMatch.points2 = Math.max(0, value);
+                }
+
+                updateLiveScoreDOM();
+                updateLiveScore(); // Save to liveScore table
+            }
+
+            function updateLiveScoreDOM() {
+                // Get values directly from dropdowns (more reliable)
+                const select1Value = document.getElementById("live-team-1").value;
+                const select2Value = document.getElementById("live-team-2").value;
+                
+                // Display the selected team names
+                document.getElementById("display-name-1").innerText = select1Value || "Player 1";
+                document.getElementById("display-name-2").innerText = select2Value || "Player 2";
+
+                document.getElementById("live-points-1").value = liveMatch.points1;
+                document.getElementById("live-points-2").value = liveMatch.points2;
+
+                document.getElementById("live-sets-1").innerText = liveMatch.sets1;
+                document.getElementById("live-sets-2").innerText = liveMatch.sets2;
+
+                document.getElementById("set-history-log").innerText = liveMatch.setHistory.length
+                    ? `Sets: ${liveMatch.setHistory.join(" | ")}`
+                    : "No Sets Completed Yet";
+            }
+
+            /* ---------------------------------- */
+            /* SET LOGGING */
+            /* ---------------------------------- */
+
+            function clearHistory() {
+                if (!confirm("Clear all set history for this match?")) {
+                    return;
+                }
+
+                liveMatch.setHistory = [];
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+                liveMatch.sets1 = 0;
+                liveMatch.sets2 = 0;
+
+                updateLiveScoreDOM();
+            }
+
+            function confirmSetWinner() {
+                if (liveMatch.points1 === 0 && liveMatch.points2 === 0) {
+                    return;
+                }
+
+                liveMatch.setHistory.push(`${liveMatch.points1}-${liveMatch.points2}`);
+
+                if (liveMatch.points1 > liveMatch.points2) {
+                    liveMatch.sets1++;
+                } else {
+                    liveMatch.sets2++;
+                }
+
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+
+                updateLiveScoreDOM();
+                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
+            }
+
+            /* ---------------------------------- */
+            /* SAVE MATCH */
+            /* ---------------------------------- */
+
+            function submitCompletedMatch() {
+                const category = tournamentState[currentCategory];
+
+                const team1 = category.teams.find((t) => t.id === liveMatch.team1Id);
+
+                const team2 = category.teams.find((t) => t.id === liveMatch.team2Id);
+
+                if (!team1 || !team2) {
+                    return;
+                }
+
+                if (liveMatch.sets1 === 0 && liveMatch.sets2 === 0) {
+                    alert("No completed sets.");
+
+                    return;
+                }
+
+                category.matches.unshift({
+                    id: "m_" + Date.now(),
+
+                    team1Id: team1.id,
+
+                    team2Id: team2.id,
+
+                    team1Name: team1.name,
+
+                    team2Name: team2.name,
+
+                    sets1: liveMatch.sets1,
+
+                    sets2: liveMatch.sets2,
+
+                    setHistory: [...liveMatch.setHistory],
+
+                    timestamp: new Date().toLocaleString(),
+                });
+
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+
+                liveMatch.sets1 = 0;
+                liveMatch.sets2 = 0;
+
+                liveMatch.setHistory = [];
+
+                saveTournamentData();
+
+                renderDashboard();
+
+                updateLiveScoreDOM();
+            }
+
+            /* ---------------------------------- */
+            /* EDIT AND DELETE MATCHES */
+            /* ---------------------------------- */
+
+            function editMatch(matchIndex) {
+                const category = tournamentState[currentCategory];
+                const match = category.matches[matchIndex];
+
+                if (!match) return;
+
+                const sets1 = prompt("Enter sets for team 1:", match.sets1);
+                if (sets1 === null) return;
+
+                const sets2 = prompt("Enter sets for team 2:", match.sets2);
+                if (sets2 === null) return;
+
+                match.sets1 = parseInt(sets1) || 0;
+                match.sets2 = parseInt(sets2) || 0;
+
+                saveTournamentData();
+                renderDashboard();
+            }
+
+            function deleteMatch(matchIndex) {
+                const category = tournamentState[currentCategory];
+                
+                if (!confirm("Delete this match?")) return;
+
+                category.matches.splice(matchIndex, 1);
+
+                saveTournamentData();
+                renderDashboard();
+            }
+
+            function calculateStats(team) {
+                const category = tournamentState[currentCategory];
+
+                let played = 0;
+                let wins = 0;
+                let losses = 0;
+                let points = 0;
+
+                category.matches.forEach((match) => {
+                    if (match.team1Id !== team.id && match.team2Id !== team.id) {
+                        return;
+                    }
+
+                    played++;
+
+                    const winner = match.sets1 > match.sets2 ? match.team1Id : match.team2Id;
+
+                    if (winner === team.id) {
+                        wins++;
+                        points += 3;
+                    } else {
+                        losses++;
+                        points += 1;
+                    }
+                });
 
                 return {
-                    tournament: metadata?.tournament || {},
-                    liveScore: liveData?.liveScore || {}
+                    played,
+                    wins,
+                    losses,
+                    points,
                 };
-            } catch (error) {
-                console.error("❌ Error loading:", error);
-                return null;
-            }
-        }
-
-        async function saveToGitHub(liveScoreData) {
-            if (!githubToken || !gistId) {
-                console.warn("❌ Cannot save - no token");
-                return;
             }
 
-            try {
-                const gistData = {
-                    files: {
-                        "live-data.json": {
-                            content: JSON.stringify({ liveScore: liveScoreData }, null, 2)
-                        }
+            /* ---------------------------------- */
+            /* RENDER */
+            /* ---------------------------------- */
+
+            function renderDashboard() {
+                // Show standings for all categories, with currentCategory first
+                const container = document.getElementById("all-standings-container");
+                if (!container) {
+                    console.log("Standings container not found");
+                    return;
+                }
+                
+                container.innerHTML = "";
+
+                // Check if tournamentState is loaded
+                if (!tournamentState || Object.keys(tournamentState).length === 0) {
+                    console.warn("⚠️ Tournament state is empty - no data to display");
+                    container.innerHTML = '<div class="text-slate-400 text-center py-8">Loading tournament data...</div>';
+                    return;
+                }
+
+                // Create sorted array with currentCategory first
+                const categoryKeys = Object.keys(tournamentState);
+                const sortedKeys = [
+                    currentCategory,
+                    ...categoryKeys.filter(key => key !== currentCategory)
+                ];
+
+                sortedKeys.forEach((categoryKey) => {
+                    const category = tournamentState[categoryKey];
+                    
+                    // Safety check
+                    if (!category || !category.teams || category.teams.length === 0) {
+                        console.log(`Skipping empty category: ${categoryKey}`);
+                        return; // Skip empty categories
                     }
-                };
+                    
+                    // Group teams by their group
+                    const groupedTeams = {};
+                    category.teams.forEach(team => {
+                        const group = team.group || "No Group";
+                        if (!groupedTeams[group]) {
+                            groupedTeams[group] = [];
+                        }
+                        groupedTeams[group].push(team);
+                    });
+                    
+                    let standings = `
+<div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+    <div class="p-5 border-b border-slate-800 flex justify-between">
+        <div>
+            <h2 class="font-bold text-lg">${category.title}</h2>
+            <p class="text-slate-500 text-sm">Rankings update automatically</p>
+        </div>
+        <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            ${category.matches ? category.matches.length : 0} Matches
+        </div>
+    </div>
+    <div class="p-5 space-y-4">
+`;
 
-                const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-                    method: "PATCH",
-                    headers: {
-                        "Authorization": `token ${githubToken}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(gistData)
+                    // Render standings for each group
+                    Object.keys(groupedTeams).forEach(groupName => {
+                        standings += `
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+            <h3 class="font-bold text-blue-400 mb-3 text-sm">${groupName}</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400">
+                            <th class="py-2 px-2 text-center">#</th>
+                            <th class="py-2 px-2 text-left">Team / Player</th>
+                            <th class="py-2 px-2 text-center">Played</th>
+                            <th class="py-2 px-2 text-center">Wins</th>
+                            <th class="py-2 px-2 text-center">Losses</th>
+                            <th class="py-2 px-2 text-center">Diff</th>
+                            <th class="py-2 px-2 text-center">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+`;
+
+                        groupedTeams[groupName].forEach((team, index) => {
+                            const stats = calculateStats(team);
+                            standings += `
+                        <tr class="border-b border-slate-700">
+                            <td class="py-2 px-2 text-center text-xs">${index + 1}</td>
+                            <td class="py-2 px-2 text-slate-300 text-xs">${team.name}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.played}</td>
+                            <td class="py-2 px-2 text-center text-green-400 text-xs">${stats.wins}</td>
+                            <td class="py-2 px-2 text-center text-red-400 text-xs">${stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.wins - stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-blue-400 text-xs font-bold">${stats.points}</td>
+                        </tr>
+`;
+                        });
+
+                        standings += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+`;
+                    });
+
+                    standings += `
+    </div>
+</div>
+`;
+
+                    container.innerHTML += standings;
                 });
-
-                if (!response.ok) throw new Error(`Save error: ${response.status}`);
-                console.log("✅ Saved to GitHub");
-            } catch (error) {
-                console.error("❌ Save error:", error);
-            }
-        }
-
-        // ============================================
-        // DATA LOADING
-        // ============================================
-        async function loadTournamentData() {
-            const data = await loadFromGitHub();
-            if (!data) {
-                document.getElementById("status").textContent = "❌ Failed to load data";
-                return;
             }
 
-            tournamentState = data.tournament;
-            liveScore = data.liveScore || {};
+            function renderMatchHistory() {
+                const category = tournamentState[currentCategory];
+                const history = document.getElementById("match-history-list");
+                history.innerHTML = "";
 
-            console.log("✅ Data loaded:", Object.keys(tournamentState));
-            initLiveSelectors();
-            updateLiveScoreDOM();
-            dataFullyLoaded = true;
-            document.getElementById("status").textContent = "✅ Ready";
-        }
-
-        // ============================================
-        // UI UPDATES
-        // ============================================
-        function switchCategory(category) {
-            currentCategory = category;
-            document.querySelectorAll(".category-btn").forEach(btn => btn.classList.remove("bg-blue-500", "text-white"));
-            document.getElementById(`btn-${category}`).classList.add("bg-blue-500", "text-white");
-            initLiveSelectors();
-        }
-
-        function initLiveSelectors() {
-            const category = tournamentState[currentCategory];
-            if (!category || !category.teams) {
-                console.warn("❌ No category or teams found");
-                return;
+                category.matches.forEach((match, index) => {
+                    history.innerHTML += `
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+<div class="flex justify-between items-start mb-2">
+<div class="text-xs text-slate-500">
+${match.timestamp}
+</div>
+<button
+onclick="deleteMatch(${index})"
+class="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs hover:bg-red-500/20 transition">
+Delete
+</button>
+</div>
+<div class="font-semibold">
+${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span class="text-blue-400">${match.sets2}</span> ${match.team2Name}
+</div>
+<div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
+</div>
+`;
+                });
             }
-
-            const select1 = document.getElementById("live-team-1");
-            const select2 = document.getElementById("live-team-2");
-
-            select1.innerHTML = '<option value="">Select Team 1</option>';
-            select2.innerHTML = '<option value="">Select Team 2</option>';
-
-            category.teams.forEach(team => {
-                select1.innerHTML += `<option value="${team.name}">${team.name}</option>`;
-                select2.innerHTML += `<option value="${team.name}">${team.name}</option>`;
-            });
-
-            // Restore previous selection
-            if (liveScore.team1Name) select1.value = liveScore.team1Name;
-            if (liveScore.team2Name) select2.value = liveScore.team2Name;
-
-            // Event listeners
-            select1.onchange = () => {
-                liveScore.team1Name = select1.value;
-                updateLiveScore();
-                updateLiveScoreDOM();
-            };
-
-            select2.onchange = () => {
-                liveScore.team2Name = select2.value;
-                updateLiveScore();
-                updateLiveScoreDOM();
-            };
-        }
-
-        function setMatchFormat(format) {
-            liveScore.matchFormat = parseInt(format);
-            const text = `Best Of ${format}`;
-            document.getElementById("match-format-display").innerText = text;
-            updateLiveScore();
-        }
-
-        function adjustPoints(team, amount) {
-            if (team === 1) {
-                liveScore.team1Points = Math.max(0, (liveScore.team1Points || 0) + amount);
-            } else {
-                liveScore.team2Points = Math.max(0, (liveScore.team2Points || 0) + amount);
-            }
-            updateLiveScore();
-            updateLiveScoreDOM();
-        }
-
-        function updateLiveScoreDOM() {
-            document.getElementById("live-points-1").value = liveScore.team1Points || 0;
-            document.getElementById("live-points-2").value = liveScore.team2Points || 0;
-            document.getElementById("live-sets-1").innerText = liveScore.team1Sets || 0;
-            document.getElementById("live-sets-2").innerText = liveScore.team2Sets || 0;
-            document.getElementById("display-name-1").innerText = liveScore.team1Name || "Team 1";
-            document.getElementById("display-name-2").innerText = liveScore.team2Name || "Team 2";
-        }
-
-        function updateLiveScore() {
-            if (!dataFullyLoaded) return;
-
-            const updated = {
-                isActive: !!liveScore.team1Name && !!liveScore.team2Name,
-                category: currentCategory,
-                team1Name: liveScore.team1Name || "",
-                team2Name: liveScore.team2Name || "",
-                team1Points: liveScore.team1Points || 0,
-                team2Points: liveScore.team2Points || 0,
-                team1Sets: liveScore.team1Sets || 0,
-                team2Sets: liveScore.team2Sets || 0,
-                setHistory: liveScore.setHistory || [],
-                matchFormat: liveScore.matchFormat || 3,
-                timestamp: new Date().toISOString()
-            };
-
-            liveScore = updated;
-            saveToGitHub(updated);
-        }
-
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        window.addEventListener("DOMContentLoaded", async () => {
-            console.log("🚀 Admin page loaded");
-
-            if (!githubToken) {
-                document.getElementById("token-warning").classList.remove("hidden");
-                document.getElementById("status").textContent = "❌ Token required";
-                return;
-            }
-
-            await loadTournamentData();
-        });
-    </script>
-</body>
+        </script>
+    </body>
 </html>
