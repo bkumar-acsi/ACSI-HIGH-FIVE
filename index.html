@@ -1064,11 +1064,65 @@
             }
 
             function saveTournamentData() {
-                // ADMIN PAGE NEVER SAVES METADATA
-                // Metadata is static and only loaded from GitHub
-                // Use updateLiveScore() to save live data instead
-                console.log("ℹ️ Use updateLiveScore() to save live data");
-                console.log("ℹ️ Metadata is never modified from admin page");
+                // Save standings data to live-standings.json
+                saveStandingsData();
+            }
+
+            async function saveStandingsData() {
+                if (!githubToken) {
+                    console.warn("GitHub token not set, cannot save standings");
+                    return;
+                }
+
+                try {
+                    // Extract standings from tournamentState
+                    const standings = {};
+                    Object.keys(tournamentState).forEach(categoryKey => {
+                        const category = tournamentState[categoryKey];
+                        standings[categoryKey] = {
+                            title: category.title,
+                            teams: category.teams.map(team => ({
+                                id: team.id,
+                                name: team.name,
+                                group: team.group,
+                                wins: team.wins || 0,
+                                losses: team.losses || 0,
+                                points: team.points || 0
+                            }))
+                        };
+                    });
+
+                    const gistData = {
+                        description: "ACSII TT Tournament 2026 - Live Standings Data",
+                        public: false,
+                        files: {
+                            "live-standings.json": {
+                                content: JSON.stringify({
+                                    standings: standings,
+                                    timestamp: new Date().toISOString()
+                                }, null, 2)
+                            }
+                        }
+                    };
+
+                    const url = `https://api.github.com/gists/${gistId}`;
+                    const response = await fetch(url, {
+                        method: "PATCH",
+                        headers: {
+                            "Authorization": `token ${githubToken}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(gistData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`GitHub API error: ${response.status}`);
+                    }
+
+                    console.log("✅ Standings saved to live-standings.json");
+                } catch (error) {
+                    console.error("Error saving standings:", error);
+                }
             }
 
             /* ---------------------------------- */
@@ -1079,7 +1133,7 @@
             // Update liveScore table with current admin screen
             function updateLiveScore() {
                 liveScore = {
-                    isActive: document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== "",
+                    isActive: liveScore.isActive !== undefined ? liveScore.isActive : (document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== ""),
                     category: currentCategory,
                     team1Name: document.getElementById("live-team-1").value,
                     team2Name: document.getElementById("live-team-2").value,
@@ -1561,20 +1615,30 @@
                     return;
                 }
 
+                // Initialize stats if not present
+                if (!team1.wins) team1.wins = 0;
+                if (!team1.losses) team1.losses = 0;
+                if (!team1.points) team1.points = 0;
+                if (!team2.wins) team2.wins = 0;
+                if (!team2.losses) team2.losses = 0;
+                if (!team2.points) team2.points = 0;
+
                 // Show match summary
                 alert(`✅ Match Saved!\n\n${team1Name} vs ${team2Name}\nSets: ${liveMatch.sets1} - ${liveMatch.sets2}\nHistory: ${liveMatch.setHistory.join(", ")}`);
 
                 // Update team standings based on match result
                 if (liveMatch.sets1 > liveMatch.sets2) {
                     // Team 1 won
-                    team1.wins = (team1.wins || 0) + 1;
-                    team2.losses = (team2.losses || 0) + 1;
-                    team1.points = (team1.points || 0) + 2;
+                    team1.wins++;
+                    team2.losses++;
+                    team1.points += 2;
+                    console.log(`✅ ${team1Name} won! Updated stats - Wins: ${team1.wins}, Points: ${team1.points}`);
                 } else {
                     // Team 2 won
-                    team2.wins = (team2.wins || 0) + 1;
-                    team1.losses = (team1.losses || 0) + 1;
-                    team2.points = (team2.points || 0) + 2;
+                    team2.wins++;
+                    team1.losses++;
+                    team2.points += 2;
+                    console.log(`✅ ${team2Name} won! Updated stats - Wins: ${team2.wins}, Points: ${team2.points}`);
                 }
 
                 // Clear live match data
