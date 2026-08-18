@@ -781,9 +781,57 @@
                 }
             }
 
+            // Load match history only from Gist
+            async function loadMatchHistoryOnly() {
+                if (!PUBLIC_GIST_ID || PUBLIC_GIST_ID === "YOUR_PUBLIC_GIST_ID_HERE") {
+                    return null;
+                }
+
+                try {
+                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`);
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const gist = await response.json();
+                    
+                    // Extract ONLY match-history.json
+                    if (gist.files["match-history.json"]) {
+                        const historyData = JSON.parse(gist.files["match-history.json"].content);
+                        return historyData.matchHistory || {};
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error("Error loading match history from Gist:", error);
+                    return null;
+                }
+            }
+
             /* ---------------------------------- */
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
+
+            // Load standings separately
+            async function loadStandingsData() {
+                console.log("📊 Loading standings from live-standings.json...");
+                
+                const standings = await loadStandingsOnly();
+                if (standings) {
+                    // Merge standings into tournamentState
+                    Object.keys(standings).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].teams = standings[categoryKey].teams || [];
+                        }
+                    });
+                    console.log("✅ Standings loaded and merged into tournamentState");
+                    return standings;
+                } else {
+                    console.warn("⚠️ Standings not found");
+                    return null;
+                }
+            }
 
             async function loadTournamentData() {
                 // Load from GitHub Gist
@@ -798,6 +846,9 @@
                         
                         console.log("📊 Tournament categories:", Object.keys(tournamentState));
                         console.log("📊 Live match data:", liveMatch);
+                        
+                        // Load standings separately
+                        await loadStandingsData();
                         
                         // Update live score display if data exists
                         updateLiveScoreDisplay();
@@ -957,24 +1008,30 @@
 
             // Manual refresh function - loads latest live data from Gist
             async function refreshLiveData() {
-                console.log("🔄 Refreshing live data and standings from Gist...");
+                console.log("🔄 Refreshing live data, standings, and match history from Gist...");
                 
                 const updatedLiveScore = await loadLiveDataOnly();
-                const updatedStandings = await loadStandingsOnly();
+                const updatedStandings = await loadStandingsData();
+                const updatedHistory = await loadMatchHistoryOnly();
                 
                 if (updatedLiveScore) {
                     liveScore = updatedLiveScore;
                     console.log("✅ Live data refreshed:", liveScore);
                     updateLiveScoreDisplay();
-                } else {
-                    alert("❌ Failed to load live data. Check if Gist is accessible.");
                 }
                 
                 if (updatedStandings) {
                     console.log("✅ Standings refreshed");
-                    // Update standings display if on that tab
                     if (currentTab === "standings") {
                         renderDashboard();
+                    }
+                }
+                
+                if (updatedHistory) {
+                    console.log("✅ Match history refreshed");
+                    // Update match history display if on that tab
+                    if (currentTab === "fixtures") {
+                        // Would need to render match history here if it's displayed in fixtures tab
                     }
                 }
             }
