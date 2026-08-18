@@ -638,7 +638,15 @@
                         console.log("Tournament data:", tournamentState);
                         console.log("Live match:", liveMatch);
                         
-                        renderDashboard();
+                        // Re-render the current active tab
+                        if (currentTab === "home") {
+                            renderHomeView();
+                        } else if (currentTab === "standings") {
+                            renderDashboard();
+                        } else if (currentTab === "fixtures") {
+                            renderFixtures();
+                        }
+                        
                         updateLiveScoreDOM();
                         applyLiveMatchVisibility();
                         return;
