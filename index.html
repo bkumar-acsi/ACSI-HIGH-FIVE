@@ -1025,7 +1025,6 @@
 
             function initLiveSelectors() {
                 const category = tournamentState[currentCategory];
-                const fixtures = FIXTURES_DATA[currentCategory];
 
                 const select1 = document.getElementById("live-team-1");
                 const select2 = document.getElementById("live-team-2");
@@ -1033,49 +1032,14 @@
                 select1.innerHTML = "";
                 select2.innerHTML = "";
 
-                // Get all unique teams from fixtures matches
-                let teamsFromFixtures = new Set();
-                
-                if (fixtures && fixtures.matches) {
-                    Object.values(fixtures.matches).forEach(matchArray => {
-                        matchArray.forEach(({ match }) => {
-                            // Parse match string like "Aniket vs Kshitij" to extract team names
-                            if (match) {
-                                const parts = match.split(" vs ");
-                                if (parts.length === 2) {
-                                    teamsFromFixtures.add(parts[0].trim());
-                                    teamsFromFixtures.add(parts[1].trim());
-                                }
-                            }
-                        });
-                    });
-                }
-
-                // If we have fixture teams, show only those; otherwise show all teams
-                let teamsToShow = teamsFromFixtures.size > 0 ? Array.from(teamsFromFixtures).sort() : category.teams.map(t => t.name).sort();
-
-                if (teamsFromFixtures.size > 0) {
-                    // Show fixture teams - add to both dropdowns
-                    teamsToShow.forEach((teamName) => {
-                        select1.innerHTML += `<option value="${teamName}">${teamName}</option>`;
-                        select2.innerHTML += `<option value="${teamName}">${teamName}</option>`;
-                    });
-                    
-                    // Set default values to first two teams from fixtures
-                    if (teamsToShow.length >= 2) {
-                        select1.value = teamsToShow[0];
-                        select2.value = teamsToShow[1];
-                        liveMatch.team1Id = teamsToShow[0];
-                        liveMatch.team2Id = teamsToShow[1];
-                    }
-                } else {
-                    // Fallback: show all teams from database
+                // Show all teams from the category
+                if (category && category.teams) {
                     category.teams.forEach((team) => {
                         select1.innerHTML += `<option value="${team.name}">${team.name}</option>`;
                         select2.innerHTML += `<option value="${team.name}">${team.name}</option>`;
                     });
-                    
-                    // Set default values
+
+                    // Set default values to first two teams
                     if (category.teams.length >= 2) {
                         select1.value = category.teams[0].name;
                         select2.value = category.teams[1].name;
