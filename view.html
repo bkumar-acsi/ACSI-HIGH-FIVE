@@ -94,10 +94,12 @@
                 </div>
 
                 <div class="flex gap-2 items-center flex-col md:flex-row">
-                    <span class="text-xs text-slate-400 whitespace-nowrap">
-                        <span id="refresh-status">Click Refresh to load live data</span>
-                        <span id="refresh-indicator" class="inline-block ml-2">●</span>
-                    </span>
+                    <button
+                        onclick="location.reload()"
+                        class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition"
+                    >
+                        🔄 Refresh Live Data
+                    </button>
                 </div>
             </div>
         </header>
@@ -684,9 +686,6 @@
 
             // Gist ID
             const PUBLIC_GIST_ID = "c0af02e95d49a4933b5846882f802e04";
-            
-            // GitHub token for reading Gist (hardcoded)
-            const VIEWER_TOKEN = "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";
 
             async function loadFromGitHub() {
                 if (!PUBLIC_GIST_ID || PUBLIC_GIST_ID === "YOUR_PUBLIC_GIST_ID_HERE") {
@@ -695,20 +694,9 @@
                 }
 
                 try {
-                    console.log("📥 Loading from Gist...");
+                    console.log("📥 Loading from PUBLIC Gist (no token needed)...");
                     
-                    // Build request with optional token
-                    const headers = {};
-                    if (VIEWER_TOKEN) {
-                        headers.Authorization = `token ${VIEWER_TOKEN}`;
-                        console.log("Using token for authentication");
-                    } else {
-                        console.log("Attempting public read (no token)");
-                    }
-                    
-                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`, {
-                        headers: headers
-                    });
+                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`);
 
                     if (!response.ok) {
                         throw new Error(`GitHub API error: ${response.status}`);
@@ -736,35 +724,31 @@
                 }
             }
 
-            // Optimized function - load ONLY live-data.json (for auto-refresh)
+            // Load live data only from Gist (no token needed for public read)
             async function loadLiveDataOnly() {
                 if (!PUBLIC_GIST_ID || PUBLIC_GIST_ID === "YOUR_PUBLIC_GIST_ID_HERE") {
                     return null;
                 }
 
                 try {
-                    const headers = {};
-                    if (VIEWER_TOKEN) {
-                        headers.Authorization = `token ${VIEWER_TOKEN}`;
-                    }
-                    
-                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`, {
-                        headers: headers
-                    });
+                    // Fetch only live-data.json from Gist
+                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`);
 
                     if (!response.ok) {
-                        throw new Error(`GitHub API error: ${response.status}`);
+                        throw new Error(`API error: ${response.status}`);
                     }
 
                     const gist = await response.json();
                     
-                    // Load ONLY live data
-                    const liveContent = gist.files["live-data.json"]?.content;
-                    const liveData = liveContent ? JSON.parse(liveContent) : null;
+                    // Extract ONLY live-data.json
+                    if (gist.files["live-data.json"]) {
+                        const liveData = JSON.parse(gist.files["live-data.json"].content);
+                        return liveData.liveScore || {};
+                    }
                     
-                    return liveData?.liveScore || {};
+                    return null;
                 } catch (error) {
-                    console.error("Error loading live data:", error);
+                    console.error("Error loading live data from Gist:", error);
                     return null;
                 }
             }
@@ -822,24 +806,21 @@
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh every 5 seconds when live scoring is active
-                let isLoading = false;
-                setInterval(async () => {
-                    // Only refresh if live scoring is active
-                    if (liveScore && liveScore.isActive && !isLoading) {
-                        isLoading = true;
-                        console.log("🔄 Auto-refreshing live data only (no metadata refresh)...");
-                        
-                        // Load ONLY live-data.json (optimized)
-                        const updatedLiveScore = await loadLiveDataOnly();
-                        if (updatedLiveScore) {
-                            liveScore = updatedLiveScore;
-                            updateLiveScoreDisplay();
-                        }
-                        
-                        isLoading = false;
-                    }
-                }, 5000);
+                // Auto-refresh DISABLED
+                // Users click refresh button to load latest data
+                // let isLoading = false;
+                // setInterval(async () => {
+                //     if (liveScore && liveScore.isActive && !isLoading) {
+                //         isLoading = true;
+                //         console.log("🔄 Auto-refreshing live data from Gist...");
+                //         const updatedLiveScore = await loadLiveDataOnly();
+                //         if (updatedLiveScore) {
+                //             liveScore = updatedLiveScore;
+                //             updateLiveScoreDisplay();
+                //         }
+                //         isLoading = false;
+                //     }
+                // }, 5000);
             });
 
             /* ---------------------------------- */
@@ -907,24 +888,11 @@
                     // Hide live match if not active
                     console.log("⚠️ Live score not active, hiding display");
                     document.getElementById("live-match-section").style.display = "none";
-                    
-                    // Update refresh status
-                    const statusEl = document.getElementById("refresh-status");
-                    const indicatorEl = document.getElementById("refresh-indicator");
-                    if (statusEl) statusEl.innerText = "No live match";
-                    if (indicatorEl) indicatorEl.style.color = "#64748b";
-                    
                     return;
                 }
                 
                 // Show live match
                 document.getElementById("live-match-section").style.display = "block";
-                
-                // Update refresh status
-                const statusEl = document.getElementById("refresh-status");
-                const indicatorEl = document.getElementById("refresh-indicator");
-                if (statusEl) statusEl.innerText = "Auto-refreshing live data";
-                if (indicatorEl) indicatorEl.style.color = "#10b981";
                 
                 // Get team names from liveScore
                 const team1 = liveScore.team1Name || "Player 1";
