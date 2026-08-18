@@ -647,6 +647,37 @@
             };
 
             /* ---------------------------------- */
+            /* TAB SWITCHING FUNCTIONS */
+            /* ---------------------------------- */
+
+            function switchTab(tab) {
+                currentTab = tab;
+
+                // Update tab buttons
+                document.querySelectorAll(".tab-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-${tab}-tab`).classList.remove("bg-slate-800", "text-slate-300");
+                document.getElementById(`btn-${tab}-tab`).classList.add("bg-blue-500", "text-white");
+
+                // Show/hide sections
+                document.getElementById("home-section").style.display = tab === "home" ? "" : "none";
+                document.getElementById("standings-nav").style.display = tab === "standings" ? "" : "none";
+                document.getElementById("standings-section").style.display = tab === "standings" ? "" : "none";
+                document.getElementById("fixtures-section").style.display = tab === "fixtures" ? "" : "none";
+
+                if (tab === "home") {
+                    renderHomeView();
+                } else if (tab === "fixtures") {
+                    renderFixtures();
+                } else if (tab === "standings") {
+                    renderDashboard();
+                }
+            }
+
+            /* ---------------------------------- */
             /* GITHUB INTEGRATION - PUBLIC GIST READ */
             /* ---------------------------------- */
 
@@ -710,25 +741,6 @@
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
 
-            window.addEventListener("DOMContentLoaded", () => {
-                console.log("View page loaded");
-                
-                // Always render home view first (static upcoming matches)
-                renderHomeView();
-                
-                // Load data from Gist (will update teams list)
-                loadTournamentData();
-                
-                // Set tab to home
-                currentTab = "home";
-                
-                // Auto-refresh every 5 seconds
-                // Auto-refresh disabled for now
-                // setInterval(() => {
-                //     loadTournamentData();
-                // }, 5000);
-            });
-
             async function loadTournamentData() {
                 // Load from GitHub Gist
                 if (PUBLIC_GIST_ID && PUBLIC_GIST_ID !== "YOUR_PUBLIC_GIST_ID_HERE") {
@@ -761,6 +773,25 @@
                     return;
                 }
             }
+
+            window.addEventListener("DOMContentLoaded", () => {
+                console.log("View page loaded");
+                
+                // Always render home view first (static upcoming matches)
+                renderHomeView();
+                
+                // Load data from Gist (will update teams list)
+                loadTournamentData();
+                
+                // Set tab to home
+                currentTab = "home";
+                
+                // Auto-refresh every 5 seconds
+                // Auto-refresh disabled for now
+                // setInterval(() => {
+                //     loadTournamentData();
+                // }, 5000);
+            });
 
             /* ---------------------------------- */
             /* STORAGE */
@@ -809,33 +840,6 @@
                 } else {
                     renderDashboard();
                     updateLiveScoreDOM();
-                }
-            }
-
-            function switchTab(tab) {
-                currentTab = tab;
-
-                // Update tab buttons
-                document.querySelectorAll(".tab-btn").forEach((btn) => {
-                    btn.classList.remove("bg-blue-500", "text-white");
-                    btn.classList.add("bg-slate-800", "text-slate-300");
-                });
-
-                document.getElementById(`btn-${tab}-tab`).classList.remove("bg-slate-800", "text-slate-300");
-                document.getElementById(`btn-${tab}-tab`).classList.add("bg-blue-500", "text-white");
-
-                // Show/hide sections
-                document.getElementById("home-section").style.display = tab === "home" ? "" : "none";
-                document.getElementById("standings-nav").style.display = tab === "standings" ? "" : "none";
-                document.getElementById("standings-section").style.display = tab === "standings" ? "" : "none";
-                document.getElementById("fixtures-section").style.display = tab === "fixtures" ? "" : "none";
-
-                if (tab === "home") {
-                    renderHomeView();
-                } else if (tab === "fixtures") {
-                    renderFixtures();
-                } else if (tab === "standings") {
-                    renderDashboard();
                 }
             }
 
