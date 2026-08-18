@@ -190,7 +190,7 @@
                 <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
                 <div class="text-center mb-8">
                     <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
-                    <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
+                    <div class="text-slate-500 text-xs" id="match-format-display">Best Of 3 Sets</div>
                 </div>
 
                 <!-- SCOREBOARD -->
@@ -608,11 +608,23 @@
                     }
 
                     const gist = await response.json();
-                    const content = gist.files["tournament-data.json"].content;
-                    const data = JSON.parse(content);
                     
-                    console.log("Data loaded from public GitHub Gist");
-                    return data;
+                    // Load METADATA (tournament structure - static)
+                    const metadataContent = gist.files["tournament-metadata.json"]?.content;
+                    const metadata = metadataContent ? JSON.parse(metadataContent) : null;
+                    
+                    // Load LIVE DATA (scores - dynamic)
+                    const liveContent = gist.files["live-data.json"]?.content;
+                    const liveData = liveContent ? JSON.parse(liveContent) : null;
+                    
+                    console.log("✅ Data loaded from public GitHub Gist");
+                    console.log("   Metadata:", metadata ? "loaded" : "missing");
+                    console.log("   Live data:", liveData ? "loaded" : "missing");
+                    
+                    return {
+                        tournament: metadata?.tournament || {},
+                        liveScore: liveData?.liveScore || {}
+                    };
                 } catch (error) {
                     console.error("Error loading from GitHub:", error);
                     return null;
@@ -774,8 +786,11 @@
             }
 
             function updateLiveScoreDisplay() {
+                console.log("📊 updateLiveScoreDisplay called, liveScore:", liveScore);
+                
                 if (!liveScore || !liveScore.isActive) {
                     // Hide live match if not active
+                    console.log("⚠️ Live score not active, hiding display");
                     document.getElementById("live-match-section").style.display = "none";
                     return;
                 }
@@ -783,9 +798,15 @@
                 // Show live match
                 document.getElementById("live-match-section").style.display = "block";
                 
+                // Get team names from liveScore
+                const team1 = liveScore.team1Name || "Player 1";
+                const team2 = liveScore.team2Name || "Player 2";
+                
+                console.log(`📊 Updating display: ${team1} vs ${team2}`);
+                
                 // Update display names
-                document.getElementById("display-name-1").innerText = liveScore.team1Name || "Player 1";
-                document.getElementById("display-name-2").innerText = liveScore.team2Name || "Player 2";
+                document.getElementById("display-name-1").innerText = team1;
+                document.getElementById("display-name-2").innerText = team2;
                 
                 // Update points
                 document.getElementById("live-points-1").innerText = liveScore.team1Points || 0;
@@ -796,7 +817,7 @@
                 document.getElementById("live-sets-2").innerText = liveScore.team2Sets || 0;
                 
                 // Update match format
-                const formatText = `Best Of ${liveScore.matchFormat}`;
+                const formatText = `Best Of ${liveScore.matchFormat || 3}`;
                 document.getElementById("match-format-display").innerText = formatText;
                 
                 // Update set history
@@ -805,7 +826,7 @@
                     : "No Sets Completed Yet";
                 document.getElementById("set-history-log").innerText = historyDisplay;
                 
-                console.log("✅ Live score display updated:", liveScore);
+                console.log("✅ Live score display updated");
             }
 
             function renderHomeView() {
@@ -1018,8 +1039,11 @@
                     ? `Sets: ${liveMatch.setHistory.join(" | ")}`
                     : "No Sets Completed Yet";
 
-                document.getElementById("match-format-display").innerText = 
-                    liveMatch.matchFormat === 5 ? "Best Of 5 Sets" : "Best Of 7 Sets";
+                // Update match format from liveScore
+                if (liveScore && liveScore.matchFormat) {
+                    const formatText = `Best Of ${liveScore.matchFormat}`;
+                    document.getElementById("match-format-display").innerText = formatText;
+                }
             }
 
             /* ---------------------------------- */
