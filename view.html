@@ -904,32 +904,39 @@
                 console.log("✅ All data loaded!");
             }
 
-            window.addEventListener("DOMContentLoaded", () => {
+            window.addEventListener("DOMContentLoaded", async () => {
                 console.log("View page loaded");
                 
                 // Always render home view first (static upcoming matches)
                 renderHomeView();
                 
                 // Load data
-                loadTournamentData();
+                await loadTournamentData();
                 
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh from Firebase every 5 seconds ONLY when live match is active
+                // Set initial visibility from what was loaded
+                let liveMatchActive = liveScore.isVisible || false;
+                console.log("📌 Initial visibility:", liveMatchActive);
                 let isLoading = false;
+                
+                // Check visibility every 5 minutes (lightweight check)
                 setInterval(async () => {
-                    if (isLoading) return;
-                    
-                    // First check visibility from Firebase
                     const isLive = await loadVisibilityStatus();
-                    
-                    if (!isLive) {
-                        // If not live, hide the section and stop
-                        const section = document.getElementById("live-match-section");
-                        if (section) section.style.display = "none";
-                        return;
+                    if (liveMatchActive !== isLive) {
+                        console.log("📌 Visibility changed:", isLive);
+                        liveMatchActive = isLive;
+                        if (!isLive) {
+                            const section = document.getElementById("live-match-section");
+                            if (section) section.style.display = "none";
+                        }
                     }
+                }, 300000);
+                
+                // Auto-refresh live data & standings every 5 sec ONLY when active
+                setInterval(async () => {
+                    if (!liveMatchActive || isLoading) return;
                     
                     isLoading = true;
                     
