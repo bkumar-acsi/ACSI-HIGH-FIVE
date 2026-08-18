@@ -835,20 +835,27 @@
             // Load live data only from Gist (no token needed for public read)
             async function loadLiveDataOnly() {
                 try {
-                    // Fetch from raw URL (no API limit!)
-                    const response = await fetch(`${DATA_BASE_URL}/live-data.json`);
+                    // Fetch from raw URL with cache-busting and no-cache headers
+                    const url = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
                     const content = await response.text();
                     
                     if (content) {
                         const liveData = JSON.parse(content);
                         const liveScore = liveData.liveScore || {};
-                        setCachedData(CACHE_KEYS.LIVE_DATA, liveScore);
+                        console.log("✅ Live data loaded:", liveScore);
                         return liveScore;
                     }
                     
                     return null;
                 } catch (error) {
-                    console.error("Error loading live data from Gist:", error);
+                    console.error("Error loading live data:", error);
                     return null;
                 }
             }
@@ -856,7 +863,14 @@
             // Load standings only from Gist
             async function loadStandingsOnly() {
                 try {
-                    const response = await fetch(`${DATA_BASE_URL}/live-standings.json`);
+                    const url = `${DATA_BASE_URL}/live-standings.json?t=${Date.now()}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
                     const content = await response.text();
                     
                     if (content) {
@@ -866,7 +880,7 @@
                     
                     return null;
                 } catch (error) {
-                    console.error("Error loading standings from Gist:", error);
+                    console.error("Error loading standings:", error);
                     return null;
                 }
             }
@@ -874,7 +888,14 @@
             // Load match history only from Gist
             async function loadMatchHistoryOnly() {
                 try {
-                    const response = await fetch(`${DATA_BASE_URL}/match-history.json`);
+                    const url = `${DATA_BASE_URL}/match-history.json?t=${Date.now()}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
                     const content = await response.text();
                     
                     if (content) {
@@ -884,7 +905,7 @@
                     
                     return null;
                 } catch (error) {
-                    console.error("Error loading match history from Gist:", error);
+                    console.error("Error loading match history:", error);
                     return null;
                 }
             }
@@ -965,21 +986,21 @@
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh DISABLED
-                // Users click refresh button to load latest data
-                // let isLoading = false;
-                // setInterval(async () => {
-                //     if (liveScore && liveScore.isActive && !isLoading) {
-                //         isLoading = true;
-                //         console.log("🔄 Auto-refreshing live data from Gist...");
-                //         const updatedLiveScore = await loadLiveDataOnly();
-                //         if (updatedLiveScore) {
-                //             liveScore = updatedLiveScore;
-                //             updateLiveScoreDisplay();
-                //         }
-                //         isLoading = false;
-                //     }
-                // }, 5000);
+                // Auto-refresh live data every 5 seconds when live match is active
+                let isLoading = false;
+                setInterval(async () => {
+                    if (liveScore && liveScore.isActive && !isLoading) {
+                        isLoading = true;
+                        console.log("🔄 Auto-refreshing live data...");
+                        const updatedLiveScore = await loadLiveDataOnly();
+                        if (updatedLiveScore) {
+                            liveScore = updatedLiveScore;
+                            updateLiveScoreDisplay();
+                            console.log("✅ Live data refreshed automatically");
+                        }
+                        isLoading = false;
+                    }
+                }, 5000); // Refresh every 5 seconds
             });
 
             /* ---------------------------------- */
