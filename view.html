@@ -835,15 +835,9 @@
             // Load live data only from Gist (no token needed for public read)
             async function loadLiveDataOnly() {
                 try {
-                    // Fetch from raw URL with cache-busting and no-cache headers
+                    // Fetch from raw URL with cache-busting timestamp only
                     const url = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
-                    });
+                    const response = await fetch(url);
                     const content = await response.text();
                     
                     if (content) {
@@ -864,13 +858,7 @@
             async function loadStandingsOnly() {
                 try {
                     const url = `${DATA_BASE_URL}/live-standings.json?t=${Date.now()}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
-                    });
+                    const response = await fetch(url);
                     const content = await response.text();
                     
                     if (content) {
@@ -889,13 +877,7 @@
             async function loadVisibilityStatus() {
                 try {
                     const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
-                    });
+                    const response = await fetch(url);
                     const content = await response.text();
                     
                     if (content) {
@@ -914,13 +896,7 @@
             async function loadMatchHistoryOnly() {
                 try {
                     const url = `${DATA_BASE_URL}/match-history.json?t=${Date.now()}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
-                    });
+                    const response = await fetch(url);
                     const content = await response.text();
                     
                     if (content) {
