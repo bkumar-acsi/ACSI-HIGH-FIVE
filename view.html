@@ -241,11 +241,11 @@
                     <div class="p-5 overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="border-b border-slate-700 text-slate-400">
-                                    <th class="py-3 px-3 text-left">Match</th>
-                                    <th class="py-3 px-3 text-center">Start Time</th>
-                                    <th class="py-3 px-3 text-center">End Time</th>
-                                    <th class="py-3 px-3 text-left">Details</th>
+                                <tr class="border-b border-slate-700 bg-slate-950">
+                                    <th class="py-3 px-3 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
+                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Start Time</th>
+                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">End Time</th>
+                                    <th class="py-3 px-3 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Details</th>
                                 </tr>
                             </thead>
                             <tbody id="upcoming-matches-list">
@@ -746,6 +746,14 @@
                 }
             }
 
+            function formatTeamName(name) {
+                // Replace '&' with a colored span
+                let formatted = name.replace(/&/g, '<span class="text-blue-400 font-bold">&</span>');
+                // Replace ' vs ' with colored version
+                formatted = formatted.replace(/ vs /g, ' <span class="text-blue-400 font-bold">vs</span> ');
+                return formatted;
+            }
+
             function renderHomeView() {
                 // Render upcoming matches - first 10 from Men's Singles (as per PDF)
                 const upcomingContainer = document.getElementById("upcoming-matches-list");
@@ -766,12 +774,13 @@
                 ];
                 
                 tomorrowMatches.forEach((m) => {
+                    const formattedMatch = formatTeamName(m.match);
                     upcomingContainer.innerHTML += `
-                        <tr class="border-b border-slate-700 hover:bg-slate-800/50 transition">
-                            <td class="py-3 px-3 text-blue-400 font-semibold">${m.matchNum}</td>
-                            <td class="py-3 px-3 text-center text-slate-300">${m.startTime}</td>
-                            <td class="py-3 px-3 text-center text-slate-300">${m.endTime}</td>
-                            <td class="py-3 px-3 text-slate-200">${m.match}</td>
+                        <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
+                            <td class="py-3 px-3 text-blue-400 font-bold text-center">${m.matchNum}</td>
+                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.startTime}</td>
+                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.endTime}</td>
+                            <td class="py-3 px-3 text-slate-100 font-semibold">${formattedMatch}</td>
                         </tr>
 `;
                 });
@@ -818,10 +827,10 @@
                     sortedGroups.forEach((groupName) => {
                         const teamNames = groupedTeams[groupName];
                         categoryHTML += `
-        <div class="bg-slate-900 rounded-lg p-3 border border-slate-700">
-            <h4 class="text-sm font-semibold text-slate-300 mb-2">${groupName}</h4>
-            <ul class="text-xs space-y-1">
-                ${teamNames.map(name => `<li class="text-slate-400">• ${name}</li>`).join('')}
+        <div class="bg-slate-900 rounded-lg p-3 border border-slate-700 hover:border-blue-500/50 transition">
+            <h4 class="text-sm font-bold text-blue-300 mb-3 uppercase tracking-wide">${groupName}</h4>
+            <ul class="text-sm space-y-2">
+                ${teamNames.map(name => `<li class="text-slate-200 font-medium flex items-center gap-2"><span class="text-blue-400">▸</span>${formatTeamName(name)}</li>`).join('')}
             </ul>
         </div>
 `;
@@ -898,10 +907,10 @@
                 sortedGroups.forEach((groupName) => {
                     const teamNames = groupedTeams[groupName];
                     groupsContainer.innerHTML += `
-                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
-                            <h4 class="font-bold text-blue-400 mb-3">${groupName}</h4>
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 hover:border-blue-500/50 transition">
+                            <h4 class="font-bold text-blue-300 mb-3 uppercase tracking-wide">${groupName}</h4>
                             <ul class="space-y-2 text-sm">
-                                ${teamNames.map(name => `<li class="text-slate-300">• ${name}</li>`).join('')}
+                                ${teamNames.map(name => `<li class="text-slate-200 font-medium flex items-center gap-2"><span class="text-blue-400">▸</span>${formatTeamName(name)}</li>`).join('')}
                             </ul>
                         </div>
                     `;
