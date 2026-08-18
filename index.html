@@ -674,15 +674,48 @@
             
             let githubToken = TOKEN_FROM_URL;
             
-            // GitHub repository for unlimited bandwidth (no rate limits!)
+            // GitHub repository for tournament metadata and match history
             const REPO_OWNER = "bkumar-acsi";
             const REPO_NAME = "ACSI-HIGH-FIVE-DATA";
             const REPO_BRANCH = "main";
             const DATA_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/data`;
-            
-            // Keep gistId for migration/fallback
-            const HARDCODED_GIST_ID = "c0af02e95d49a4933b5846882f802e04";
-            let gistId = HARDCODED_GIST_ID;
+
+            /* ---------------------------------- */
+            /* FIREBASE - REAL-TIME DATA */
+            /* ---------------------------------- */
+            const FIREBASE_DB_URL = "https://tt-live-44a37-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+            // Firebase REST API helper - write data
+            async function firebaseSet(path, data) {
+                try {
+                    const url = `${FIREBASE_DB_URL}/${path}.json`;
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!response.ok) throw new Error(`Firebase error: ${response.status}`);
+                    console.log(`✅ Firebase saved: ${path}`);
+                    return true;
+                } catch (error) {
+                    console.error(`❌ Firebase save error (${path}):`, error);
+                    return false;
+                }
+            }
+
+            // Firebase REST API helper - read data
+            async function firebaseGet(path) {
+                try {
+                    const url = `${FIREBASE_DB_URL}/${path}.json`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Firebase error: ${response.status}`);
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error(`❌ Firebase read error (${path}):`, error);
+                    return null;
+                }
+            }
 
             function showTokenWarning() {
                 // Add warning banner at the top
@@ -747,75 +780,12 @@
             }
 
             // Save visibility status to separate file
+            // Save visibility status to Firebase (instant!)
             async function saveVisibilityStatus() {
-                if (!githubToken) {
-                    console.warn("GitHub token not set, cannot save visibility");
-                    return;
-                }
-
-                try {
-                    const content = JSON.stringify({
-                        isActive: liveScore.isActive || false,
-                        timestamp: new Date().toISOString()
-                    }, null, 2);
-
-                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/visibility-status.json`;
-
-                    let retries = 3;
-                    while (retries > 0) {
-                        console.log(`📝 Attempt ${4 - retries}/3 - Fetching current SHA for visibility...`);
-                        
-                        // Get fresh SHA
-                        const getResponse = await fetch(url, {
-                            headers: {
-                                "Authorization": `token ${githubToken}`
-                            }
-                        });
-
-                        let sha = null;
-                        if (getResponse.ok) {
-                            const data = await getResponse.json();
-                            sha = data.sha;
-                            console.log("📝 Got visibility SHA:", sha.substring(0, 8));
-                        } else {
-                            console.warn("Could not get SHA for visibility, will try without it");
-                            sha = null;
-                        }
-
-                        const response = await fetch(url, {
-                            method: "PUT",
-                            headers: {
-                                "Authorization": `token ${githubToken}`,
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                message: "Update visibility status",
-                                content: btoa(content),
-                                sha: sha
-                            })
-                        });
-
-                        console.log(`Response status: ${response.status}`);
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            
-                            if (response.status === 409 && retries > 1) {
-                                console.warn("⚠️ 409 Conflict on visibility - retrying...");
-                                retries--;
-                                await new Promise(r => setTimeout(r, 500));
-                                continue;
-                            }
-                            
-                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message}`);
-                        }
-
-                        console.log("✅ Visibility status saved!");
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Error saving visibility status:", error);
-                }
+                await firebaseSet('visibility', {
+                    isActive: liveScore.isActive || false,
+                    timestamp: new Date().toISOString()
+                });
             }
 
             function toggleViewerVisibility() {
@@ -893,80 +863,9 @@
                 resetAutoHideTimer();
             }
 
+            // Save live data to Firebase (instant, no CDN cache!)
             async function saveToGitHub(liveScore) {
-                if (!githubToken) {
-                    console.warn("GitHub token not set, cannot save");
-                    return;
-                }
-
-                try {
-                    // Save live data to GitHub repo
-                    const content = JSON.stringify({
-                        liveScore: liveScore || {}
-                    }, null, 2);
-
-                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/live-data.json`;
-
-                    // Get current file SHA for update (with retry for 409 conflicts)
-                    let sha = null;
-                    let retries = 3;
-                    
-                    while (retries > 0) {
-                        console.log(`📝 Attempt ${4 - retries}/3 - Fetching current SHA...`);
-                        
-                        // Always get fresh SHA
-                        const getResponse = await fetch(url, {
-                            headers: {
-                                "Authorization": `token ${githubToken}`
-                            }
-                        });
-
-                        if (getResponse.ok) {
-                            const data = await getResponse.json();
-                            sha = data.sha;
-                            console.log("📝 Got SHA:", sha.substring(0, 8));
-                        } else {
-                            console.warn("Could not get SHA, will try without it");
-                            sha = null;
-                        }
-
-                        console.log(`📤 Saving live-data.json with ${Object.keys(liveScore || {}).length} keys...`);
-                        
-                        const response = await fetch(url, {
-                            method: "PUT",
-                            headers: {
-                                "Authorization": `token ${githubToken}`,
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                message: "Update live scoring data",
-                                content: btoa(content),
-                                sha: sha
-                            })
-                        });
-
-                        console.log(`Response status: ${response.status}`);
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            
-                            // If 409 conflict, retry with fresh SHA
-                            if (response.status === 409 && retries > 1) {
-                                console.warn("⚠️ 409 Conflict - retrying with fresh SHA...");
-                                retries--;
-                                await new Promise(r => setTimeout(r, 500)); // Wait 500ms before retry
-                                continue;
-                            }
-                            
-                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
-                        }
-
-                        console.log("✅ Live data saved to GitHub repo successfully!");
-                        return; // Success
-                    }
-                } catch (error) {
-                    console.error("Error saving to GitHub:", error);
-                }
+                await firebaseSet('liveScore', liveScore || {});
             }
 
             async function loadFromGitHub() {
@@ -1015,47 +914,16 @@
             /* ---------------------------------- */
 
             // Load standings from GitHub repo
+            // Load standings from Firebase
             async function loadStandingsOnly() {
-                try {
-                    const response = await fetch(`${DATA_BASE_URL}/live-standings.json`);
-                    if (!response.ok) {
-                        console.warn("⚠️ live-standings.json not found");
-                        return null;
-                    }
-                    const content = await response.text();
-                    if (!content) return null;
-                    
-                    const data = JSON.parse(content);
-                    return data.standings || null;
-                } catch (error) {
-                    console.warn("⚠️ Error loading standings:", error);
-                    return null;
-                }
+                const standings = await firebaseGet('standings');
+                return standings;
             }
 
-            // Load visibility status from separate file
+            // Load visibility status from Firebase
             async function loadVisibilityStatus() {
-                try {
-                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
-                    });
-                    const content = await response.text();
-                    
-                    if (content) {
-                        const data = JSON.parse(content);
-                        return data.isActive || false;
-                    }
-                    
-                    return false;
-                } catch (error) {
-                    console.error("Error loading visibility status:", error);
-                    return false;
-                }
+                const data = await firebaseGet('visibility');
+                return data ? (data.isActive || false) : false;
             }
 
             // Load standings separately
@@ -1255,14 +1123,9 @@
             }
 
             // Save match history separately (only matches, not standings)
+            // Save match history to Firebase
             async function saveMatchHistoryOnly() {
-                if (!githubToken) {
-                    console.warn("Cannot save match history - token missing");
-                    return;
-                }
-
                 try {
-                    // Build match history data from all categories
                     const matchHistory = {};
                     Object.keys(tournamentState).forEach(categoryKey => {
                         const category = tournamentState[categoryKey];
@@ -1271,72 +1134,16 @@
                             matches: category.matches || []
                         };
                     });
-
-                    const content = JSON.stringify({
-                        matchHistory: matchHistory,
-                        timestamp: new Date().toISOString()
-                    }, null, 2);
-
-                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/match-history.json`;
-
-                    let retries = 3;
-                    while (retries > 0) {
-                        // Always get fresh SHA
-                        const getResponse = await fetch(url, {
-                            headers: {
-                                "Authorization": `token ${githubToken}`
-                            }
-                        });
-
-                        let sha = null;
-                        if (getResponse.ok) {
-                            const data = await getResponse.json();
-                            sha = data.sha;
-                        }
-
-                        const response = await fetch(url, {
-                            method: "PUT",
-                            headers: {
-                                "Authorization": `token ${githubToken}`,
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                message: "Update match history",
-                                content: btoa(content),
-                                sha: sha
-                            })
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            
-                            if (response.status === 409 && retries > 1) {
-                                console.warn("⚠️ 409 Conflict on match history - retrying...");
-                                retries--;
-                                await new Promise(r => setTimeout(r, 500));
-                                continue;
-                            }
-                            
-                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message}`);
-                        }
-
-                        console.log("✅ Match history saved!");
-                        return;
-                    }
+                    await firebaseSet('matchHistory', matchHistory);
                 } catch (error) {
                     console.error("Error saving match history:", error);
                 }
             }
 
             // Save standings separately (only called when standings change)
+            // Save standings to Firebase (instant, no CDN cache!)
             async function saveStandingsOnly() {
-                if (!githubToken) {
-                    console.warn("Cannot save standings - token missing");
-                    return;
-                }
-
                 try {
-                    // Build standings data
                     const standings = {};
                     Object.keys(tournamentState).forEach(categoryKey => {
                         const category = tournamentState[categoryKey];
@@ -1353,57 +1160,7 @@
                         };
                     });
 
-                    const content = JSON.stringify({
-                        standings: standings,
-                        timestamp: new Date().toISOString()
-                    }, null, 2);
-
-                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/live-standings.json`;
-
-                    let retries = 3;
-                    while (retries > 0) {
-                        // Always get fresh SHA
-                        const getResponse = await fetch(url, {
-                            headers: {
-                                "Authorization": `token ${githubToken}`
-                            }
-                        });
-
-                        let sha = null;
-                        if (getResponse.ok) {
-                            const data = await getResponse.json();
-                            sha = data.sha;
-                        }
-
-                        const response = await fetch(url, {
-                            method: "PUT",
-                            headers: {
-                                "Authorization": `token ${githubToken}`,
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                message: "Update standings",
-                                content: btoa(content),
-                                sha: sha
-                            })
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            
-                            if (response.status === 409 && retries > 1) {
-                                console.warn("⚠️ 409 Conflict on standings - retrying...");
-                                retries--;
-                                await new Promise(r => setTimeout(r, 500));
-                                continue;
-                            }
-                            
-                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message}`);
-                        }
-
-                        console.log("✅ Standings saved!");
-                        return;
-                    }
+                    await firebaseSet('standings', standings);
                 } catch (error) {
                     console.error("Error saving standings:", error);
                 }
@@ -1956,12 +1713,10 @@
                 document.getElementById("live-team-2").value = "";
                 updateLiveScoreDOM();
                 
-                // Save to database - save live data first, then standings and history
-                await updateLiveScore(); // Clear live match to database
-                await new Promise(resolve => setTimeout(resolve, 300)); // Wait to avoid conflicts
-                await saveStandingsOnly(); // Save updated standings
-                await new Promise(resolve => setTimeout(resolve, 300)); // Wait to avoid conflicts
-                await saveMatchHistoryOnly(); // Save match history
+                // Save to Firebase - all instant, no delays needed!
+                await updateLiveScore();
+                await saveStandingsOnly();
+                await saveMatchHistoryOnly();
                 
                 // Refresh standings display
                 renderDashboard();
