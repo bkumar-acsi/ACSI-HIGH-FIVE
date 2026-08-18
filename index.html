@@ -637,7 +637,7 @@
             let githubToken = TOKEN_FROM_URL;
             
             // HARDCODED GIST ID - tournament data gist
-            const HARDCODED_GIST_ID = "07976ee644e8d7bd84da31758de0ad74";
+            const HARDCODED_GIST_ID = "406cd9f16be8697ef329ccfc643a5558";
             let gistId = HARDCODED_GIST_ID;
 
             function showTokenWarning() {
@@ -1241,6 +1241,14 @@
                     saveTournamentData();
                     updateLiveScoreDOM();
                 });
+                
+                // Add event listeners for points inputs
+                document.getElementById("live-points-1").addEventListener("change", () => {
+                    updatePointsFromInput(1);
+                });
+                document.getElementById("live-points-2").addEventListener("change", () => {
+                    updatePointsFromInput(2);
+                });
             }
 
             function updateSelect2Options(excludeTeam) {
@@ -1391,7 +1399,7 @@
                 }
 
                 updateLiveScoreDOM();
-                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
+                saveTournamentData(); // Save to GitHub Gist
             }
 
             function updatePointsFromInput(team) {
@@ -1405,18 +1413,17 @@
                 }
 
                 updateLiveScoreDOM();
-                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
+                saveTournamentData(); // Save to GitHub Gist
             }
 
             function updateLiveScoreDOM() {
-                const category = tournamentState[currentCategory];
-
-                // Find team by name instead of ID
-                const team1 = category.teams.find((t) => t.name === liveMatch.team1Id);
-                const team2 = category.teams.find((t) => t.name === liveMatch.team2Id);
-
-                document.getElementById("display-name-1").innerText = team1 ? team1.name : "Player 1";
-                document.getElementById("display-name-2").innerText = team2 ? team2.name : "Player 2";
+                // Get values directly from dropdowns (more reliable)
+                const select1Value = document.getElementById("live-team-1").value;
+                const select2Value = document.getElementById("live-team-2").value;
+                
+                // Display the selected team names
+                document.getElementById("display-name-1").innerText = select1Value || "Player 1";
+                document.getElementById("display-name-2").innerText = select2Value || "Player 2";
 
                 document.getElementById("live-points-1").value = liveMatch.points1;
                 document.getElementById("live-points-2").value = liveMatch.points2;
