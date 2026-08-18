@@ -797,37 +797,30 @@
                 try {
                     console.log("📥 Loading from GitHub repo (raw URLs - NO rate limits!)...");
                     
-                    // Load metadata from raw URL (no rate limits!)
-                    const metadataResponse = await fetch(`${DATA_BASE_URL}/tournament-metadata.json`);
+                    // Load metadata from raw URL with cache-busting
+                    const metadataResponse = await fetch(`${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}`);
                     const metadataContent = await metadataResponse.text();
                     const metadata = metadataContent ? JSON.parse(metadataContent) : null;
                     
-                    // Load live data from raw URL
-                    const liveResponse = await fetch(`${DATA_BASE_URL}/live-data.json`);
+                    // Load live data from raw URL with cache-busting
+                    const liveResponse = await fetch(`${DATA_BASE_URL}/live-data.json?t=${Date.now()}`);
                     const liveContent = await liveResponse.text();
                     const liveData = liveContent ? JSON.parse(liveContent) : null;
                     
                     console.log("✅ Data loaded from GitHub repo (raw CDN)");
+                    console.log("   Metadata keys:", Object.keys(metadata?.tournament || {}));
+                    console.log("   Live data:", liveData?.liveScore);
                     
                     const result = {
                         tournament: metadata?.tournament || {},
                         liveMatch: liveData?.liveScore || {}
                     };
                     
-                    // Cache the data
-                    setCachedData(CACHE_KEYS.METADATA, result);
+                    // Don't cache - always fetch fresh
                     
                     return result;
                 } catch (error) {
                     console.error("Error loading from GitHub:", error);
-                    
-                    // If network error, try cached data
-                    const cachedData = getCachedData(CACHE_KEYS.METADATA);
-                    if (cachedData) {
-                        console.log("✅ Network error, using cached data");
-                        return cachedData;
-                    }
-                    
                     return null;
                 }
             }
@@ -835,8 +828,8 @@
             // Load live data only from Gist (no token needed for public read)
             async function loadLiveDataOnly() {
                 try {
-                    // Fetch from raw URL with cache-busting timestamp only
-                    const url = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}`;
+                    // Use random parameter for aggressive cache-busting
+                    const url = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}&v=${Math.random()}`;
                     const response = await fetch(url);
                     const content = await response.text();
                     
@@ -857,7 +850,7 @@
             // Load standings only from Gist
             async function loadStandingsOnly() {
                 try {
-                    const url = `${DATA_BASE_URL}/live-standings.json?t=${Date.now()}`;
+                    const url = `${DATA_BASE_URL}/live-standings.json?t=${Date.now()}&v=${Math.random()}`;
                     const response = await fetch(url);
                     const content = await response.text();
                     
@@ -876,7 +869,7 @@
             // Load visibility status from separate file
             async function loadVisibilityStatus() {
                 try {
-                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
+                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}&v=${Math.random()}`;
                     const response = await fetch(url);
                     const content = await response.text();
                     
@@ -895,7 +888,7 @@
             // Load match history only from Gist
             async function loadMatchHistoryOnly() {
                 try {
-                    const url = `${DATA_BASE_URL}/match-history.json?t=${Date.now()}`;
+                    const url = `${DATA_BASE_URL}/match-history.json?t=${Date.now()}&v=${Math.random()}`;
                     const response = await fetch(url);
                     const content = await response.text();
                     
@@ -943,14 +936,24 @@
                     
                     if (githubData) {
                         console.log("✅ Data loaded successfully");
+                        console.log("Tournament keys:", Object.keys(githubData.tournament || {}));
+                        console.log("Live match:", githubData.liveMatch);
+                        
                         tournamentState = githubData.tournament;
                         liveMatch = githubData.liveMatch || {};
+                        liveScore = githubData.liveMatch || {}; // Set liveScore from liveMatch
                         
                         console.log("📊 Tournament categories:", Object.keys(tournamentState));
                         console.log("📊 Live match data:", liveMatch);
+                        console.log("📊 liveScore:", liveScore);
                         
                         // Load standings separately
                         await loadStandingsData();
+                        
+                        // Load visibility status
+                        const isVisible = await loadVisibilityStatus();
+                        liveScore.isVisible = isVisible;
+                        console.log("📌 Visibility loaded:", isVisible);
                         
                         // Update live score display if data exists
                         updateLiveScoreDisplay();
