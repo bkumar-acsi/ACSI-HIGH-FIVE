@@ -872,6 +872,11 @@
                     // Load data directly
                     loadTournamentData();
                     
+                    // Initialize live selectors for default category (mens_singles)
+                    setTimeout(() => {
+                        initLiveSelectors();
+                    }, 100);
+                    
                     // Set default match format to Best of 3
                     document.getElementById("match-format-select").value = "3";
                     liveMatch.matchFormat = 3;
@@ -1147,9 +1152,17 @@
                     });
                 }
 
-                // Don't set default values - let user select
-                liveMatch.team1Id = "";
-                liveMatch.team2Id = "";
+                // Restore previously selected teams from liveMatch if they exist
+                if (liveMatch.team1Id) {
+                    select1.value = liveMatch.team1Id;
+                }
+                if (liveMatch.team2Id) {
+                    select2.value = liveMatch.team2Id;
+                    // Update select2 to exclude selected team1
+                    if (liveMatch.team1Id) {
+                        updateSelect2Options(liveMatch.team1Id);
+                    }
+                }
 
                 // Remove old event listeners by cloning and replacing
                 const newSelect1 = select1.cloneNode(true);
