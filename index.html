@@ -1041,6 +1041,30 @@
                 console.log("✅ Data fully loaded - saves now enabled");
             }
 
+            // Update liveScore table with current admin screen
+            function updateLiveScore() {
+                const liveScore = {
+                    isActive: document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== "",
+                    category: currentCategory,
+                    team1Name: document.getElementById("live-team-1").value,
+                    team2Name: document.getElementById("live-team-2").value,
+                    team1Points: parseInt(document.getElementById("live-points-1").value) || 0,
+                    team2Points: parseInt(document.getElementById("live-points-2").value) || 0,
+                    team1Sets: liveMatch.sets1,
+                    team2Sets: liveMatch.sets2,
+                    setHistory: liveMatch.setHistory,
+                    matchFormat: liveMatch.matchFormat,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save to GitHub
+                saveToGitHub({
+                    tournament: tournamentState,
+                    liveMatch: liveMatch,
+                    liveScore: liveScore
+                });
+            }
+
             function resetTournamentData() {
                 if (!confirm("Reset all tournament data?")) {
                     return;
@@ -1399,7 +1423,7 @@
                 }
 
                 updateLiveScoreDOM();
-                saveTournamentData(); // Save to GitHub Gist
+                updateLiveScore(); // Save to liveScore table
             }
 
             function updatePointsFromInput(team) {
@@ -1413,7 +1437,7 @@
                 }
 
                 updateLiveScoreDOM();
-                saveTournamentData(); // Save to GitHub Gist
+                updateLiveScore(); // Save to liveScore table
             }
 
             function updateLiveScoreDOM() {
