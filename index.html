@@ -732,32 +732,6 @@
                 
                 alert("✅ Women's Singles category added and saved to Gist!");
             }
-                // Disable all buttons on the page
-                const buttons = document.querySelectorAll("button");
-                buttons.forEach(btn => {
-                    btn.disabled = true;
-                    btn.style.pointerEvents = "none";
-                    btn.style.opacity = "0.5";
-                    btn.style.cursor = "not-allowed";
-                    btn.title = "Token is required. Use: ?token=your_github_token";
-                });
-                
-                // Disable all input fields
-                const inputs = document.querySelectorAll("input, select, textarea");
-                inputs.forEach(input => {
-                    input.disabled = true;
-                    input.style.pointerEvents = "none";
-                    input.style.opacity = "0.5";
-                    input.style.cursor = "not-allowed";
-                    input.title = "Token is required. Use: ?token=your_github_token";
-                });
-                
-                // Disable all forms
-                const forms = document.querySelectorAll("form");
-                forms.forEach(form => {
-                    form.style.pointerEvents = "none";
-                });
-            }
 
             function saveTournamentData() {
                 // Check if token is present before saving
