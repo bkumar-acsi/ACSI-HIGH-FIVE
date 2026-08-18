@@ -330,47 +330,9 @@
                 <!-- RIGHT SIDE -->
 
                 <div class="xl:col-span-2 space-y-6">
-                    <!-- STANDINGS -->
+                    <!-- STANDINGS FOR ALL CATEGORIES -->
 
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                        <div class="p-5 border-b border-slate-800 flex justify-between">
-                            <div>
-                                <h2 class="font-bold text-lg">
-                                    <span id="current-view-title"> Men Singles </span>
-
-                                    Standings
-                                </h2>
-
-                                <p class="text-slate-500 text-sm">Rankings update automatically</p>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-slate-800 text-slate-400 text-sm">
-                                        <th class="py-4 px-4 text-center">#</th>
-
-                                        <th class="py-4 px-4">Team / Player</th>
-
-                                        <th class="py-4 px-4 text-center">Actions</th>
-
-                                        <th class="py-4 px-4 text-center">Played</th>
-
-                                        <th class="py-4 px-4 text-center">Wins</th>
-
-                                        <th class="py-4 px-4 text-center">Losses</th>
-
-                                        <th class="py-4 px-4 text-center">Set Diff</th>
-
-                                        <th class="py-4 px-4 text-center">Points</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="standings-table-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <div id="all-standings-container" class="space-y-6"></div>
 
                     <!-- MATCH HISTORY -->
 
@@ -416,7 +378,16 @@
 
                 womens_singles: {
                     title: "Women Singles",
-                    teams: [],
+                    teams: [
+                        { id: "ws1", name: "Sheetal Pare" },
+                        { id: "ws2", name: "Ankita Sharma" },
+                        { id: "ws3", name: "Shivangi Agarwal" },
+                        { id: "ws4", name: "Siddhi" },
+                        { id: "ws5", name: "Sneha" },
+                        { id: "ws6", name: "Shivangi Nigam" },
+                        { id: "ws7", name: "Pratishtha" },
+                        { id: "ws8", name: "Payal Umekar" }
+                    ],
                     matches: [],
                 },
 
@@ -455,6 +426,18 @@
                 
                 matchFormat: 5,
             };
+
+            // Women's Singles Teams
+            const WOMENS_SINGLES_TEAMS = [
+                { id: "ws1", name: "Sheetal Pare" },
+                { id: "ws2", name: "Ankita Sharma" },
+                { id: "ws3", name: "Shivangi Agarwal" },
+                { id: "ws4", name: "Siddhi" },
+                { id: "ws5", name: "Sneha" },
+                { id: "ws6", name: "Shivangi Nigam" },
+                { id: "ws7", name: "Pratishtha" },
+                { id: "ws8", name: "Payal Umekar" }
+            ];
 
             /* ---------------------------------- */
             /* GITHUB GIST STORAGE */
@@ -724,7 +707,31 @@
                 loadTournamentData();
             }
 
-            function disableAllButtons() {
+            function addWomensSinglesCategory() {
+                // Add Women's Singles to tournament state
+                tournamentState.womens_singles = {
+                    title: "Women Singles",
+                    teams: [
+                        { id: "ws1", name: "Sheetal Pare" },
+                        { id: "ws2", name: "Ankita Sharma" },
+                        { id: "ws3", name: "Shivangi Agarwal" },
+                        { id: "ws4", name: "Siddhi" },
+                        { id: "ws5", name: "Sneha" },
+                        { id: "ws6", name: "Shivangi Nigam" },
+                        { id: "ws7", name: "Pratishtha" },
+                        { id: "ws8", name: "Payal Umekar" }
+                    ],
+                    matches: []
+                };
+                
+                console.log("✅ Women's Singles added to tournament state");
+                console.log("Saving to Gist...");
+                
+                // Save to Gist immediately
+                saveTournamentData();
+                
+                alert("✅ Women's Singles category added and saved to Gist!");
+            }
                 // Disable all buttons on the page
                 const buttons = document.querySelectorAll("button");
                 buttons.forEach(btn => {
@@ -1251,105 +1258,101 @@ ${team.name}
             /* ---------------------------------- */
 
             function renderDashboard() {
-                const category = tournamentState[currentCategory];
+                // Show standings for all categories
+                const container = document.getElementById("all-standings-container");
+                if (!container) {
+                    console.log("Standings container not found");
+                    return;
+                }
+                
+                container.innerHTML = "";
 
-                document.getElementById("current-view-title").innerText = category.title;
-
-                const tbody = document.getElementById("standings-table-body");
-
-                tbody.innerHTML = "";
-
-                category.teams.forEach((team, index) => {
-                    const stats = calculateStats(team);
-
-                    tbody.innerHTML += `
-
-<tr class="border-b border-slate-800">
-
-<td class="py-4 px-4 text-center">
-${index + 1}
-</td>
-
-<td class="py-4 px-4">
-${team.name}
-</td>
-
-<td class="py-4 px-4">
-
-<div class="flex gap-2 justify-center">
-
-<button
-onclick="editTeam('${team.id}')"
-class="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs hover:bg-blue-500/20 transition">
-
-Edit
-
-</button>
-
-<button
-onclick="deleteTeam('${team.id}')"
-class="px-3 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs hover:bg-red-500/20 transition">
-
-Delete
-
-</button>
-
-</div>
-
-</td>
-
-<td class="py-4 px-4 text-center">
-${stats.played}
-</td>
-
-<td class="py-4 px-4 text-center">
-${stats.wins}
-</td>
-
-<td class="py-4 px-4 text-center">
-${stats.losses}
-</td>
-
-<td class="py-4 px-4 text-center">
-${stats.wins - stats.losses}
-</td>
-
-<td class="py-4 px-4 text-center text-blue-400 font-bold">
-${stats.points}
-</td>
-
-</tr>
-
+                Object.keys(tournamentState).forEach((categoryKey) => {
+                    const category = tournamentState[categoryKey];
+                    
+                    if (!category.teams || category.teams.length === 0) {
+                        return; // Skip empty categories
+                    }
+                    
+                    // Group teams by their group
+                    const groupedTeams = {};
+                    category.teams.forEach(team => {
+                        const group = team.group || "No Group";
+                        if (!groupedTeams[group]) {
+                            groupedTeams[group] = [];
+                        }
+                        groupedTeams[group].push(team);
+                    });
+                    
+                    let standings = `
+<div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+    <div class="p-5 border-b border-slate-800 flex justify-between">
+        <div>
+            <h2 class="font-bold text-lg">${category.title}</h2>
+            <p class="text-slate-500 text-sm">Rankings update automatically</p>
+        </div>
+        <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            ${category.matches.length} Matches
+        </div>
+    </div>
+    <div class="p-5 space-y-4">
 `;
+
+                    // Render standings for each group
+                    Object.keys(groupedTeams).forEach(groupName => {
+                        standings += `
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+            <h3 class="font-bold text-blue-400 mb-3 text-sm">${groupName}</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400">
+                            <th class="py-2 px-2 text-center">#</th>
+                            <th class="py-2 px-2 text-left">Team / Player</th>
+                            <th class="py-2 px-2 text-center">Played</th>
+                            <th class="py-2 px-2 text-center">Wins</th>
+                            <th class="py-2 px-2 text-center">Losses</th>
+                            <th class="py-2 px-2 text-center">Diff</th>
+                            <th class="py-2 px-2 text-center">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+`;
+
+                        groupedTeams[groupName].forEach((team, index) => {
+                            const stats = calculateStats(team);
+                            standings += `
+                        <tr class="border-b border-slate-700">
+                            <td class="py-2 px-2 text-center text-xs">${index + 1}</td>
+                            <td class="py-2 px-2 text-slate-300 text-xs">${team.name}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.played}</td>
+                            <td class="py-2 px-2 text-center text-green-400 text-xs">${stats.wins}</td>
+                            <td class="py-2 px-2 text-center text-red-400 text-xs">${stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.wins - stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-blue-400 text-xs font-bold">${stats.points}</td>
+                        </tr>
+`;
+                        });
+
+                        standings += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+`;
+                    });
+
+                    standings += `
+    </div>
+</div>
+`;
+
+                    container.innerHTML += standings;
                 });
+            }
 
+            function renderMatchHistory() {
                 const history = document.getElementById("match-history-list");
-
-                history.innerHTML = "";
-
-                document.getElementById("match-count-badge").innerText = `${category.matches.length} Matches`;
-
-                category.matches.forEach((match, index) => {
-                    history.innerHTML += `
-
-<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
-
-<div class="flex justify-between items-start mb-2">
-<div class="text-xs text-slate-500">
-${match.timestamp}
-</div>
-
-<button
-onclick="deleteMatch(${index})"
-class="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs hover:bg-red-500/20 transition">
-Delete
-</button>
-</div>
-
-<div class="font-semibold">
-
-${match.team1Name}
-&nbsp;
 
 ${match.sets1}
 
