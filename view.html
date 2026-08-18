@@ -1129,34 +1129,72 @@
                 console.log("✅ Live score display updated");
             }
 
-            // Manual refresh function - loads latest live data from Gist
+            // Fresh load via GitHub API (bypasses CDN cache - always returns latest data)
+            async function fetchFreshFromAPI(filename) {
+                try {
+                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/${filename}`;
+                    console.log(`🔄 Fetching FRESH ${filename} via GitHub API...`);
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        console.warn(`⚠️ API fetch failed for ${filename}: ${response.status}`);
+                        return null;
+                    }
+                    
+                    const data = await response.json();
+                    // GitHub API returns base64 encoded content
+                    const content = atob(data.content);
+                    console.log(`✅ Fresh ${filename} loaded via API`);
+                    return JSON.parse(content);
+                } catch (error) {
+                    console.error(`Error fetching ${filename} via API:`, error);
+                    return null;
+                }
+            }
+
+            // Manual refresh function - uses GitHub API for FRESH data (bypasses CDN cache)
             async function refreshLiveData() {
-                console.log("🔄 Refreshing live data, standings, and match history from Gist...");
+                console.log("🔄 Refreshing ALL data via GitHub API (bypasses CDN cache)...");
                 
-                const updatedLiveScore = await loadLiveDataOnly();
-                const updatedStandings = await loadStandingsData();
-                const updatedHistory = await loadMatchHistoryOnly();
-                
-                if (updatedLiveScore) {
-                    liveScore = updatedLiveScore;
+                // Fetch fresh live data via API
+                const freshLiveData = await fetchFreshFromAPI('live-data.json');
+                if (freshLiveData && freshLiveData.liveScore) {
+                    liveScore = freshLiveData.liveScore;
                     console.log("✅ Live data refreshed:", liveScore);
                     updateLiveScoreDisplay();
                 }
                 
-                if (updatedStandings) {
+                // Fetch fresh standings via API
+                const freshStandings = await fetchFreshFromAPI('live-standings.json');
+                if (freshStandings && freshStandings.standings) {
+                    // Merge standings into tournamentState
+                    Object.keys(freshStandings.standings).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].teams = freshStandings.standings[categoryKey].teams || [];
+                        }
+                    });
                     console.log("✅ Standings refreshed");
                     if (currentTab === "standings") {
                         renderDashboard();
                     }
                 }
                 
-                if (updatedHistory) {
+                // Fetch fresh match history via API
+                const freshHistory = await fetchFreshFromAPI('match-history.json');
+                if (freshHistory && freshHistory.matchHistory) {
+                    // Merge match history into tournamentState
+                    Object.keys(freshHistory.matchHistory).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].matches = freshHistory.matchHistory[categoryKey].matches || [];
+                        }
+                    });
                     console.log("✅ Match history refreshed");
-                    // Update match history display if on that tab
-                    if (currentTab === "fixtures") {
-                        // Would need to render match history here if it's displayed in fixtures tab
+                    if (currentTab === "standings") {
+                        renderDashboard();
                     }
                 }
+                
+                console.log("✅ All data refreshed from GitHub API!");
             }
 
             function renderHomeView() {
