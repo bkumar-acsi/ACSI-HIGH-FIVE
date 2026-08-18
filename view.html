@@ -753,6 +753,34 @@
                 }
             }
 
+            // Load standings only from Gist
+            async function loadStandingsOnly() {
+                if (!PUBLIC_GIST_ID || PUBLIC_GIST_ID === "YOUR_PUBLIC_GIST_ID_HERE") {
+                    return null;
+                }
+
+                try {
+                    const response = await fetch(`https://api.github.com/gists/${PUBLIC_GIST_ID}`);
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const gist = await response.json();
+                    
+                    // Extract ONLY live-standings.json
+                    if (gist.files["live-standings.json"]) {
+                        const standingsData = JSON.parse(gist.files["live-standings.json"].content);
+                        return standingsData.standings || {};
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error("Error loading standings from Gist:", error);
+                    return null;
+                }
+            }
+
             /* ---------------------------------- */
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
@@ -929,8 +957,10 @@
 
             // Manual refresh function - loads latest live data from Gist
             async function refreshLiveData() {
-                console.log("🔄 Refreshing live data from Gist...");
+                console.log("🔄 Refreshing live data and standings from Gist...");
+                
                 const updatedLiveScore = await loadLiveDataOnly();
+                const updatedStandings = await loadStandingsOnly();
                 
                 if (updatedLiveScore) {
                     liveScore = updatedLiveScore;
@@ -938,6 +968,14 @@
                     updateLiveScoreDisplay();
                 } else {
                     alert("❌ Failed to load live data. Check if Gist is accessible.");
+                }
+                
+                if (updatedStandings) {
+                    console.log("✅ Standings refreshed");
+                    // Update standings display if on that tab
+                    if (currentTab === "standings") {
+                        renderDashboard();
+                    }
                 }
             }
 
