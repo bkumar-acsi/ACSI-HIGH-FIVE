@@ -727,6 +727,97 @@
                 }, INACTIVITY_TIMEOUT);
             }
 
+            // Restore visibility button state based on loaded status
+            function restoreVisibilityButtonState() {
+                const btn = document.getElementById("btn-viewer-visibility");
+                if (!btn) return;
+                
+                if (liveScore.isActive) {
+                    // Currently visible to viewers
+                    btn.innerText = "Hide from Viewers";
+                    btn.classList.remove("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                    btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                } else {
+                    // Currently hidden from viewers
+                    btn.innerText = "Show to Viewers";
+                    btn.classList.remove("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
+                    btn.classList.add("bg-green-500/10", "border-green-500/30", "text-green-400", "hover:bg-green-500/20");
+                }
+                console.log("🔘 Visibility button state restored - isActive:", liveScore.isActive);
+            }
+
+            // Save visibility status to separate file
+            async function saveVisibilityStatus() {
+                if (!githubToken) {
+                    console.warn("GitHub token not set, cannot save visibility");
+                    return;
+                }
+
+                try {
+                    const content = JSON.stringify({
+                        isActive: liveScore.isActive || false,
+                        timestamp: new Date().toISOString()
+                    }, null, 2);
+
+                    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/visibility-status.json`;
+
+                    let retries = 3;
+                    while (retries > 0) {
+                        console.log(`📝 Attempt ${4 - retries}/3 - Fetching current SHA for visibility...`);
+                        
+                        // Get fresh SHA
+                        const getResponse = await fetch(url, {
+                            headers: {
+                                "Authorization": `token ${githubToken}`
+                            }
+                        });
+
+                        let sha = null;
+                        if (getResponse.ok) {
+                            const data = await getResponse.json();
+                            sha = data.sha;
+                            console.log("📝 Got visibility SHA:", sha.substring(0, 8));
+                        } else {
+                            console.warn("Could not get SHA for visibility, will try without it");
+                            sha = null;
+                        }
+
+                        const response = await fetch(url, {
+                            method: "PUT",
+                            headers: {
+                                "Authorization": `token ${githubToken}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                message: "Update visibility status",
+                                content: btoa(content),
+                                sha: sha
+                            })
+                        });
+
+                        console.log(`Response status: ${response.status}`);
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            
+                            if (response.status === 409 && retries > 1) {
+                                console.warn("⚠️ 409 Conflict on visibility - retrying...");
+                                retries--;
+                                await new Promise(r => setTimeout(r, 500));
+                                continue;
+                            }
+                            
+                            throw new Error(`GitHub API error: ${response.status} - ${errorData.message}`);
+                        }
+
+                        console.log("✅ Visibility status saved!");
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Error saving visibility status:", error);
+                }
+            }
+
             function toggleViewerVisibility() {
                 const btn = document.getElementById("btn-viewer-visibility");
                 
@@ -757,8 +848,8 @@
                     console.log("✅ Live match will be HIDDEN from viewers (isActive = false)");
                 }
                 
-                // Save to live-data.json
-                updateLiveScore();
+                // Save visibility status to separate file
+                saveVisibilityStatus();
             }
 
             function toggleLiveMatch() {
@@ -821,6 +912,8 @@
                     let retries = 3;
                     
                     while (retries > 0) {
+                        console.log(`📝 Attempt ${4 - retries}/3 - Fetching current SHA...`);
+                        
                         // Always get fresh SHA
                         const getResponse = await fetch(url, {
                             headers: {
@@ -837,6 +930,8 @@
                             sha = null;
                         }
 
+                        console.log(`📤 Saving live-data.json with ${Object.keys(liveScore || {}).length} keys...`);
+                        
                         const response = await fetch(url, {
                             method: "PUT",
                             headers: {
@@ -849,6 +944,8 @@
                                 sha: sha
                             })
                         });
+
+                        console.log(`Response status: ${response.status}`);
 
                         if (!response.ok) {
                             const errorData = await response.json();
@@ -864,7 +961,7 @@
                             throw new Error(`GitHub API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
                         }
 
-                        console.log("✅ Live data saved to GitHub repo!");
+                        console.log("✅ Live data saved to GitHub repo successfully!");
                         return; // Success
                     }
                 } catch (error) {
@@ -936,6 +1033,31 @@
                 }
             }
 
+            // Load visibility status from separate file
+            async function loadVisibilityStatus() {
+                try {
+                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
+                    const content = await response.text();
+                    
+                    if (content) {
+                        const data = JSON.parse(content);
+                        return data.isActive || false;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error("Error loading visibility status:", error);
+                    return false;
+                }
+            }
+
             // Load standings separately
             async function loadStandingsData() {
                 console.log("📊 Loading standings from live-standings.json...");
@@ -996,7 +1118,6 @@
                 } else {
                     console.warn("⚠️ Live score data not found");
                     liveScore = {
-                        isActive: false,
                         category: "mens_singles",
                         team1Name: "",
                         team2Name: "",
@@ -1010,6 +1131,11 @@
                     };
                 }
                 
+                // Load visibility status from separate file
+                const visibilityStatus = await loadVisibilityStatus();
+                liveScore.isActive = visibilityStatus;
+                console.log("📌 Visibility status loaded: isActive =", liveScore.isActive);
+                
                 console.log("📋 After assignment - tournamentState keys:", Object.keys(tournamentState));
                 console.log("📋 After assignment - liveScore:", liveScore);
                 
@@ -1018,6 +1144,9 @@
                 
                 console.log("✅ Initializing live score selectors");
                 initLiveSelectors();
+                
+                // Restore visibility button state
+                restoreVisibilityButtonState();
                 
                 console.log("✅ Calling renderDashboard with fresh data from GitHub");
                 renderDashboard();
@@ -1288,7 +1417,6 @@
             // Update liveScore table with current admin screen
             async function updateLiveScore() {
                 liveScore = {
-                    isActive: liveScore.isActive !== undefined ? liveScore.isActive : (document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== ""),
                     category: currentCategory,
                     team1Name: document.getElementById("live-team-1").value,
                     team2Name: document.getElementById("live-team-2").value,
