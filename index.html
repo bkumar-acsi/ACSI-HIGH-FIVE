@@ -1052,25 +1052,36 @@
                 }
 
                 // If we have fixture teams, show only those; otherwise show all teams
-                let teamsToShow = teamsFromFixtures.size > 0 ? Array.from(teamsFromFixtures) : category.teams.map(t => t.name);
+                let teamsToShow = teamsFromFixtures.size > 0 ? Array.from(teamsFromFixtures).sort() : category.teams.map(t => t.name).sort();
 
                 if (teamsFromFixtures.size > 0) {
-                    // Show fixture teams
+                    // Show fixture teams - add to both dropdowns
                     teamsToShow.forEach((teamName) => {
                         select1.innerHTML += `<option value="${teamName}">${teamName}</option>`;
                         select2.innerHTML += `<option value="${teamName}">${teamName}</option>`;
                     });
+                    
+                    // Set default values to first two teams from fixtures
+                    if (teamsToShow.length >= 2) {
+                        select1.value = teamsToShow[0];
+                        select2.value = teamsToShow[1];
+                        liveMatch.team1Id = teamsToShow[0];
+                        liveMatch.team2Id = teamsToShow[1];
+                    }
                 } else {
                     // Fallback: show all teams from database
                     category.teams.forEach((team) => {
-                        select1.innerHTML += `<option value="${team.id}">${team.name}</option>`;
-                        select2.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                        select1.innerHTML += `<option value="${team.name}">${team.name}</option>`;
+                        select2.innerHTML += `<option value="${team.name}">${team.name}</option>`;
                     });
-                }
-
-                if (category.teams.length >= 2) {
-                    liveMatch.team1Id = category.teams[0].id;
-                    liveMatch.team2Id = category.teams[1].id;
+                    
+                    // Set default values
+                    if (category.teams.length >= 2) {
+                        select1.value = category.teams[0].name;
+                        select2.value = category.teams[1].name;
+                        liveMatch.team1Id = category.teams[0].name;
+                        liveMatch.team2Id = category.teams[1].name;
+                    }
                 }
 
                 // Remove old event listeners by cloning and replacing
@@ -1243,20 +1254,17 @@
             function updateLiveScoreDOM() {
                 const category = tournamentState[currentCategory];
 
-                const team1 = category.teams.find((t) => t.id === liveMatch.team1Id);
-
-                const team2 = category.teams.find((t) => t.id === liveMatch.team2Id);
+                // Find team by name instead of ID
+                const team1 = category.teams.find((t) => t.name === liveMatch.team1Id);
+                const team2 = category.teams.find((t) => t.name === liveMatch.team2Id);
 
                 document.getElementById("display-name-1").innerText = team1 ? team1.name : "Player 1";
-
                 document.getElementById("display-name-2").innerText = team2 ? team2.name : "Player 2";
 
                 document.getElementById("live-points-1").value = liveMatch.points1;
-
                 document.getElementById("live-points-2").value = liveMatch.points2;
 
                 document.getElementById("live-sets-1").innerText = liveMatch.sets1;
-
                 document.getElementById("live-sets-2").innerText = liveMatch.sets2;
 
                 document.getElementById("set-history-log").innerText = liveMatch.setHistory.length
