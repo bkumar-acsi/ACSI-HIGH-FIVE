@@ -1062,19 +1062,16 @@
 
             // Update liveScore table with current admin screen
             function updateLiveScore() {
-                // Keep previous values if they exist
-                const prevLiveScore = window.liveScore || {};
-                
                 liveScore = {
                     isActive: document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== "",
                     category: currentCategory,
                     team1Name: document.getElementById("live-team-1").value,
                     team2Name: document.getElementById("live-team-2").value,
-                    team1Points: parseInt(document.getElementById("live-points-1").value) || 0,
-                    team2Points: parseInt(document.getElementById("live-points-2").value) || 0,
-                    team1Sets: (prevLiveScore && prevLiveScore.team1Sets) || 0,
-                    team2Sets: (prevLiveScore && prevLiveScore.team2Sets) || 0,
-                    setHistory: (prevLiveScore && prevLiveScore.setHistory) || [],
+                    team1Points: liveMatch.points1 || 0,
+                    team2Points: liveMatch.points2 || 0,
+                    team1Sets: liveMatch.sets1 || 0,
+                    team2Sets: liveMatch.sets2 || 0,
+                    setHistory: liveMatch.setHistory || [],
                     matchFormat: document.getElementById("match-format-select").value || 3,
                     timestamp: new Date().toISOString()
                 };
