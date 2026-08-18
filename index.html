@@ -1468,9 +1468,11 @@
 
             function confirmSetWinner() {
                 if (liveMatch.points1 === 0 && liveMatch.points2 === 0) {
+                    alert("Please enter scores first");
                     return;
                 }
 
+                // Record the set result
                 liveMatch.setHistory.push(`${liveMatch.points1}-${liveMatch.points2}`);
 
                 if (liveMatch.points1 > liveMatch.points2) {
@@ -1479,11 +1481,17 @@
                     liveMatch.sets2++;
                 }
 
+                // Reset points for next set
                 liveMatch.points1 = 0;
                 liveMatch.points2 = 0;
 
+                // Update display
                 updateLiveScoreDOM();
-                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
+                
+                // Save set history to live-data.json
+                updateLiveScore();
+                
+                console.log("✅ Set recorded and saved");
             }
 
             /* ---------------------------------- */
@@ -1491,55 +1499,39 @@
             /* ---------------------------------- */
 
             function submitCompletedMatch() {
-                const category = tournamentState[currentCategory];
-
-                const team1 = category.teams.find((t) => t.id === liveMatch.team1Id);
-
-                const team2 = category.teams.find((t) => t.id === liveMatch.team2Id);
-
-                if (!team1 || !team2) {
-                    return;
-                }
-
+                // Check if sets were played
                 if (liveMatch.sets1 === 0 && liveMatch.sets2 === 0) {
-                    alert("No completed sets.");
-
+                    alert("❌ No sets completed yet! Please end at least one set.");
                     return;
                 }
 
-                category.matches.unshift({
-                    id: "m_" + Date.now(),
+                const team1 = document.getElementById("live-team-1").value;
+                const team2 = document.getElementById("live-team-2").value;
+                
+                if (!team1 || !team2) {
+                    alert("❌ Please select both teams");
+                    return;
+                }
 
-                    team1Id: team1.id,
+                // Show match summary
+                alert(`✅ Match Saved!\n\n${team1} vs ${team2}\nSets: ${liveMatch.sets1} - ${liveMatch.sets2}\nHistory: ${liveMatch.setHistory.join(", ")}`);
 
-                    team2Id: team2.id,
-
-                    team1Name: team1.name,
-
-                    team2Name: team2.name,
-
-                    sets1: liveMatch.sets1,
-
-                    sets2: liveMatch.sets2,
-
-                    setHistory: [...liveMatch.setHistory],
-
-                    timestamp: new Date().toLocaleString(),
-                });
-
+                // Clear live match data
                 liveMatch.points1 = 0;
                 liveMatch.points2 = 0;
-
                 liveMatch.sets1 = 0;
                 liveMatch.sets2 = 0;
-
                 liveMatch.setHistory = [];
-
-                saveTournamentData();
-
-                renderDashboard();
-
+                
+                // Reset UI
+                document.getElementById("live-team-1").value = "";
+                document.getElementById("live-team-2").value = "";
                 updateLiveScoreDOM();
+                
+                // Save cleared state to live-data.json (match is now inactive)
+                updateLiveScore();
+                
+                console.log("✅ Match completed and saved");
             }
 
             /* ---------------------------------- */
