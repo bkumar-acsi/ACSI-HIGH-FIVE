@@ -106,11 +106,20 @@
 
         <section class="sticky top-20 z-40 bg-slate-900 border-b border-slate-800">
             <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
+                <!-- HOME TAB (DEFAULT) -->
+                <button
+                    id="btn-home-tab"
+                    onclick="switchTab('home')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                >
+                    🏠 Home
+                </button>
+                
                 <!-- STANDINGS TAB -->
                 <button
                     id="btn-standings-tab"
                     onclick="switchTab('standings')"
-                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
                 >
                     Standings
                 </button>
@@ -127,7 +136,7 @@
         </section>
 
         <!-- CATEGORY NAV (for standings) -->
-        <section id="standings-nav" class="sticky top-32 z-40 bg-slate-900 border-b border-slate-800">
+        <section id="standings-nav" class="sticky top-32 z-40 bg-slate-900 border-b border-slate-800" style="display: none;">
             <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
                 <button
                     id="btn-mens_singles"
@@ -174,8 +183,31 @@
         <!-- MAIN -->
 
         <main class="max-w-7xl mx-auto px-4 mt-6">
+            <!-- HOME SECTION (DEFAULT VIEW) -->
+            <div id="home-section" style="display: block;">
+                <!-- UPCOMING MATCHES -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">🎯 Upcoming Matches</h2>
+                        <p class="text-slate-500 text-sm mt-1">Next matches across all categories</p>
+                    </div>
+                    
+                    <div id="upcoming-matches-list" class="p-5 space-y-3"></div>
+                </div>
+
+                <!-- ALL GROUPS BY CATEGORY -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">📊 All Groups</h2>
+                        <p class="text-slate-500 text-sm mt-1">Teams organized by category and group</p>
+                    </div>
+                    
+                    <div id="all-groups-container" class="p-5 space-y-8"></div>
+                </div>
+            </div> <!-- End home-section -->
+
             <!-- STANDINGS SECTION -->
-            <div id="standings-section" style="display: block;">
+            <div id="standings-section" style="display: none;">
                 <!-- LIVE SCOREBOARD -->
 
                 <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
@@ -530,9 +562,9 @@
                 // Load data immediately from public Gist
                 loadTournamentData();
                 
-                // Initialize fixtures view as default
+                // Initialize home view as default
                 setTimeout(() => {
-                    switchTab("fixtures");
+                    switchTab("home");
                 }, 100);
                 
                 // Auto-refresh every 5 seconds
@@ -639,13 +671,107 @@
                 document.getElementById(`btn-${tab}-tab`).classList.add("bg-blue-500", "text-white");
 
                 // Show/hide sections
+                document.getElementById("home-section").style.display = tab === "home" ? "" : "none";
                 document.getElementById("standings-nav").style.display = tab === "standings" ? "" : "none";
                 document.getElementById("standings-section").style.display = tab === "standings" ? "" : "none";
                 document.getElementById("fixtures-section").style.display = tab === "fixtures" ? "" : "none";
 
-                if (tab === "fixtures") {
+                if (tab === "home") {
+                    renderHomeView();
+                } else if (tab === "fixtures") {
                     renderFixtures();
+                } else if (tab === "standings") {
+                    renderDashboard();
                 }
+            }
+
+            function renderHomeView() {
+                // Render upcoming matches (first match from each category)
+                const upcomingContainer = document.getElementById("upcoming-matches-list");
+                upcomingContainer.innerHTML = "";
+                
+                Object.entries(tournamentState).forEach(([categoryKey, category]) => {
+                    const fixtures = FIXTURES_DATA[categoryKey];
+                    if (!fixtures || !fixtures.matches) return;
+                    
+                    // Get first match from first round
+                    let firstMatch = null;
+                    for (const matches of Object.values(fixtures.matches)) {
+                        if (matches.length > 0) {
+                            firstMatch = matches[0];
+                            break;
+                        }
+                    }
+                    
+                    if (firstMatch) {
+                        const categoryNames = {
+                            mens_singles: "Men's Singles",
+                            womens_singles: "Women's Singles",
+                            mens_doubles: "Men's Doubles",
+                            womens_doubles: "Women's Doubles",
+                            mix_doubles: "Mixed Doubles"
+                        };
+                        
+                        upcomingContainer.innerHTML += `
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+    <div class="text-xs text-slate-500 mb-2">${categoryNames[categoryKey] || categoryKey}</div>
+    <div class="text-sm font-semibold text-blue-400">${firstMatch.match || firstMatch.number}</div>
+    ${firstMatch.group ? `<div class="text-xs text-slate-400 mt-1">Group: ${firstMatch.group}</div>` : ''}
+</div>
+`;
+                    }
+                });
+                
+                if (upcomingContainer.innerHTML === "") {
+                    upcomingContainer.innerHTML = '<div class="text-slate-500 text-center py-6">No upcoming matches</div>';
+                }
+                
+                // Render all groups by category
+                const groupsContainer = document.getElementById("all-groups-container");
+                groupsContainer.innerHTML = "";
+                
+                Object.entries(tournamentState).forEach(([categoryKey, category]) => {
+                    const categoryNames = {
+                        mens_singles: "Men's Singles",
+                        womens_singles: "Women's Singles",
+                        mens_doubles: "Men's Doubles",
+                        womens_doubles: "Women's Doubles",
+                        mix_doubles: "Mixed Doubles"
+                    };
+                    
+                    // Group teams by group field
+                    const groupedTeams = {};
+                    category.teams.forEach(team => {
+                        const group = team.group || "No Group";
+                        if (!groupedTeams[group]) {
+                            groupedTeams[group] = [];
+                        }
+                        groupedTeams[group].push(team.name);
+                    });
+                    
+                    let categoryHTML = `
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+    <h3 class="font-bold text-blue-400 mb-4">${categoryNames[categoryKey] || categoryKey}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+`;
+                    
+                    Object.entries(groupedTeams).forEach(([groupName, teamNames]) => {
+                        categoryHTML += `
+        <div class="bg-slate-900 rounded-lg p-3 border border-slate-700">
+            <h4 class="text-sm font-semibold text-slate-300 mb-2">${groupName}</h4>
+            <ul class="text-xs space-y-1">
+                ${teamNames.map(name => `<li class="text-slate-400">• ${name}</li>`).join('')}
+            </ul>
+        </div>
+`;
+                    });
+                    
+                    categoryHTML += `
+    </div>
+</div>
+`;
+                    groupsContainer.innerHTML += categoryHTML;
+                });
             }
 
             function renderFixtures() {
