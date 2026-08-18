@@ -902,8 +902,8 @@
             async function loadStandingsData() {
                 console.log("📊 Loading standings from live-standings.json...");
                 
-                if (!githubToken || !gistId) {
-                    console.warn("Cannot load standings - token or gistId missing");
+                if (!githubToken) {
+                    console.warn("Cannot load standings - GitHub token missing");
                     return;
                 }
 
@@ -926,21 +926,19 @@
             async function loadTournamentData() {
                 console.log("=== LOADING TOURNAMENT DATA ===");
                 console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
-                console.log("Gist ID:", gistId ? "✅ " + gistId : "❌ Missing");
 
-                // Must load from GitHub - no localhost fallback
-                if (!githubToken || !gistId) {
-                    console.error("❌ CANNOT LOAD: Token or Gist ID missing!");
+                // Must have token to save to GitHub repo
+                if (!githubToken) {
+                    console.error("❌ CANNOT LOAD: GitHub token missing!");
                     console.error("Token:", githubToken ? "OK" : "MISSING");
-                    console.error("Gist ID:", gistId ? "OK" : "MISSING");
                     return;
                 }
 
-                console.log("📡 Loading from GitHub Gist...");
+                console.log("📡 Loading from GitHub repo...");
                 const githubData = await loadFromGitHub();
                 
                 if (!githubData) {
-                    console.error("❌ Failed to load from GitHub Gist!");
+                    console.error("❌ Failed to load from GitHub repo!");
                     return;
                 }
 
