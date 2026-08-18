@@ -659,11 +659,9 @@
                     if (githubData) {
                         console.log("✅ Loading from GitHub Gist");
                         tournamentState = githubData.tournament;
-                        liveMatch = githubData.liveMatch;
-                        liveScore = githubData.liveScore || liveScore; // Load liveScore if available
+                        liveScore = githubData.liveScore || {};
                         
-                        console.log("Tournament data:", tournamentState);
-                        console.log("Live match:", liveMatch);
+                        console.log("Tournament data keys:", Object.keys(tournamentState));
                         console.log("Live score:", liveScore);
                         
                         // Update live score display
@@ -678,7 +676,6 @@
                             renderFixtures();
                         }
                         
-                        applyLiveMatchVisibility();
                         return;
                     } else {
                         console.error("❌ Failed to load from GitHub Gist - check your Gist ID!");
@@ -701,18 +698,9 @@
             function applyLiveMatchVisibility() {
                 const section = document.getElementById("live-match-section");
                 
-                console.log("🎬 applyLiveMatchVisibility called");
-                console.log("Current liveMatch.hidden:", liveMatch.hidden);
-                console.log("Full liveMatch object:", liveMatch);
-                
-                // Check if live match is hidden from the data
-                if (liveMatch.hidden === true) {
-                    console.log("🔴 Setting display to NONE (hidden)");
-                    section.style.display = "none";
-                } else {
-                    console.log("🟢 Setting display to BLOCK (visible)");
-                    section.style.display = "";
-                }
+                // In new architecture, we use liveScore.isActive instead
+                // Don't show live match section - use updateLiveScoreDisplay() instead
+                console.log("ℹ️ applyLiveMatchVisibility (legacy function - no longer used)");
             }
 
             /* ---------------------------------- */
