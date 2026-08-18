@@ -377,6 +377,70 @@
             /* TOURNAMENT DATA */
             /* ---------------------------------- */
 
+            const FIXTURES_DATA = {
+                mens_singles: {
+                    groups: {
+                        "Group A": ["Aniket Ghodake", "Kshitij Babar", "Balachander Srinivasalu", "Suraj Kendre", "Suresh Rankhamb"],
+                        "Group B": ["Rishabh Mishra", "Prem Tamang", "Brajesh Kumar", "Sachin Sonone", "Shekhar Kothawade"],
+                        "Group C": ["Sanket Pande", "Akshay Prabhune", "Santosh Daware", "Sagar Zanjad", "Aditya Dhage"],
+                        "Group D": ["Swapnil Walivkar", "Jinish Shah", "Rahul Singh", "Saurabh Kulkarni", "Ajinkya"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { group: "Group A", match: "Aniket vs Kshitij" },
+                            { group: "Group B", match: "Rishabh vs Prem" },
+                            { group: "Group C", match: "Sanket vs Akshay" },
+                            { group: "Group D", match: "Swapnil vs Jinish" }
+                        ]
+                    }
+                },
+                mens_doubles: {
+                    groups: {
+                        "Group A": ["Balachander & Sachin", "Suresh & Prem", "Suraj & Rishabh"],
+                        "Group B": ["Kshitij & Saurabh", "Tushar & Brajesh", "Sanket & Amit"],
+                        "Group C": ["Anurag & Shekhar", "Akshay & Santosh", "Sagar & Aditya"],
+                        "Group D": ["Jinish & Birju", "Rahul & Mandar", "Shreyas & Ambuj"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Balachander & Sachin vs Suresh & Prem" }
+                        ]
+                    }
+                },
+                womens_singles: {
+                    groups: {
+                        "Group A": ["Sheetal Pare", "Ankita Sharma", "Shivangi Agarwal", "Siddhi"],
+                        "Group B": ["Sneha", "Shivangi Nigam", "Pratishtha", "Payal Umekar"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Sheetal Pare vs Ankita Sharma" }
+                        ]
+                    }
+                },
+                womens_doubles: {
+                    groups: {
+                        "All Teams": ["Ankita & Sheetal", "Shivangi A & Siddhi", "Sneha & Harshali", "Payal & Vimla", "Shivangi N & Pratishtha"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { number: "1", match: "Ankita & Sheetal vs Shivangi A & Siddhi", bye: "Sneha & Harshali" }
+                        ]
+                    }
+                },
+                mix_doubles: {
+                    groups: {
+                        "Group A": ["Kshitij Babar & Sheetal Pare", "Suresh Rankhamb & Sneha", "Saurabh Kulkarni & Ankita Sharma", "Sachin Sonone & Siddhi Joshi", "Ajinkya & Harshali"],
+                        "Group B": ["Brajesh Kumar & Shivangi Nigam", "Amit Sharma & Shivangi Agarwal", "Shekhar & Payal Umekar", "Rahul & Vimla"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Kshitij & Sheetal vs Suresh & Sneha" }
+                        ]
+                    }
+                }
+            };
+
             const SEED_DATA = {
                 mens_singles: {
                     title: "Men Singles",
@@ -904,13 +968,23 @@
                     groupedTeams[group].push(team.name);
                 });
                 
-                // Render groups from database
-                Object.entries(groupedTeams).forEach(([groupName, teamNames]) => {
+                // Sort groups in order A, B, C, D, All Teams
+                const groupOrder = ["Group A", "Group B", "Group C", "Group D", "All Teams"];
+                const sortedGroups = Object.keys(groupedTeams).sort((a, b) => {
+                    const aIndex = groupOrder.indexOf(a);
+                    const bIndex = groupOrder.indexOf(b);
+                    if (aIndex === -1) return 1;
+                    if (bIndex === -1) return 1;
+                    return aIndex - bIndex;
+                });
+                
+                // Render groups in sorted order
+                sortedGroups.forEach(groupName => {
                     groupsContainer.innerHTML += `
                         <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                             <h4 class="font-bold text-blue-400 mb-3">${groupName}</h4>
                             <ul class="space-y-2 text-sm">
-                                ${teamNames.map(name => `<li class="text-slate-300">• ${name}</li>`).join('')}
+                                ${groupedTeams[groupName].map(name => `<li class="text-slate-300">• ${name}</li>`).join('')}
                             </ul>
                         </div>
                     `;
@@ -1357,7 +1431,7 @@
             /* ---------------------------------- */
 
             function renderDashboard() {
-                // Show standings for all categories
+                // Show standings for all categories, with currentCategory first
                 const container = document.getElementById("all-standings-container");
                 if (!container) {
                     console.log("Standings container not found");
@@ -1366,7 +1440,14 @@
                 
                 container.innerHTML = "";
 
-                Object.keys(tournamentState).forEach((categoryKey) => {
+                // Create sorted array with currentCategory first
+                const categoryKeys = Object.keys(tournamentState);
+                const sortedKeys = [
+                    currentCategory,
+                    ...categoryKeys.filter(key => key !== currentCategory)
+                ];
+
+                sortedKeys.forEach((categoryKey) => {
                     const category = tournamentState[categoryKey];
                     
                     if (!category.teams || category.teams.length === 0) {
