@@ -189,10 +189,23 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">🎯 Upcoming Matches</h2>
-                        <p class="text-slate-500 text-sm mt-1">Next matches across all categories</p>
+                        <p class="text-slate-500 text-sm mt-1">Tomorrow - 19 August 2026</p>
                     </div>
                     
-                    <div id="upcoming-matches-list" class="p-5 space-y-3"></div>
+                    <div class="p-5 overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-slate-400">
+                                    <th class="py-3 px-3 text-left">Match</th>
+                                    <th class="py-3 px-3 text-center">Start Time</th>
+                                    <th class="py-3 px-3 text-center">End Time</th>
+                                    <th class="py-3 px-3 text-left">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="upcoming-matches-list">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- ALL GROUPS BY CATEGORY -->
@@ -686,45 +699,34 @@
             }
 
             function renderHomeView() {
-                // Render upcoming matches (first match from each category)
+                // Render upcoming matches - first 10 from Men's Singles (as per PDF)
                 const upcomingContainer = document.getElementById("upcoming-matches-list");
                 upcomingContainer.innerHTML = "";
                 
-                Object.entries(tournamentState).forEach(([categoryKey, category]) => {
-                    const fixtures = FIXTURES_DATA[categoryKey];
-                    if (!fixtures || !fixtures.matches) return;
-                    
-                    // Get first match from first round
-                    let firstMatch = null;
-                    for (const matches of Object.values(fixtures.matches)) {
-                        if (matches.length > 0) {
-                            firstMatch = matches[0];
-                            break;
-                        }
-                    }
-                    
-                    if (firstMatch) {
-                        const categoryNames = {
-                            mens_singles: "Men's Singles",
-                            womens_singles: "Women's Singles",
-                            mens_doubles: "Men's Doubles",
-                            womens_doubles: "Women's Doubles",
-                            mix_doubles: "Mixed Doubles"
-                        };
-                        
-                        upcomingContainer.innerHTML += `
-<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
-    <div class="text-xs text-slate-500 mb-2">${categoryNames[categoryKey] || categoryKey}</div>
-    <div class="text-sm font-semibold text-blue-400">${firstMatch.match || firstMatch.number}</div>
-    ${firstMatch.group ? `<div class="text-xs text-slate-400 mt-1">Group: ${firstMatch.group}</div>` : ''}
-</div>
-`;
-                    }
-                });
+                // Tomorrow's scheduled matches from PDF (19 Aug 2026)
+                const tomorrowMatches = [
+                    { matchNum: "M1", startTime: "09:30", endTime: "09:39", match: "Aniket vs Kshitij" },
+                    { matchNum: "M2", startTime: "09:39", endTime: "09:48", match: "Rishabh vs Prem" },
+                    { matchNum: "M3", startTime: "09:48", endTime: "09:57", match: "Sanket vs Akshay" },
+                    { matchNum: "M4", startTime: "09:57", endTime: "10:06", match: "Swapnil vs Jinish" },
+                    { matchNum: "M5", startTime: "10:06", endTime: "10:15", match: "Balachander vs Suraj" },
+                    { matchNum: "M6", startTime: "10:15", endTime: "10:24", match: "Brajesh vs Sachin" },
+                    { matchNum: "M7", startTime: "10:24", endTime: "10:33", match: "Santosh vs Sagar" },
+                    { matchNum: "M8", startTime: "10:33", endTime: "10:42", match: "Rahul vs Saurabh" },
+                    { matchNum: "M9", startTime: "10:42", endTime: "10:51", match: "Aniket vs Balachander" },
+                    { matchNum: "M10", startTime: "10:51", endTime: "11:00", match: "Rishabh vs Brajesh" }
+                ];
                 
-                if (upcomingContainer.innerHTML === "") {
-                    upcomingContainer.innerHTML = '<div class="text-slate-500 text-center py-6">No upcoming matches</div>';
-                }
+                tomorrowMatches.forEach((m) => {
+                    upcomingContainer.innerHTML += `
+                        <tr class="border-b border-slate-700 hover:bg-slate-800/50 transition">
+                            <td class="py-3 px-3 text-blue-400 font-semibold">${m.matchNum}</td>
+                            <td class="py-3 px-3 text-center text-slate-300">${m.startTime}</td>
+                            <td class="py-3 px-3 text-center text-slate-300">${m.endTime}</td>
+                            <td class="py-3 px-3 text-slate-200">${m.match}</td>
+                        </tr>
+`;
+                });
                 
                 // Render all groups by category
                 const groupsContainer = document.getElementById("all-groups-container");
@@ -915,16 +917,16 @@
             /* Live match visibility is controlled by admin in index.html */
 
             function renderDashboard() {
-                // Render standings for all categories
+                // Render standings for ONLY the current category selected
                 const container = document.getElementById("all-standings-container");
                 container.innerHTML = "";
 
-                // Render match history for first category
-                const firstCategory = tournamentState[currentCategory] || tournamentState["mens_singles"];
+                // Render match history for current category
+                const currentCategoryData = tournamentState[currentCategory] || tournamentState["mens_singles"];
                 const history = document.getElementById("match-history-list");
                 history.innerHTML = "";
 
-                firstCategory.matches.forEach((match) => {
+                currentCategoryData.matches.forEach((match) => {
                     history.innerHTML += `
 <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
 <div class="text-xs text-slate-500 mb-2">${match.timestamp}</div>
@@ -936,14 +938,11 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 `;
                 });
 
-                // Render all categories standings with groups
-                Object.keys(tournamentState).forEach((categoryKey) => {
-                    const category = tournamentState[categoryKey];
+                // Render ONLY current category standings
+                const categoryKey = currentCategory;
+                const category = tournamentState[categoryKey];
                     
-                    if (!category.teams || category.teams.length === 0) {
-                        return;
-                    }
-                    
+                if (category.teams && category.teams.length > 0) {
                     // Group teams by their group
                     const groupedTeams = {};
                     category.teams.forEach(team => {
@@ -1018,7 +1017,7 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 `;
 
                     container.innerHTML += standings;
-                });
+                }
             }
         </script>
     </body>
