@@ -797,26 +797,28 @@
                 try {
                     console.log("📥 Loading from GitHub repo (raw URLs - NO rate limits!)...");
                     
-                    // Load metadata from raw URL with cache-busting
-                    const metadataResponse = await fetch(`${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}`);
+                    // Load metadata from raw URL with aggressive cache-busting
+                    const metadataUrl = `${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}&v=${Math.random()}`;
+                    console.log("Fetching metadata from:", metadataUrl);
+                    const metadataResponse = await fetch(metadataUrl, { cache: 'no-store' });
                     const metadataContent = await metadataResponse.text();
                     const metadata = metadataContent ? JSON.parse(metadataContent) : null;
+                    console.log("✅ Metadata loaded, keys:", Object.keys(metadata?.tournament || {}));
                     
-                    // Load live data from raw URL with cache-busting
-                    const liveResponse = await fetch(`${DATA_BASE_URL}/live-data.json?t=${Date.now()}`);
+                    // Load live data from raw URL with aggressive cache-busting
+                    const liveUrl = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}&v=${Math.random()}`;
+                    console.log("Fetching live data from:", liveUrl);
+                    const liveResponse = await fetch(liveUrl, { cache: 'no-store' });
                     const liveContent = await liveResponse.text();
                     const liveData = liveContent ? JSON.parse(liveContent) : null;
+                    console.log("✅ Live data loaded:", liveData?.liveScore);
                     
                     console.log("✅ Data loaded from GitHub repo (raw CDN)");
-                    console.log("   Metadata keys:", Object.keys(metadata?.tournament || {}));
-                    console.log("   Live data:", liveData?.liveScore);
                     
                     const result = {
                         tournament: metadata?.tournament || {},
                         liveMatch: liveData?.liveScore || {}
                     };
-                    
-                    // Don't cache - always fetch fresh
                     
                     return result;
                 } catch (error) {
@@ -830,13 +832,14 @@
                 try {
                     // Use random parameter for aggressive cache-busting
                     const url = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}&v=${Math.random()}`;
-                    const response = await fetch(url);
+                    console.log("🔄 Fetching live data from:", url);
+                    const response = await fetch(url, { cache: 'no-store' });
                     const content = await response.text();
                     
                     if (content) {
                         const liveData = JSON.parse(content);
                         const liveScore = liveData.liveScore || {};
-                        console.log("✅ Live data loaded:", liveScore);
+                        console.log("✅ Live data loaded - team1:", liveScore.team1Name, "team2:", liveScore.team2Name);
                         return liveScore;
                     }
                     
@@ -851,11 +854,13 @@
             async function loadStandingsOnly() {
                 try {
                     const url = `${DATA_BASE_URL}/live-standings.json?t=${Date.now()}&v=${Math.random()}`;
-                    const response = await fetch(url);
+                    console.log("📊 Fetching standings from:", url);
+                    const response = await fetch(url, { cache: 'no-store' });
                     const content = await response.text();
                     
                     if (content) {
                         const standingsData = JSON.parse(content);
+                        console.log("✅ Standings loaded");
                         return standingsData.standings || {};
                     }
                     
@@ -870,11 +875,12 @@
             async function loadVisibilityStatus() {
                 try {
                     const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}&v=${Math.random()}`;
-                    const response = await fetch(url);
+                    const response = await fetch(url, { cache: 'no-store' });
                     const content = await response.text();
                     
                     if (content) {
                         const data = JSON.parse(content);
+                        console.log("✅ Visibility status loaded:", data.isActive);
                         return data.isActive || false;
                     }
                     
@@ -889,11 +895,12 @@
             async function loadMatchHistoryOnly() {
                 try {
                     const url = `${DATA_BASE_URL}/match-history.json?t=${Date.now()}&v=${Math.random()}`;
-                    const response = await fetch(url);
+                    const response = await fetch(url, { cache: 'no-store' });
                     const content = await response.text();
                     
                     if (content) {
                         const historyData = JSON.parse(content);
+                        console.log("✅ Match history loaded");
                         return historyData.matchHistory || {};
                     }
                     
