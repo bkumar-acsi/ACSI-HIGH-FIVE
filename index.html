@@ -164,7 +164,7 @@
                                 <div class="text-slate-500 text-xs" id="match-format-display">Best Of 5 Sets</div>
                             </div>
 
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 items-center">
                                 <button
                                     onclick="toggleViewerVisibility()"
                                     id="btn-viewer-visibility"
@@ -172,20 +172,16 @@
                                 >
                                     Hide from Viewers
                                 </button>
-                                <button
-                                    onclick="setMatchFormat(5)"
-                                    id="btn-best-5"
-                                    class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-semibold transition hover:bg-blue-500/30"
+                                
+                                <select
+                                    id="match-format-select"
+                                    onchange="setMatchFormat(parseInt(this.value))"
+                                    class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-semibold transition hover:bg-blue-500/30 cursor-pointer"
                                 >
-                                    Best of 5
-                                </button>
-                                <button
-                                    onclick="setMatchFormat(7)"
-                                    id="btn-best-7"
-                                    class="px-3 py-1 rounded-full bg-slate-700/50 border border-slate-600/50 text-slate-400 text-xs font-semibold transition hover:bg-slate-700"
-                                >
-                                    Best of 7
-                                </button>
+                                    <option value="3">Best of 3</option>
+                                    <option value="5">Best of 5</option>
+                                    <option value="7">Best of 7</option>
+                                </select>
                             </div>
 
                             <div
@@ -566,6 +562,12 @@
                     btn.classList.add("bg-red-500/10", "border-red-500/30", "text-red-400", "hover:bg-red-500/20");
                 }
                 
+                // Restore match format dropdown
+                const formatSelect = document.getElementById("match-format-select");
+                if (formatSelect) {
+                    formatSelect.value = liveMatch.matchFormat || 5;
+                }
+                
                 // Start auto-hide timer
                 resetAutoHideTimer();
             }
@@ -824,22 +826,16 @@
             function setMatchFormat(format) {
                 liveMatch.matchFormat = format;
                 
-                document.getElementById("btn-best-5").classList.toggle("bg-blue-500/20", format === 5);
-                document.getElementById("btn-best-5").classList.toggle("border-blue-500/40", format === 5);
-                document.getElementById("btn-best-5").classList.toggle("text-blue-400", format === 5);
-                document.getElementById("btn-best-5").classList.toggle("bg-slate-700/50", format === 5 ? false : true);
-                document.getElementById("btn-best-5").classList.toggle("border-slate-600/50", format === 5 ? false : true);
-                document.getElementById("btn-best-5").classList.toggle("text-slate-400", format === 5 ? false : true);
-
-                document.getElementById("btn-best-7").classList.toggle("bg-blue-500/20", format === 7);
-                document.getElementById("btn-best-7").classList.toggle("border-blue-500/40", format === 7);
-                document.getElementById("btn-best-7").classList.toggle("text-blue-400", format === 7);
-                document.getElementById("btn-best-7").classList.toggle("bg-slate-700/50", format === 7 ? false : true);
-                document.getElementById("btn-best-7").classList.toggle("border-slate-600/50", format === 7 ? false : true);
-                document.getElementById("btn-best-7").classList.toggle("text-slate-400", format === 7 ? false : true);
-
-                document.getElementById("match-format-display").innerText = format === 5 ? "Best Of 5 Sets" : "Best Of 7 Sets";
-                localStorage.setItem("acsii_tt_live_match", JSON.stringify(liveMatch));
+                // Update dropdown value
+                document.getElementById("match-format-select").value = format;
+                
+                // Update display text
+                const formatText = format === 3 ? "Best Of 3 Sets" : format === 5 ? "Best Of 5 Sets" : "Best Of 7 Sets";
+                document.getElementById("match-format-display").innerText = formatText;
+                
+                console.log("Match format changed to:", format);
+                recordAdminActivity();
+                saveTournamentData();
             }
             /* ---------------------------------- */
             /* CATEGORY SWITCHING */
