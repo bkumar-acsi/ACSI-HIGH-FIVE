@@ -232,6 +232,14 @@
                                     >
                                         +
                                     </button>
+
+                                    <button
+                                        onclick="resetTeamScore(1)"
+                                        class="w-12 h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold transition"
+                                        title="Reset score to 0"
+                                    >
+                                        ⟲
+                                    </button>
                                 </div>
 
                                 <div class="mt-2">
@@ -266,6 +274,14 @@
                                         class="w-16 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 text-3xl font-black"
                                     >
                                         +
+                                    </button>
+
+                                    <button
+                                        onclick="resetTeamScore(2)"
+                                        class="w-12 h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold transition"
+                                        title="Reset score to 0"
+                                    >
+                                        ⟲
                                     </button>
                                 </div>
 
@@ -1417,6 +1433,20 @@
                 updateLiveScore(); // Save to liveScore table
             }
 
+            function resetTeamScore(team) {
+                if (team === 1) {
+                    liveMatch.points1 = 0;
+                    document.getElementById("live-points-1").value = 0;
+                } else {
+                    liveMatch.points2 = 0;
+                    document.getElementById("live-points-2").value = 0;
+                }
+
+                updateLiveScoreDOM();
+                updateLiveScore(); // Save to liveScore table
+                console.log(`✅ Team ${team} score reset to 0`);
+            }
+
             function updatePointsFromInput(team) {
                 const input = document.getElementById(`live-points-${team}`);
                 const value = parseInt(input.value) || 0;
@@ -1513,16 +1543,39 @@
                     return;
                 }
 
-                const team1 = document.getElementById("live-team-1").value;
-                const team2 = document.getElementById("live-team-2").value;
+                const team1Name = document.getElementById("live-team-1").value;
+                const team2Name = document.getElementById("live-team-2").value;
                 
-                if (!team1 || !team2) {
+                if (!team1Name || !team2Name) {
                     alert("❌ Please select both teams");
                     return;
                 }
 
+                // Find team IDs by matching names
+                const category = tournamentState[currentCategory];
+                const team1 = category.teams.find(t => t.name === team1Name);
+                const team2 = category.teams.find(t => t.name === team2Name);
+
+                if (!team1 || !team2) {
+                    alert("❌ Teams not found in standings");
+                    return;
+                }
+
                 // Show match summary
-                alert(`✅ Match Saved!\n\n${team1} vs ${team2}\nSets: ${liveMatch.sets1} - ${liveMatch.sets2}\nHistory: ${liveMatch.setHistory.join(", ")}`);
+                alert(`✅ Match Saved!\n\n${team1Name} vs ${team2Name}\nSets: ${liveMatch.sets1} - ${liveMatch.sets2}\nHistory: ${liveMatch.setHistory.join(", ")}`);
+
+                // Update team standings based on match result
+                if (liveMatch.sets1 > liveMatch.sets2) {
+                    // Team 1 won
+                    team1.wins = (team1.wins || 0) + 1;
+                    team2.losses = (team2.losses || 0) + 1;
+                    team1.points = (team1.points || 0) + 2;
+                } else {
+                    // Team 2 won
+                    team2.wins = (team2.wins || 0) + 1;
+                    team1.losses = (team1.losses || 0) + 1;
+                    team2.points = (team2.points || 0) + 2;
+                }
 
                 // Clear live match data
                 liveMatch.points1 = 0;
@@ -1536,10 +1589,14 @@
                 document.getElementById("live-team-2").value = "";
                 updateLiveScoreDOM();
                 
-                // Save cleared state to live-data.json (match is now inactive)
-                updateLiveScore();
+                // Save to database
+                updateLiveScore(); // Clear live match
+                saveTournamentData(); // Save updated standings
                 
-                console.log("✅ Match completed and saved");
+                // Refresh standings display
+                renderDashboard();
+                
+                console.log("✅ Match completed, standings updated");
             }
 
             /* ---------------------------------- */
@@ -1687,6 +1744,7 @@
                             <th class="py-2 px-2 text-center">Losses</th>
                             <th class="py-2 px-2 text-center">Diff</th>
                             <th class="py-2 px-2 text-center">Points</th>
+                            <th class="py-2 px-2 text-center">Reset</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1703,6 +1761,9 @@
                             <td class="py-2 px-2 text-center text-red-400 text-xs">${stats.losses}</td>
                             <td class="py-2 px-2 text-center text-xs">${stats.wins - stats.losses}</td>
                             <td class="py-2 px-2 text-center text-blue-400 text-xs font-bold">${stats.points}</td>
+                            <td class="py-2 px-2 text-center">
+                                <button onclick="resetTeamStandings('${categoryKey}', '${team.id}')" class="px-2 py-1 rounded bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition" title="Reset standings">⟲</button>
+                            </td>
                         </tr>
 `;
                         });
@@ -1722,6 +1783,39 @@
 
                     container.innerHTML += standings;
                 });
+            }
+
+            function resetTeamStandings(categoryKey, teamId) {
+                if (!confirm(`⚠️ Reset all standings for this team?\n\nThis will:\n✓ Clear all wins/losses\n✓ Clear match history\n\nContinue?`)) {
+                    return;
+                }
+
+                const category = tournamentState[categoryKey];
+                const team = category.teams.find(t => t.id === teamId);
+                
+                if (!team) {
+                    alert("❌ Team not found");
+                    return;
+                }
+
+                // Reset team stats
+                team.wins = 0;
+                team.losses = 0;
+                team.points = 0;
+
+                // Remove all matches involving this team
+                category.matches = category.matches.filter(match => 
+                    match.team1Id !== teamId && match.team2Id !== teamId
+                );
+
+                // Save to GitHub
+                saveTournamentData();
+
+                // Re-render standings
+                renderDashboard();
+                
+                console.log(`✅ Reset standings for team: ${team.name}`);
+                alert(`✅ Standings reset for ${team.name}`);
             }
 
             function renderMatchHistory() {
