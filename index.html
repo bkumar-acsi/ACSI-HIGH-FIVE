@@ -667,6 +667,11 @@
             }
 
             function resetAutoHideTimer() {
+                // Don't auto-hide until data is fully loaded
+                if (!dataFullyLoaded) {
+                    return;
+                }
+                
                 clearTimeout(autoHideTimer);
                 autoHideTimer = setTimeout(() => {
                     // Auto-hide live match if admin hasn't done anything for 5 minutes
@@ -708,6 +713,12 @@
             }
 
             function toggleLiveMatch() {
+                // Only allow toggle if data is fully loaded
+                if (!dataFullyLoaded) {
+                    console.warn("⚠️ Cannot toggle - data not fully loaded yet");
+                    return;
+                }
+                
                 // Admin page - no toggle button, just control the hidden flag for viewers
                 liveMatch.hidden = !liveMatch.hidden;
                 recordAdminActivity();
@@ -943,16 +954,26 @@
                     return;
                 }
                 
-                // Validate that tournament data has required categories with teams
+                // EMERGENCY VALIDATION: Count total teams - should NEVER be less than 45
+                let totalTeams = 0;
                 const requiredCategories = ["mens_singles", "mens_doubles", "womens_singles", "womens_doubles", "mix_doubles"];
                 let isDataValid = true;
                 
                 for (let cat of requiredCategories) {
-                    if (!tournamentState[cat] || !Array.isArray(tournamentState[cat].teams) || tournamentState[cat].teams.length === 0) {
-                        console.warn(`⚠️ Category ${cat} has no teams!`);
+                    if (!tournamentState[cat] || !Array.isArray(tournamentState[cat].teams)) {
+                        console.warn(`❌ Category ${cat} missing!`);
                         isDataValid = false;
                         break;
                     }
+                    totalTeams += tournamentState[cat].teams.length;
+                }
+                
+                // ABSOLUTE MINIMUM: 45 teams total (20+12+8+5+9 = 54, but allow 45 minimum)
+                if (totalTeams < 45) {
+                    console.error(`❌ CRITICAL: Only ${totalTeams} teams found! Expected minimum 45!`);
+                    console.error("Tournament data:", tournamentState);
+                    alert(`❌ EMERGENCY STOP!\n\nOnly ${totalTeams} teams in database.\nExpected at least 45 teams.\n\nData NOT saved to prevent corruption!\n\nPlease refresh and contact support.`);
+                    return;
                 }
                 
                 if (!isDataValid) {
@@ -961,6 +982,8 @@
                     alert("⚠️ Warning: Tournament data appears incomplete.\nData NOT saved to prevent data loss.\nPlease refresh the page and check the data.");
                     return;
                 }
+                
+                console.log(`✅ Save validation passed - ${totalTeams} teams confirmed`);
                 
                 // Save ONLY to GitHub Gist - never to localStorage
                 saveToGitHub({
