@@ -709,10 +709,18 @@
             function toggleViewerVisibility() {
                 const btn = document.getElementById("btn-viewer-visibility");
                 
+                // Ensure liveScore object exists
+                if (!liveScore) {
+                    liveScore = {};
+                }
+                
                 console.log("🔘 toggleViewerVisibility called");
+                console.log("Current isActive:", liveScore.isActive);
                 
                 // Toggle isActive flag (controls viewer visibility)
                 liveScore.isActive = !liveScore.isActive;
+                
+                console.log("New isActive:", liveScore.isActive);
                 
                 if (liveScore.isActive) {
                     // Show to viewers
