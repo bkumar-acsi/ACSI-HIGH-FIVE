@@ -898,6 +898,25 @@
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
 
+            // Load standings from GitHub repo
+            async function loadStandingsOnly() {
+                try {
+                    const response = await fetch(`${DATA_BASE_URL}/live-standings.json`);
+                    if (!response.ok) {
+                        console.warn("⚠️ live-standings.json not found");
+                        return null;
+                    }
+                    const content = await response.text();
+                    if (!content) return null;
+                    
+                    const data = JSON.parse(content);
+                    return data.standings || null;
+                } catch (error) {
+                    console.warn("⚠️ Error loading standings:", error);
+                    return null;
+                }
+            }
+
             // Load standings separately
             async function loadStandingsData() {
                 console.log("📊 Loading standings from live-standings.json...");
