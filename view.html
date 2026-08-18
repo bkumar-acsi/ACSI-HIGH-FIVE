@@ -986,18 +986,28 @@
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh live data every 5 seconds when live match is active
+                // Auto-refresh live data and standings every 5 seconds when live match is active
                 let isLoading = false;
                 setInterval(async () => {
                     if (liveScore && liveScore.isActive && !isLoading) {
                         isLoading = true;
-                        console.log("🔄 Auto-refreshing live data...");
+                        console.log("🔄 Auto-refreshing live data and standings...");
+                        
+                        // Refresh live data
                         const updatedLiveScore = await loadLiveDataOnly();
                         if (updatedLiveScore) {
                             liveScore = updatedLiveScore;
                             updateLiveScoreDisplay();
-                            console.log("✅ Live data refreshed automatically");
+                            console.log("✅ Live data refreshed");
                         }
+                        
+                        // Refresh standings
+                        const updatedStandings = await loadStandingsData();
+                        if (updatedStandings && currentTab === "standings") {
+                            renderDashboard();
+                            console.log("✅ Standings refreshed");
+                        }
+                        
                         isLoading = false;
                     }
                 }, 5000); // Refresh every 5 seconds
