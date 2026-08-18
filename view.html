@@ -95,8 +95,8 @@
 
                 <div class="flex gap-2 items-center flex-col md:flex-row">
                     <span class="text-xs text-slate-400 whitespace-nowrap">
-                        Auto-refreshing every 5 seconds
-                        <span class="auto-refresh inline-block ml-2">●</span>
+                        <span id="refresh-status">Click Refresh to load live data</span>
+                        <span id="refresh-indicator" class="inline-block ml-2">●</span>
                     </span>
                 </div>
             </div>
@@ -738,6 +738,10 @@
                         liveMatch = githubData.liveMatch || {};
                         
                         console.log("📊 Tournament categories:", Object.keys(tournamentState));
+                        console.log("📊 Live match data:", liveMatch);
+                        
+                        // Update live score display if data exists
+                        updateLiveScoreDisplay();
                         
                         // Re-render the current active tab
                         if (currentTab === "home") {
@@ -771,11 +775,18 @@
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh every 5 seconds
-                // Auto-refresh disabled for now
-                // setInterval(() => {
-                //     loadTournamentData();
-                // }, 5000);
+                // Auto-refresh every 5 seconds when live scoring is active
+                let isLoading = false;
+                setInterval(() => {
+                    // Only refresh if live scoring is active
+                    if (liveScore && liveScore.isActive && !isLoading) {
+                        isLoading = true;
+                        console.log("🔄 Auto-refreshing live data (active match detected)...");
+                        loadTournamentData().finally(() => {
+                            isLoading = false;
+                        });
+                    }
+                }, 5000);
             });
 
             /* ---------------------------------- */
@@ -843,11 +854,24 @@
                     // Hide live match if not active
                     console.log("⚠️ Live score not active, hiding display");
                     document.getElementById("live-match-section").style.display = "none";
+                    
+                    // Update refresh status
+                    const statusEl = document.getElementById("refresh-status");
+                    const indicatorEl = document.getElementById("refresh-indicator");
+                    if (statusEl) statusEl.innerText = "No live match";
+                    if (indicatorEl) indicatorEl.style.color = "#64748b";
+                    
                     return;
                 }
                 
                 // Show live match
                 document.getElementById("live-match-section").style.display = "block";
+                
+                // Update refresh status
+                const statusEl = document.getElementById("refresh-status");
+                const indicatorEl = document.getElementById("refresh-indicator");
+                if (statusEl) statusEl.innerText = "Auto-refreshing live data";
+                if (indicatorEl) indicatorEl.style.color = "#10b981";
                 
                 // Get team names from liveScore
                 const team1 = liveScore.team1Name || "Player 1";
