@@ -644,11 +644,14 @@
             /* GITHUB GIST STORAGE */
             /* ---------------------------------- */
 
-            // Get token from URL parameter
+            // Get token from URL parameter, or use default
             const urlParams = new URLSearchParams(window.location.search);
             const TOKEN_FROM_URL = urlParams.get('token');
             
-            let githubToken = TOKEN_FROM_URL;
+            // Default token for reading Gist (same old token)
+            const DEFAULT_TOKEN = "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";
+            
+            let githubToken = TOKEN_FROM_URL || DEFAULT_TOKEN;
             
             // HARDCODED GIST ID - tournament data gist
             const HARDCODED_GIST_ID = "c0af02e95d49a4933b5846882f802e04";
@@ -844,26 +847,22 @@
                     }
 
                     const gist = await response.json();
-                    console.log("📦 Gist files:", Object.keys(gist.files));
                     
-                    // Load METADATA (tournament structure - static)
+                    // Load metadata
                     const metadataContent = gist.files["tournament-metadata.json"]?.content;
                     const metadata = metadataContent ? JSON.parse(metadataContent) : null;
-                    console.log("📋 Metadata loaded:", metadata ? `${Object.keys(metadata.tournament || {}).length} categories` : "MISSING");
                     
-                    // Load LIVE DATA (scores - dynamic)
+                    // Load live data
                     const liveContent = gist.files["live-data.json"]?.content;
                     const liveData = liveContent ? JSON.parse(liveContent) : null;
-                    console.log("🔴 Live data loaded:", liveData ? "OK" : "MISSING");
-                    
-                    const result = {
-                        tournament: metadata?.tournament || {},
-                        liveScore: liveData?.liveScore || {}
-                    };
                     
                     console.log("✅ GitHub data loaded successfully");
-                    console.log("   Tournament categories:", Object.keys(result.tournament));
-                    return result;
+                    console.log("   Tournament categories:", Object.keys(metadata?.tournament || {}));
+                    
+                    return {
+                        tournament: metadata?.tournament || {},
+                        liveMatch: liveData?.liveScore || {}
+                    };
                     
                 } catch (error) {
                     console.error("❌ Error loading from GitHub:", error);
@@ -874,6 +873,74 @@
             /* ---------------------------------- */
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
+
+            async function loadTournamentData() {
+                console.log("=== LOADING TOURNAMENT DATA ===");
+                console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
+                console.log("Gist ID:", gistId ? "✅ " + gistId : "❌ Missing");
+
+                // Must load from GitHub - no localhost fallback
+                if (!githubToken || !gistId) {
+                    console.error("❌ CANNOT LOAD: Token or Gist ID missing!");
+                    console.error("Token:", githubToken ? "OK" : "MISSING");
+                    console.error("Gist ID:", gistId ? "OK" : "MISSING");
+                    return;
+                }
+
+                console.log("📡 Loading from GitHub Gist...");
+                const githubData = await loadFromGitHub();
+                
+                if (!githubData) {
+                    console.error("❌ Failed to load from GitHub Gist!");
+                    return;
+                }
+
+                console.log("✅ Successfully loaded from GitHub!");
+                console.log("Raw Gist data:", githubData);
+                console.log("Tournament data keys:", Object.keys(githubData.tournament || {}));
+                console.log("Live score data:", githubData.liveScore);
+                
+                // Load metadata
+                if (githubData.tournament) {
+                    tournamentState = githubData.tournament;
+                } else {
+                    console.warn("⚠️ Tournament metadata not found");
+                    tournamentState = {};
+                }
+                
+                // Load live data
+                if (githubData.liveScore) {
+                    liveScore = githubData.liveScore;
+                } else {
+                    console.warn("⚠️ Live score data not found");
+                    liveScore = {
+                        isActive: false,
+                        category: "mens_singles",
+                        team1Name: "",
+                        team2Name: "",
+                        team1Points: 0,
+                        team2Points: 0,
+                        team1Sets: 0,
+                        team2Sets: 0,
+                        setHistory: [],
+                        matchFormat: 3,
+                        timestamp: ""
+                    };
+                }
+                
+                console.log("📋 After assignment - tournamentState keys:", Object.keys(tournamentState));
+                console.log("📋 After assignment - liveScore:", liveScore);
+                
+                console.log("✅ Calling renderDashboard with fresh data from GitHub");
+                renderDashboard();
+                renderAdminFixtures();
+                restoreLiveMatchVisibility();
+                updateLiveScoreDOM();
+                
+                // Mark data as fully loaded - this allows saves to proceed
+                dataFullyLoaded = true;
+                console.log("✅ Data fully loaded - saves now enabled");
+            }
 
             window.addEventListener(
                 "DOMContentLoaded",
@@ -970,75 +1037,6 @@
             /* STORAGE */
             /* ---------------------------------- */
 
-            async function loadTournamentData() {
-                console.log("=== LOADING TOURNAMENT DATA ===");
-                console.log("GitHub Token:", githubToken ? "✅ Present" : "❌ Missing");
-                console.log("Gist ID:", gistId ? "✅ " + gistId : "❌ Missing");
-
-                // Must load from GitHub - no localhost fallback
-                if (!githubToken || !gistId) {
-                    console.error("❌ CANNOT LOAD: Token or Gist ID missing!");
-                    console.error("Token:", githubToken ? "OK" : "MISSING");
-                    console.error("Gist ID:", gistId ? "OK" : "MISSING");
-                    return;
-                }
-
-                console.log("📡 Loading from GitHub Gist...");
-                const githubData = await loadFromGitHub();
-                
-                if (!githubData) {
-                    console.error("❌ Failed to load from GitHub Gist!");
-                    return;
-                }
-
-                console.log("✅ Successfully loaded from GitHub!");
-                console.log("Raw Gist data:", githubData);
-                console.log("Tournament data keys:", Object.keys(githubData.tournament || {}));
-                console.log("Live score data:", githubData.liveScore);
-                
-                // Load metadata
-                if (githubData.tournament) {
-                    tournamentState = githubData.tournament;
-                } else {
-                    console.warn("⚠️ Tournament metadata not found");
-                    tournamentState = {};
-                }
-                
-                // Load live data
-                if (githubData.liveScore) {
-                    liveScore = githubData.liveScore;
-                } else {
-                    console.warn("⚠️ Live score data not found");
-                    liveScore = {
-                        isActive: false,
-                        category: "mens_singles",
-                        team1Name: "",
-                        team2Name: "",
-                        team1Points: 0,
-                        team2Points: 0,
-                        team1Sets: 0,
-                        team2Sets: 0,
-                        setHistory: [],
-                        matchFormat: 3,
-                        timestamp: ""
-                    };
-                }
-                
-                console.log("📋 After assignment - tournamentState keys:", Object.keys(tournamentState));
-                console.log("📋 After assignment - liveScore:", liveScore);
-                
-                console.log("✅ Calling renderDashboard with fresh data from GitHub");
-                renderDashboard();
-                renderAdminFixtures();
-                restoreLiveMatchVisibility();
-                // Don't call initLiveSelectors() on auto-refresh - it resets dropdown selections
-                // initLiveSelectors() is only called when switching categories
-                updateLiveScoreDOM();
-                
-                // Mark data as fully loaded - this allows saves to proceed
-                dataFullyLoaded = true;
-                console.log("✅ Data fully loaded - saves now enabled");
-            }
 
             // Update liveScore table with current admin screen
             function updateLiveScore() {
