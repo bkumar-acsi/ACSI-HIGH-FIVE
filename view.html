@@ -910,16 +910,11 @@
                     
                     matches.forEach(({ number, group, match, bye }) => {
                         const displayText = number ? `${number}. ${match}` : match;
-                        let byeText = '';
-                        if (bye && bye.trim()) {
-                            byeText = `<span class="text-amber-400 text-xs ml-2">Bye: ${bye}</span>`;
-                        }
                         roundHTML += `<div class="text-sm text-slate-300 p-2 bg-slate-900 rounded">
                             <div class="flex justify-between items-start">
                                 <span>${displayText}</span>
                                 <span class="text-slate-500 text-xs">${group || ''}</span>
                             </div>
-                            ${byeText ? `<div class="mt-1">${byeText}</div>` : ''}
                         </div>`;
                     });
                     
