@@ -572,12 +572,26 @@
                 matchFormat: 5,
             };
 
+            let liveScore = {
+                isActive: false,
+                category: "",
+                team1Name: "",
+                team2Name: "",
+                team1Points: 0,
+                team2Points: 0,
+                team1Sets: 0,
+                team2Sets: 0,
+                setHistory: [],
+                matchFormat: 3,
+                timestamp: ""
+            };
+
             /* ---------------------------------- */
             /* GITHUB INTEGRATION - PUBLIC GIST READ */
             /* ---------------------------------- */
 
             // Public Gist ID - anyone can read this without authentication
-            const PUBLIC_GIST_ID = "07976ee644e8d7bd84da31758de0ad74";
+            const PUBLIC_GIST_ID = "406cd9f16be8697ef329ccfc643a5558";
 
             async function loadFromGitHub() {
                 if (!PUBLIC_GIST_ID || PUBLIC_GIST_ID === "YOUR_PUBLIC_GIST_ID_HERE") {
@@ -634,9 +648,14 @@
                         console.log("✅ Loading from GitHub Gist");
                         tournamentState = githubData.tournament;
                         liveMatch = githubData.liveMatch;
+                        liveScore = githubData.liveScore || liveScore; // Load liveScore if available
                         
                         console.log("Tournament data:", tournamentState);
                         console.log("Live match:", liveMatch);
+                        console.log("Live score:", liveScore);
+                        
+                        // Update live score display
+                        updateLiveScoreDisplay();
                         
                         // Re-render the current active tab
                         if (currentTab === "home") {
@@ -752,6 +771,41 @@
                 // Replace ' vs ' with colored version
                 formatted = formatted.replace(/ vs /g, ' <span class="text-blue-400 font-bold">vs</span> ');
                 return formatted;
+            }
+
+            function updateLiveScoreDisplay() {
+                if (!liveScore || !liveScore.isActive) {
+                    // Hide live match if not active
+                    document.getElementById("live-match-section").style.display = "none";
+                    return;
+                }
+                
+                // Show live match
+                document.getElementById("live-match-section").style.display = "block";
+                
+                // Update display names
+                document.getElementById("display-name-1").innerText = liveScore.team1Name || "Player 1";
+                document.getElementById("display-name-2").innerText = liveScore.team2Name || "Player 2";
+                
+                // Update points
+                document.getElementById("live-points-1").innerText = liveScore.team1Points || 0;
+                document.getElementById("live-points-2").innerText = liveScore.team2Points || 0;
+                
+                // Update sets
+                document.getElementById("live-sets-1").innerText = liveScore.team1Sets || 0;
+                document.getElementById("live-sets-2").innerText = liveScore.team2Sets || 0;
+                
+                // Update match format
+                const formatText = `Best Of ${liveScore.matchFormat}`;
+                document.getElementById("match-format-display").innerText = formatText;
+                
+                // Update set history
+                const historyDisplay = liveScore.setHistory && liveScore.setHistory.length > 0
+                    ? `Sets: ${liveScore.setHistory.join(" | ")}`
+                    : "No Sets Completed Yet";
+                document.getElementById("set-history-log").innerText = historyDisplay;
+                
+                console.log("✅ Live score display updated:", liveScore);
             }
 
             function renderHomeView() {
