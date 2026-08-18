@@ -985,11 +985,17 @@
                     // 2. Admin page is for editing, not just viewing
                     // 3. Data is only modified by this page, not external sources
                     
-                    // If needed for sync in future, use selective refresh only for read-only sections
-                    // setInterval(() => {
-                    //     console.log("⏰ Auto-refreshing data from Gist...");
-                    //     loadTournamentData();
-                    // }, 10000);
+                    // Auto-refresh every 5 seconds to sync with live-data.json changes
+                    let isLoading = false;
+                    setInterval(() => {
+                        if (!isLoading) {
+                            isLoading = true;
+                            console.log("🔄 Auto-refreshing live data from Gist...");
+                            loadTournamentData().finally(() => {
+                                isLoading = false;
+                            });
+                        }
+                    }, 5000);
                 }
             );
 
@@ -1039,25 +1045,25 @@
 
             // Update liveScore table with current admin screen
             function updateLiveScore() {
-                const liveScore = {
+                // Keep previous values if they exist
+                const prevLiveScore = window.liveScore || {};
+                
+                liveScore = {
                     isActive: document.getElementById("live-team-1").value !== "" && document.getElementById("live-team-2").value !== "",
                     category: currentCategory,
                     team1Name: document.getElementById("live-team-1").value,
                     team2Name: document.getElementById("live-team-2").value,
                     team1Points: parseInt(document.getElementById("live-points-1").value) || 0,
                     team2Points: parseInt(document.getElementById("live-points-2").value) || 0,
-                    team1Sets: (liveScore && liveScore.team1Sets) || 0,
-                    team2Sets: (liveScore && liveScore.team2Sets) || 0,
-                    setHistory: (liveScore && liveScore.setHistory) || [],
+                    team1Sets: (prevLiveScore && prevLiveScore.team1Sets) || 0,
+                    team2Sets: (prevLiveScore && prevLiveScore.team2Sets) || 0,
+                    setHistory: (prevLiveScore && prevLiveScore.setHistory) || [],
                     matchFormat: document.getElementById("match-format-select").value || 3,
                     timestamp: new Date().toISOString()
                 };
                 
                 // Save ONLY live-data.json (never touch tournament-metadata.json)
                 saveToGitHub(liveScore);
-                
-                // Update global liveScore for use by other functions
-                window.liveScore = liveScore;
             }
 
             function resetTournamentData() {
