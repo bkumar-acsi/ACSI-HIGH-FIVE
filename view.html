@@ -811,155 +811,108 @@
                 }
             }
 
-            async function loadFromGitHub() {
+            // Load ONLY metadata (team names, groups) from GitHub - this is static
+            async function loadMetadataFromGitHub() {
                 try {
-                    console.log("📥 Loading from GitHub repo (raw URLs - NO rate limits!)...");
-                    
-                    // Load metadata from raw URL with aggressive cache-busting
-                    const metadataUrl = `${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}&v=${Math.random()}`;
-                    console.log("Fetching metadata from:", metadataUrl);
-                    const metadataResponse = await fetch(metadataUrl, { cache: 'no-store' });
+                    console.log("📥 Loading tournament metadata from GitHub...");
+                    const metadataUrl = `${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}`;
+                    const metadataResponse = await fetch(metadataUrl);
                     const metadataContent = await metadataResponse.text();
                     const metadata = metadataContent ? JSON.parse(metadataContent) : null;
-                    console.log("✅ Metadata loaded, keys:", Object.keys(metadata?.tournament || {}));
-                    
-                    // Load live data from raw URL with aggressive cache-busting
-                    const liveUrl = `${DATA_BASE_URL}/live-data.json?t=${Date.now()}&v=${Math.random()}`;
-                    console.log("Fetching live data from:", liveUrl);
-                    const liveResponse = await fetch(liveUrl, { cache: 'no-store' });
-                    const liveContent = await liveResponse.text();
-                    const liveData = liveContent ? JSON.parse(liveContent) : null;
-                    console.log("✅ Live data loaded:", liveData?.liveScore);
-                    
-                    console.log("✅ Data loaded from GitHub repo (raw CDN)");
-                    
-                    const result = {
-                        tournament: metadata?.tournament || {},
-                        liveMatch: liveData?.liveScore || {}
-                    };
-                    
-                    return result;
+                    console.log("✅ Metadata loaded, categories:", Object.keys(metadata?.tournament || {}));
+                    return metadata?.tournament || {};
                 } catch (error) {
-                    console.error("Error loading from GitHub:", error);
+                    console.error("Error loading metadata:", error);
                     return null;
                 }
             }
 
-            // Load live data only from Gist (no token needed for public read)
-            // Load live data from Firebase (instant!)
-            async function loadLiveDataOnly() {
-                const data = await firebaseGet('liveScore');
-                if (data) {
-                    console.log("✅ Live data loaded from Firebase - team1:", data.team1Name, "team2:", data.team2Name);
-                    return data;
-                }
-                return null;
-            }
-
-            // Load standings from Firebase (instant!)
-            async function loadStandingsOnly() {
-                const data = await firebaseGet('standings');
-                if (data) {
-                    console.log("✅ Standings loaded from Firebase");
-                    return data;
-                }
-                return null;
-            }
-
-            // Load visibility status from Firebase (instant!)
+            // Load visibility from GitHub repo
             async function loadVisibilityStatus() {
-                const data = await firebaseGet('visibility');
-                if (data) {
-                    console.log("✅ Visibility loaded from Firebase:", data.isActive);
-                    return data.isActive || false;
+                try {
+                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
+                    const response = await fetch(url);
+                    const content = await response.text();
+                    if (content) {
+                        const data = JSON.parse(content);
+                        console.log("✅ Visibility loaded from GitHub:", data.isActive);
+                        return data.isActive || false;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error("Error loading visibility:", error);
+                    return false;
                 }
-                return false;
-            }
-
-            // Load match history from Firebase (instant!)
-            async function loadMatchHistoryOnly() {
-                const data = await firebaseGet('matchHistory');
-                if (data) {
-                    console.log("✅ Match history loaded from Firebase");
-                    return data;
-                }
-                return null;
             }
 
             /* ---------------------------------- */
             /* PAGE BOOTSTRAP */
             /* ---------------------------------- */
 
-            // Load standings separately
+            // Load standings from Firebase and merge into tournamentState
             async function loadStandingsData() {
-                console.log("📊 Loading standings from live-standings.json...");
-                
-                const standings = await loadStandingsOnly();
+                console.log("📊 Loading standings from Firebase...");
+                const standings = await firebaseGet('standings');
                 if (standings) {
-                    // Merge standings into tournamentState
+                    // Replace teams in tournamentState with standings data (has wins/losses/points)
                     Object.keys(standings).forEach(categoryKey => {
                         if (tournamentState[categoryKey]) {
                             tournamentState[categoryKey].teams = standings[categoryKey].teams || [];
+                            console.log(`✅ Updated ${categoryKey}: ${standings[categoryKey].teams.length} teams`);
                         }
                     });
-                    console.log("✅ Standings loaded and merged into tournamentState");
+                    console.log("✅ Standings merged into tournamentState");
                     return standings;
                 } else {
-                    console.warn("⚠️ Standings not found");
+                    console.warn("⚠️ No standings in Firebase yet");
                     return null;
                 }
             }
 
             async function loadTournamentData() {
-                // Load from GitHub Gist
-                if (PUBLIC_GIST_ID && PUBLIC_GIST_ID !== "YOUR_PUBLIC_GIST_ID_HERE") {
-                    console.log("📥 Loading tournament data...");
-                    const githubData = await loadFromGitHub();
-                    
-                    if (githubData) {
-                        console.log("✅ Data loaded successfully");
-                        console.log("Tournament keys:", Object.keys(githubData.tournament || {}));
-                        console.log("Live match:", githubData.liveMatch);
-                        
-                        tournamentState = githubData.tournament;
-                        liveMatch = githubData.liveMatch || {};
-                        liveScore = {...githubData.liveMatch} || {}; // Copy liveMatch to liveScore
-                        
-                        console.log("📊 Tournament categories:", Object.keys(tournamentState));
-                        console.log("📊 Live match data:", liveMatch);
-                        console.log("📊 liveScore:", liveScore);
-                        
-                        // Load standings separately
-                        await loadStandingsData();
-                        
-                        // Load visibility status SEPARATELY and ADD to liveScore
-                        const isVisible = await loadVisibilityStatus();
-                        liveScore.isVisible = isVisible;
-                        console.log("📌 Visibility loaded:", isVisible);
-                        console.log("📌 liveScore.isVisible:", liveScore.isVisible);
-                        
-                        // Update live score display if data exists
-                        console.log("🎬 Calling updateLiveScoreDisplay with liveScore:", liveScore);
-                        updateLiveScoreDisplay();
-                        
-                        // Re-render the current active tab
-                        if (currentTab === "home") {
-                            renderHomeView();
-                        } else if (currentTab === "standings") {
-                            renderDashboard();
-                        } else if (currentTab === "fixtures") {
-                            renderFixtures();
-                        }
-                        
-                        return;
-                    } else {
-                        console.error("❌ Failed to load data");
-                        return;
-                    }
-                } else {
-                    console.error("❌ Gist ID not configured!");
+                console.log("=== LOADING TOURNAMENT DATA ===");
+                
+                // Step 1: Load metadata (team names, groups) from GitHub
+                const metadata = await loadMetadataFromGitHub();
+                if (!metadata) {
+                    console.error("❌ Failed to load metadata from GitHub");
                     return;
                 }
+                tournamentState = metadata;
+                console.log("📋 Tournament categories:", Object.keys(tournamentState));
+
+                // Step 2: Load live score from Firebase (instant, always fresh!)
+                const freshLiveScore = await firebaseGet('liveScore');
+                if (freshLiveScore) {
+                    liveScore = freshLiveScore;
+                    liveMatch = freshLiveScore;
+                    console.log("📊 Live score from Firebase:", liveScore.team1Name, "vs", liveScore.team2Name);
+                } else {
+                    liveScore = {};
+                    liveMatch = {};
+                    console.log("📊 No live match data in Firebase");
+                }
+
+                // Step 3: Load standings from Firebase (instant, always fresh!)
+                await loadStandingsData();
+
+                // Step 4: Load visibility from GitHub repo
+                const isVisible = await loadVisibilityStatus();
+                liveScore.isVisible = isVisible;
+                console.log("📌 Visibility:", isVisible);
+
+                // Step 5: Update displays
+                updateLiveScoreDisplay();
+                
+                if (currentTab === "home") {
+                    renderHomeView();
+                } else if (currentTab === "standings") {
+                    renderDashboard();
+                } else if (currentTab === "fixtures") {
+                    renderFixtures();
+                }
+                
+                console.log("✅ All data loaded!");
             }
 
             window.addEventListener("DOMContentLoaded", () => {
@@ -1109,33 +1062,36 @@
             async function refreshLiveData() {
                 console.log("🔄 Refreshing ALL data from Firebase...");
                 
-                // Fetch fresh live data
-                const freshLiveScore = await loadLiveDataOnly();
+                // Fetch fresh live score from Firebase
+                const freshLiveScore = await firebaseGet('liveScore');
                 if (freshLiveScore) {
                     liveScore = freshLiveScore;
+                    // Reload visibility from GitHub
+                    liveScore.isVisible = await loadVisibilityStatus();
                     updateLiveScoreDisplay();
+                    console.log("✅ Live score refreshed");
                 }
                 
-                // Fetch fresh standings
+                // Fetch fresh standings from Firebase
                 const freshStandings = await loadStandingsData();
-                if (freshStandings && currentTab === "standings") {
+                if (freshStandings) {
                     renderDashboard();
+                    console.log("✅ Standings refreshed");
                 }
                 
-                // Fetch fresh match history
-                const freshHistory = await loadMatchHistoryOnly();
+                // Fetch fresh match history from Firebase
+                const freshHistory = await firebaseGet('matchHistory');
                 if (freshHistory) {
                     Object.keys(freshHistory).forEach(categoryKey => {
                         if (tournamentState[categoryKey]) {
                             tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
                         }
                     });
-                    if (currentTab === "standings") {
-                        renderDashboard();
-                    }
+                    renderDashboard();
+                    console.log("✅ Match history refreshed");
                 }
                 
-                console.log("✅ All data refreshed from Firebase!");
+                console.log("✅ All data refreshed!");
             }
 
             function renderHomeView() {
