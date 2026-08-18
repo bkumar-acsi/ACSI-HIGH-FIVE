@@ -948,7 +948,7 @@
                         
                         tournamentState = githubData.tournament;
                         liveMatch = githubData.liveMatch || {};
-                        liveScore = githubData.liveMatch || {}; // Set liveScore from liveMatch
+                        liveScore = {...githubData.liveMatch} || {}; // Copy liveMatch to liveScore
                         
                         console.log("📊 Tournament categories:", Object.keys(tournamentState));
                         console.log("📊 Live match data:", liveMatch);
@@ -957,12 +957,14 @@
                         // Load standings separately
                         await loadStandingsData();
                         
-                        // Load visibility status
+                        // Load visibility status SEPARATELY and ADD to liveScore
                         const isVisible = await loadVisibilityStatus();
                         liveScore.isVisible = isVisible;
                         console.log("📌 Visibility loaded:", isVisible);
+                        console.log("📌 liveScore.isVisible:", liveScore.isVisible);
                         
                         // Update live score display if data exists
+                        console.log("🎬 Calling updateLiveScoreDisplay with liveScore:", liveScore);
                         updateLiveScoreDisplay();
                         
                         // Re-render the current active tab
@@ -997,38 +999,8 @@
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh live data, standings, and visibility every 5 seconds when match has teams
-                let isLoading = false;
-                setInterval(async () => {
-                    // Check if live match has teams selected
-                    const hasTeams = liveScore && liveScore.team1Name && liveScore.team2Name && liveScore.team1Name.trim() && liveScore.team2Name.trim();
-                    
-                    if (hasTeams && !isLoading) {
-                        isLoading = true;
-                        console.log("🔄 Auto-refreshing live data, standings, and visibility...");
-                        
-                        // Refresh live data
-                        const updatedLiveScore = await loadLiveDataOnly();
-                        if (updatedLiveScore) {
-                            liveScore = updatedLiveScore;
-                            
-                            // Load visibility status
-                            liveScore.isVisible = await loadVisibilityStatus();
-                            
-                            updateLiveScoreDisplay();
-                            console.log("✅ Live data and visibility refreshed");
-                        }
-                        
-                        // Refresh standings
-                        const updatedStandings = await loadStandingsData();
-                        if (updatedStandings && currentTab === "standings") {
-                            renderDashboard();
-                            console.log("✅ Standings refreshed");
-                        }
-                        
-                        isLoading = false;
-                    }
-                }, 5000); // Refresh every 5 seconds
+                // Manual refresh only - users click "Refresh Live Data" button
+                console.log("🔘 Manual refresh enabled - click 'Refresh Live Data' button to update");
             });
 
             /* ---------------------------------- */
@@ -1090,55 +1062,69 @@
             }
 
             function updateLiveScoreDisplay() {
-                console.log("📊 updateLiveScoreDisplay called, liveScore:", liveScore);
+                console.log("📊 updateLiveScoreDisplay called");
+                console.log("   liveScore:", liveScore);
+                console.log("   team1Name:", liveScore?.team1Name);
+                console.log("   team2Name:", liveScore?.team2Name);
+                console.log("   isVisible:", liveScore?.isVisible);
                 
-                // Check if live match is active based on whether teams are selected
+                // Check if live match has teams
                 const hasTeams = liveScore && liveScore.team1Name && liveScore.team2Name && liveScore.team1Name.trim() && liveScore.team2Name.trim();
                 
+                console.log("   hasTeams:", hasTeams);
+                
                 if (!hasTeams) {
-                    // Hide live match if no teams selected
-                    console.log("⚠️ Live match not active (no teams selected), hiding display");
-                    document.getElementById("live-match-section").style.display = "none";
+                    console.log("⚠️ No teams selected - hiding live match");
+                    const section = document.getElementById("live-match-section");
+                    if (section) section.style.display = "none";
                     return;
                 }
                 
-                // Show live match only if visibility is enabled
-                if (!liveScore.isVisible) {
-                    console.log("⚠️ Live match hidden by admin");
-                    document.getElementById("live-match-section").style.display = "none";
+                // Show live match section
+                const section = document.getElementById("live-match-section");
+                if (!section) {
+                    console.error("❌ live-match-section element not found!");
                     return;
                 }
                 
-                // Show live match
-                document.getElementById("live-match-section").style.display = "block";
+                section.style.display = "block";
+                console.log("✅ Live match section shown");
                 
-                // Get team names from liveScore
+                // Get team names
                 const team1 = liveScore.team1Name || "Player 1";
                 const team2 = liveScore.team2Name || "Player 2";
                 
                 console.log(`📊 Updating display: ${team1} vs ${team2}`);
                 
                 // Update display names
-                document.getElementById("display-name-1").innerText = team1;
-                document.getElementById("display-name-2").innerText = team2;
+                const el1 = document.getElementById("display-name-1");
+                const el2 = document.getElementById("display-name-2");
+                if (el1) el1.innerText = team1;
+                if (el2) el2.innerText = team2;
                 
                 // Update points
-                document.getElementById("live-points-1").innerText = liveScore.team1Points || 0;
-                document.getElementById("live-points-2").innerText = liveScore.team2Points || 0;
+                const pts1 = document.getElementById("live-points-1");
+                const pts2 = document.getElementById("live-points-2");
+                if (pts1) pts1.innerText = liveScore.team1Points || 0;
+                if (pts2) pts2.innerText = liveScore.team2Points || 0;
                 
                 // Update sets
-                document.getElementById("live-sets-1").innerText = liveScore.team1Sets || 0;
-                document.getElementById("live-sets-2").innerText = liveScore.team2Sets || 0;
+                const sets1 = document.getElementById("live-sets-1");
+                const sets2 = document.getElementById("live-sets-2");
+                if (sets1) sets1.innerText = liveScore.team1Sets || 0;
+                if (sets2) sets2.innerText = liveScore.team2Sets || 0;
                 
                 // Update match format
                 const formatText = `Best Of ${liveScore.matchFormat || 3}`;
-                document.getElementById("match-format-display").innerText = formatText;
+                const format = document.getElementById("match-format-display");
+                if (format) format.innerText = formatText;
                 
                 // Update set history
                 const historyDisplay = liveScore.setHistory && liveScore.setHistory.length > 0
                     ? `Sets: ${liveScore.setHistory.join(" | ")}`
                     : "No Sets Completed Yet";
-                document.getElementById("set-history-log").innerText = historyDisplay;
+                const history = document.getElementById("set-history-log");
+                if (history) history.innerText = historyDisplay;
                 
                 console.log("✅ Live score display updated");
             }
