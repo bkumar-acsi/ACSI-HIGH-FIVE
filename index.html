@@ -1352,25 +1352,28 @@ ${team.name}
             }
 
             function renderMatchHistory() {
+                const category = tournamentState[currentCategory];
                 const history = document.getElementById("match-history-list");
+                history.innerHTML = "";
 
-${match.sets1}
-
-:
-
-${match.sets2}
-
-&nbsp;
-${match.team2Name}
-
+                category.matches.forEach((match, index) => {
+                    history.innerHTML += `
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+<div class="flex justify-between items-start mb-2">
+<div class="text-xs text-slate-500">
+${match.timestamp}
 </div>
-
-<div class="text-xs text-slate-400 mt-2">
-${match.setHistory.join(" | ")}
+<button
+onclick="deleteMatch(${index})"
+class="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 text-xs hover:bg-red-500/20 transition">
+Delete
+</button>
 </div>
-
+<div class="font-semibold">
+${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span class="text-blue-400">${match.sets2}</span> ${match.team2Name}
 </div>
-
+<div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
+</div>
 `;
                 });
             }
