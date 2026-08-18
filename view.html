@@ -743,18 +743,18 @@
                 const upcomingContainer = document.getElementById("upcoming-matches-list");
                 upcomingContainer.innerHTML = "";
                 
-                // Tomorrow's scheduled matches from PDF (19 Aug 2026)
+                // Today's scheduled matches (19 Aug 2026) - Starting at 9:00 AM, 10 mins per match
                 const tomorrowMatches = [
-                    { matchNum: "M1", startTime: "09:30", endTime: "09:39", match: "Aniket vs Kshitij" },
-                    { matchNum: "M2", startTime: "09:39", endTime: "09:48", match: "Rishabh vs Prem" },
-                    { matchNum: "M3", startTime: "09:48", endTime: "09:57", match: "Sanket vs Akshay" },
-                    { matchNum: "M4", startTime: "09:57", endTime: "10:06", match: "Swapnil vs Jinish" },
-                    { matchNum: "M5", startTime: "10:06", endTime: "10:15", match: "Balachander vs Suraj" },
-                    { matchNum: "M6", startTime: "10:15", endTime: "10:24", match: "Brajesh vs Sachin" },
-                    { matchNum: "M7", startTime: "10:24", endTime: "10:33", match: "Santosh vs Sagar" },
-                    { matchNum: "M8", startTime: "10:33", endTime: "10:42", match: "Rahul vs Saurabh" },
-                    { matchNum: "M9", startTime: "10:42", endTime: "10:51", match: "Aniket vs Balachander" },
-                    { matchNum: "M10", startTime: "10:51", endTime: "11:00", match: "Rishabh vs Brajesh" }
+                    { matchNum: "M1", startTime: "09:00", endTime: "09:10", match: "Aniket vs Kshitij" },
+                    { matchNum: "M2", startTime: "09:10", endTime: "09:20", match: "Rishabh vs Prem" },
+                    { matchNum: "M3", startTime: "09:20", endTime: "09:30", match: "Sanket vs Akshay" },
+                    { matchNum: "M4", startTime: "09:30", endTime: "09:40", match: "Swapnil vs Jinish" },
+                    { matchNum: "M5", startTime: "09:40", endTime: "09:50", match: "Balachander vs Suraj" },
+                    { matchNum: "M6", startTime: "09:50", endTime: "10:00", match: "Brajesh vs Sachin" },
+                    { matchNum: "M7", startTime: "10:00", endTime: "10:10", match: "Santosh vs Sagar" },
+                    { matchNum: "M8", startTime: "10:10", endTime: "10:20", match: "Rahul vs Saurabh" },
+                    { matchNum: "M9", startTime: "10:20", endTime: "10:30", match: "Aniket vs Balachander" },
+                    { matchNum: "M10", startTime: "10:30", endTime: "10:40", match: "Rishabh vs Brajesh" }
                 ];
                 
                 tomorrowMatches.forEach((m) => {
