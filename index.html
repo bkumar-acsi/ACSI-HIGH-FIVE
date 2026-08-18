@@ -596,6 +596,7 @@
             let currentCategory = "mens_singles";
 
             let tournamentState = {};
+            let dataFullyLoaded = false;  // Flag to prevent saving before data is loaded
 
             let liveMatch = {
                 team1Id: "",
@@ -636,7 +637,7 @@
             let githubToken = TOKEN_FROM_URL;
             
             // HARDCODED GIST ID - tournament data gist
-            const HARDCODED_GIST_ID = "07976ee644e8d7bd84da31758de0ad74";
+            const HARDCODED_GIST_ID = "406cd9f16be8697ef329ccfc643a5558";
             let gistId = HARDCODED_GIST_ID;
 
             function showTokenWarning() {
@@ -929,10 +930,35 @@
             }
 
             function saveTournamentData() {
+                // CRITICAL: Don't save if data hasn't fully loaded yet
+                if (!dataFullyLoaded) {
+                    console.warn("⚠️ Data not fully loaded yet - save prevented");
+                    return;
+                }
+                
                 // Check if token is present before saving
                 if (!githubToken) {
                     console.warn("Cannot save: No GitHub token provided");
                     alert("⚠️ Token is required to save!\n\nUse URL: ?token=ghp_your_token");
+                    return;
+                }
+                
+                // Validate that tournament data has required categories with teams
+                const requiredCategories = ["mens_singles", "mens_doubles", "womens_singles", "womens_doubles", "mix_doubles"];
+                let isDataValid = true;
+                
+                for (let cat of requiredCategories) {
+                    if (!tournamentState[cat] || !Array.isArray(tournamentState[cat].teams) || tournamentState[cat].teams.length === 0) {
+                        console.warn(`⚠️ Category ${cat} has no teams!`);
+                        isDataValid = false;
+                        break;
+                    }
+                }
+                
+                if (!isDataValid) {
+                    console.error("❌ Cannot save incomplete tournament data!");
+                    console.error("Tournament data:", tournamentState);
+                    alert("⚠️ Warning: Tournament data appears incomplete.\nData NOT saved to prevent data loss.\nPlease refresh the page and check the data.");
                     return;
                 }
                 
@@ -986,6 +1012,10 @@
                 // Don't call initLiveSelectors() on auto-refresh - it resets dropdown selections
                 // initLiveSelectors() is only called when switching categories
                 updateLiveScoreDOM();
+                
+                // Mark data as fully loaded - this allows saves to proceed
+                dataFullyLoaded = true;
+                console.log("✅ Data fully loaded - saves now enabled");
             }
 
             function resetTournamentData() {
