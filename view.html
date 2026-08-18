@@ -885,6 +885,31 @@
                 }
             }
 
+            // Load visibility status from separate file
+            async function loadVisibilityStatus() {
+                try {
+                    const url = `${DATA_BASE_URL}/visibility-status.json?t=${Date.now()}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    });
+                    const content = await response.text();
+                    
+                    if (content) {
+                        const data = JSON.parse(content);
+                        return data.isActive || false;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error("Error loading visibility status:", error);
+                    return false;
+                }
+            }
+
             // Load match history only from Gist
             async function loadMatchHistoryOnly() {
                 try {
@@ -986,19 +1011,26 @@
                 // Set tab to home
                 currentTab = "home";
                 
-                // Auto-refresh live data and standings every 5 seconds when live match is active
+                // Auto-refresh live data, standings, and visibility every 5 seconds when match has teams
                 let isLoading = false;
                 setInterval(async () => {
-                    if (liveScore && liveScore.isActive && !isLoading) {
+                    // Check if live match has teams selected
+                    const hasTeams = liveScore && liveScore.team1Name && liveScore.team2Name && liveScore.team1Name.trim() && liveScore.team2Name.trim();
+                    
+                    if (hasTeams && !isLoading) {
                         isLoading = true;
-                        console.log("🔄 Auto-refreshing live data and standings...");
+                        console.log("🔄 Auto-refreshing live data, standings, and visibility...");
                         
                         // Refresh live data
                         const updatedLiveScore = await loadLiveDataOnly();
                         if (updatedLiveScore) {
                             liveScore = updatedLiveScore;
+                            
+                            // Load visibility status
+                            liveScore.isVisible = await loadVisibilityStatus();
+                            
                             updateLiveScoreDisplay();
-                            console.log("✅ Live data refreshed");
+                            console.log("✅ Live data and visibility refreshed");
                         }
                         
                         // Refresh standings
@@ -1074,11 +1106,19 @@
             function updateLiveScoreDisplay() {
                 console.log("📊 updateLiveScoreDisplay called, liveScore:", liveScore);
                 
-                if (!liveScore || !liveScore.isActive) {
-                    // Hide live match if not active
-                    console.log("⚠️ Live score not active, hiding display");
-                    console.log("   liveScore value:", liveScore);
-                    console.log("   isActive flag:", liveScore?.isActive);
+                // Check if live match is active based on whether teams are selected
+                const hasTeams = liveScore && liveScore.team1Name && liveScore.team2Name && liveScore.team1Name.trim() && liveScore.team2Name.trim();
+                
+                if (!hasTeams) {
+                    // Hide live match if no teams selected
+                    console.log("⚠️ Live match not active (no teams selected), hiding display");
+                    document.getElementById("live-match-section").style.display = "none";
+                    return;
+                }
+                
+                // Show live match only if visibility is enabled
+                if (!liveScore.isVisible) {
+                    console.log("⚠️ Live match hidden by admin");
                     document.getElementById("live-match-section").style.display = "none";
                     return;
                 }
