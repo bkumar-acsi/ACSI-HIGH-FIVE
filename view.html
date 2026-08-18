@@ -724,17 +724,6 @@
                     console.error("Error loading from GitHub:", error);
                     return null;
                 }
-            }                    console.log("   Metadata:", metadata ? "loaded" : "missing");
-                    console.log("   Live data:", liveData ? "loaded" : "missing");
-                    
-                    return {
-                        tournament: metadata?.tournament || {},
-                        liveScore: liveData?.liveScore || {}
-                    };
-                } catch (error) {
-                    console.error("Error loading from GitHub:", error);
-                    return null;
-                }
             }
 
             /* ---------------------------------- */
