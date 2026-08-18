@@ -1376,14 +1376,19 @@
                 // Render standings for ONLY the current category selected
                 const container = document.getElementById("all-standings-container");
                 container.innerHTML = "";
+                
+                console.log("📊 VIEW renderDashboard - currentCategory:", currentCategory);
+                console.log("📊 VIEW tournamentState keys:", Object.keys(tournamentState));
+                console.log("📊 VIEW currentCategoryData teams:", tournamentState[currentCategory]?.teams?.slice(0, 3));
 
                 // Render match history for current category
                 const currentCategoryData = tournamentState[currentCategory] || tournamentState["mens_singles"];
                 const history = document.getElementById("match-history-list");
                 history.innerHTML = "";
 
-                currentCategoryData.matches.forEach((match) => {
-                    history.innerHTML += `
+                if (currentCategoryData.matches && currentCategoryData.matches.length > 0) {
+                    currentCategoryData.matches.forEach((match) => {
+                        history.innerHTML += `
 <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
 <div class="text-xs text-slate-500 mb-2">${match.timestamp}</div>
 <div class="font-semibold text-lg">
@@ -1392,7 +1397,8 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 <div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
 </div>
 `;
-                });
+                    });
+                }
 
                 // Render ONLY current category standings
                 const categoryKey = currentCategory;
@@ -1417,7 +1423,8 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
             <p class="text-slate-500 text-sm">Group-wise rankings</p>
         </div>
         <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
-            ${category.matches.length} Matches
+            ${category.matches ? category.matches.length : 0} Matches
+
         </div>
     </div>
     <div class="p-5 space-y-4">
