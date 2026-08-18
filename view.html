@@ -747,10 +747,10 @@
             }
 
             function formatTeamName(name) {
-                // Replace '&' with blue, smaller, subscript style (pairing within team)
-                let formatted = name.replace(/&/g, '<span class="text-blue-300 font-semibold text-xs align-super">&</span>');
-                // Replace ' vs ' with larger blue, uppercase (separating teams)
-                formatted = formatted.replace(/ vs /g, ' <span class="text-blue-500 font-bold uppercase text-sm">vs</span> ');
+                // Replace '&' with a colored span
+                let formatted = name.replace(/&/g, '<span class="text-blue-400 font-bold">&</span>');
+                // Replace ' vs ' with colored version
+                formatted = formatted.replace(/ vs /g, ' <span class="text-blue-400 font-bold">vs</span> ');
                 return formatted;
             }
 
