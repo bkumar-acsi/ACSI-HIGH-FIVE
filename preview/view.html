@@ -1140,167 +1140,41 @@
                 
                 console.log("📋 Populating upcoming and completed matches...");
                 
-                // Completed matches (19 Aug 2026)
-                const completedMatchesList = [
-                    { matchNum: "M1", match: "Aniket vs Kshitij" },
-                    { matchNum: "M2", match: "Rishabh vs Prem" },
-                    { matchNum: "M3", match: "Sanket vs Aditya" },
-                    { matchNum: "M4", match: "Swapnil vs Jinish" },
-                    { matchNum: "M5", match: "Balachander vs Suraj" },
-                    { matchNum: "M6", match: "Brajesh vs Sachin" },
-                    { matchNum: "M7", match: "Santosh vs Sagar" },
-                    { matchNum: "M8", match: "Rahul vs Saurabh" },
-                    { matchNum: "M9", match: "Aniket vs Balachander" },
-                    { matchNum: "M10", match: "Rishabh vs Brajesh" },
-                    { matchNum: "M11", match: "Sanket vs Akshay" }
-                ];
+                // Load match tables from Firebase
+                var matchTables = await firebaseGet('matchTables');
+                var completedMatchesList = (matchTables && matchTables.completedMatches) || [];
+                var upcomingMatchesList = (matchTables && matchTables.upcomingMatches) || [];
+                
+                console.log("📋 Completed:", completedMatchesList.length, "Upcoming:", upcomingMatchesList.length);
 
-                // Upcoming matches (20 Aug 2026)
-                const upcomingMatchesList = [
-                    { matchNum: "M12", match: "Swapnil vs Rahul" },
-                    { matchNum: "M13", match: "Kshitij vs Suraj" },
-                    { matchNum: "M14", match: "Prem vs Sachin" },
-                    { matchNum: "M15", match: "Sanket vs Santosh" },
-                    { matchNum: "M16", match: "Jinish vs Saurabh" },
-                    { matchNum: "M17", match: "Aniket vs Suraj" },
-                    { matchNum: "M18", match: "Rishabh vs Sachin" },
-                    { matchNum: "M19", match: "Akshay vs Sagar" },
-                    { matchNum: "M20", match: "Swapnil vs Saurabh" },
-                    { matchNum: "M21", match: "Kshitij vs Balachander" },
-                    { matchNum: "M22", match: "Prem vs Brajesh" },
-                    { matchNum: "M23", match: "Sanket vs Sagar" },
-                    { matchNum: "M24", match: "Jinish vs Rahul" },
-                    { matchNum: "M25", match: "Aniket vs Suresh" },
-                    { matchNum: "M26", match: "Rishabh vs Shekhar" }
-                ];
-                
-                // Build lookup of all teams from standings
-                const allTeams = [];
-                Object.keys(tournamentState).forEach(function(catKey) {
-                    var cat = tournamentState[catKey];
-                    if (cat.teams) {
-                        cat.teams.forEach(function(t) {
-                            allTeams.push({
-                                name: t.name,
-                                firstName: t.name.split(' ')[0].toLowerCase(),
-                                wins: t.wins || 0,
-                                losses: t.losses || 0,
-                                points: t.points || 0,
-                                played: (t.wins || 0) + (t.losses || 0)
-                            });
-                        });
-                    }
-                });
-                
-                // Also build completed matches from history
-                const completedMatches = [];
-                Object.keys(tournamentState).forEach(function(catKey) {
-                    var cat = tournamentState[catKey];
-                    if (cat.matches) {
-                        cat.matches.forEach(function(m) {
-                            completedMatches.push({
-                                team1: (m.team1Name || '').toLowerCase(),
-                                team2: (m.team2Name || '').toLowerCase(),
-                                winner: m.sets1 > m.sets2 ? m.team1Name : m.team2Name,
-                                sets1: m.sets1,
-                                sets2: m.sets2
-                            });
-                        });
-                    }
-                });
-                
-                function findTeam(firstName) {
-                    return allTeams.find(function(t) {
-                        return t.firstName === firstName.toLowerCase();
-                    });
-                }
-                
-                // For COMPLETED matches (M1-M11) - use standings + history
-                function getWinnerFromStandings(matchStr) {
-                    var parts = matchStr.toLowerCase().split(' vs ');
-                    if (parts.length !== 2) return null;
-                    var t1First = parts[0].trim();
-                    var t2First = parts[1].trim();
-                    
-                    var historyMatch = completedMatches.find(function(m) {
-                        return (m.team1.includes(t1First) && m.team2.includes(t2First)) ||
-                               (m.team1.includes(t2First) && m.team2.includes(t1First));
-                    });
-                    if (historyMatch) return historyMatch.winner;
-                    
-                    var team1 = findTeam(t1First);
-                    var team2 = findTeam(t2First);
-                    if (team1 && team2) {
-                        if (team1.points > team2.points) return team1.name;
-                        if (team2.points > team1.points) return team2.name;
-                        if (team1.wins > team2.wins) return team1.name;
-                        return team2.name;
-                    }
-                    return null;
-                }
-                
-                // For UPCOMING matches (M12-M26) - ONLY check match history
-                function getWinnerFromHistory(matchStr) {
-                    var parts = matchStr.toLowerCase().split(' vs ');
-                    if (parts.length !== 2) return null;
-                    var t1First = parts[0].trim();
-                    var t2First = parts[1].trim();
-                    
-                    var historyMatch = completedMatches.find(function(m) {
-                        return (m.team1.includes(t1First) && m.team2.includes(t2First)) ||
-                               (m.team1.includes(t2First) && m.team2.includes(t1First));
-                    });
-                    return historyMatch ? historyMatch.winner : null;
-                }
-                
                 var upcomingContainer = document.getElementById("upcoming-matches-list");
                 var completedContainer = document.getElementById("completed-matches-list");
                 
-                if (!upcomingContainer || !completedContainer) {
-                    console.error("❌ Match containers not found!");
-                    return;
-                }
+                if (!upcomingContainer || !completedContainer) return;
                 
-                // Render completed matches (M1-M11)
+                // Render completed
                 var completedRows = '';
                 completedMatchesList.forEach(function(m) {
-                    var formattedMatch = formatTeamName(m.match);
-                    var winner = getWinnerFromStandings(m.match);
-                    var winnerDisplay = winner ? '🏆 ' + formatTeamName(winner) : '✅ Done';
-                    
                     completedRows += 
                     '<tr class="border-b border-slate-700 bg-green-900/10">' +
                         '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
-                        '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
-                        '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">' + winnerDisplay + '</td>' +
+                        '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formatTeamName(m.match) + '</td>' +
+                        '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(m.winner) + '</td>' +
                     '</tr>';
                 });
+                completedContainer.innerHTML = completedRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">No matches completed yet</td></tr>';
                 
-                // Render upcoming matches (M12-M26) - only move to completed if in MATCH HISTORY
+                // Render upcoming
                 var upcomingRows = '';
                 upcomingMatchesList.forEach(function(m) {
-                    var formattedMatch = formatTeamName(m.match);
-                    var winner = getWinnerFromHistory(m.match);
-                    
-                    if (winner) {
-                        completedRows += 
-                        '<tr class="border-b border-slate-700 bg-green-900/10">' +
-                            '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
-                            '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
-                            '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(winner) + '</td>' +
-                        '</tr>';
-                    } else {
-                        upcomingRows += 
-                        '<tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">' +
-                            '<td class="py-2 px-2 text-blue-400 font-bold text-center">' + m.matchNum + '</td>' +
-                            '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
-                            '<td class="py-2 px-2 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
-                        '</tr>';
-                    }
+                    upcomingRows += 
+                    '<tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">' +
+                        '<td class="py-2 px-2 text-blue-400 font-bold text-center">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formatTeamName(m.match) + '</td>' +
+                        '<td class="py-2 px-2 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
+                    '</tr>';
                 });
-                
                 upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-green-400">All matches completed! 🎉</td></tr>';
-                completedContainer.innerHTML = completedRows;
                 
                 console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
                 
