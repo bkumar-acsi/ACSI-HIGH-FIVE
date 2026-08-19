@@ -1,0 +1,1634 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>ACSII HiFive TT Tournament 2026 - Live View</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+            body {
+                font-family: "Plus Jakarta Sans", sans-serif;
+                background: #0f172a;
+                color: #f8fafc;
+            }
+
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #1e293b;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #475569;
+                border-radius: 999px;
+            }
+
+            .score-glow {
+                text-shadow:
+                    0 0 20px rgba(59, 130, 246, 0.8),
+                    0 0 40px rgba(59, 130, 246, 0.4);
+            }
+
+            .auto-refresh {
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+        </style>
+    </head>
+
+    <body class="min-h-screen pb-10">
+        <!-- HEADER -->
+
+        <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/80 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <!-- TT LOGO -->
+
+                    <div
+                        class="bg-gradient-to-tr from-blue-500 to-cyan-500 p-3 rounded-2xl shadow-lg shadow-blue-500/20"
+                    >
+                        <svg width="34" height="34" viewBox="0 0 64 64">
+                            <circle cx="26" cy="24" r="16" fill="#2563EB" />
+                            <circle cx="26" cy="24" r="12" fill="#60A5FA" />
+
+                            <rect x="22" y="38" width="8" height="18" rx="4" fill="#E2E8F0" />
+
+                            <circle cx="50" cy="14" r="6" fill="#FFFFFF" />
+
+                            <path
+                                d="M37 18C41 13 45 12 50 14"
+                                stroke="#FFFFFF"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M39 26C45 24 50 26 56 32"
+                                stroke="#A5F3FC"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h1 class="text-lg md:text-2xl font-extrabold">ACSII HiFive TT Tournament 2026</h1>
+
+                        <p
+                            class="text-xs md:text-sm bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-bold whitespace-nowrap"
+                        >
+                            Live View - Serve • Smash • Shine
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 items-center flex-col md:flex-row">
+                    <button
+                        onclick="refreshLiveData()"
+                        class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition"
+                    >
+                        🔄 Refresh Live Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAV TABS -->
+
+        <section class="sticky top-20 z-40 bg-slate-900 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
+                <!-- HOME TAB (DEFAULT) -->
+                <button
+                    id="btn-home-tab"
+                    onclick="switchTab('home')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                >
+                    🏠 Home
+                </button>
+                
+                <!-- FIXTURES TAB -->
+                <button
+                    id="btn-fixtures-tab"
+                    onclick="switchTab('fixtures')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Fixtures
+                </button>
+                
+                <!-- STANDINGS TAB -->
+                <button
+                    id="btn-standings-tab"
+                    onclick="switchTab('standings')"
+                    class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Standings
+                </button>
+            </div>
+        </section>
+
+        <!-- CATEGORY NAV (for standings) -->
+        <section id="standings-nav" class="sticky top-32 z-40 bg-slate-900 border-b border-slate-800" style="display: none;">
+            <div class="max-w-7xl mx-auto px-4 flex gap-2 py-3 overflow-x-auto">
+                <button
+                    id="btn-mens_singles"
+                    onclick="switchCategory('mens_singles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white"
+                >
+                    Men Singles
+                </button>
+
+                <button
+                    id="btn-mens_doubles"
+                    onclick="switchCategory('mens_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Men Doubles
+                </button>
+
+                <button
+                    id="btn-womens_singles"
+                    onclick="switchCategory('womens_singles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Women Singles
+                </button>
+
+                <button
+                    id="btn-womens_doubles"
+                    onclick="switchCategory('womens_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Women Doubles
+                </button>
+
+                <button
+                    id="btn-mix_doubles"
+                    onclick="switchCategory('mix_doubles')"
+                    class="category-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300"
+                >
+                    Mixed Doubles
+                </button>
+            </div>
+        </section>
+
+        <!-- MAIN -->
+
+        <main class="max-w-7xl mx-auto px-4 mt-6">
+            <!-- HOME SECTION (DEFAULT VIEW) -->
+            <div id="home-section" style="display: block;">
+                <!-- LIVE SCOREBOARD -->
+
+                <div id="live-match-section" class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl mb-6">
+                <div class="text-center mb-8">
+                    <div class="text-blue-400 font-bold text-sm">LIVE MATCH</div>
+                    <div class="text-slate-500 text-xs" id="match-format-display">Best Of 3 Sets</div>
+                </div>
+
+                <!-- SCOREBOARD -->
+
+                <div class="grid grid-cols-2 gap-4 text-center relative">
+                    <div>
+                        <div id="display-name-1" class="text-2xl font-bold mb-4">Player 1</div>
+
+                        <div id="live-points-1" class="score-glow text-[5rem] font-black leading-none">0</div>
+
+                        <div class="mt-2">
+                            <div class="text-sm text-slate-500">Sets Won</div>
+
+                            <div id="live-sets-1" class="text-2xl font-bold text-blue-400">0</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div id="display-name-2" class="text-2xl font-bold mb-4">Player 2</div>
+
+                        <div id="live-points-2" class="score-glow text-[5rem] font-black leading-none">0</div>
+
+                        <div class="mt-2">
+                            <div class="text-sm text-slate-500">Sets Won</div>
+
+                            <div id="live-sets-2" class="text-2xl font-bold text-blue-400">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SET HISTORY -->
+
+                <div
+                    id="set-history-log"
+                    class="mt-8 p-4 rounded-xl bg-slate-950 border border-slate-800 text-center text-lg text-slate-300 min-h-[40px] flex items-center justify-center"
+                >
+                    No Sets Completed Yet
+                </div>
+            </div>
+
+                <!-- MATCHES - Two column layout -->
+                <div class="flex flex-col lg:flex-row gap-4 mb-6">
+                    
+                    <!-- UPCOMING MATCHES (Left on desktop, First on mobile) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
+                        <div class="p-5 border-b border-slate-800">
+                            <h2 class="font-bold text-lg">⏳ Upcoming Matches</h2>
+                            <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
+                        </div>
+                        <div class="p-3 overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-700 bg-slate-950">
+                                        <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">#</th>
+                                        <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
+                                        <th class="py-2 px-2 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="upcoming-matches-list">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- COMPLETED MATCHES (Right on desktop, Second on mobile) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
+                        <div class="p-5 border-b border-slate-800">
+                            <h2 class="font-bold text-lg">✅ Completed Matches</h2>
+                            <p class="text-slate-500 text-sm mt-1">19 August 2026</p>
+                        </div>
+                        <div class="p-3 overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-700 bg-slate-950">
+                                        <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">#</th>
+                                        <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">Match</th>
+                                        <th class="py-2 px-2 text-center text-green-400 font-bold uppercase tracking-wide text-xs">Winner</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completed-matches-list">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <!-- ALL GROUPS BY CATEGORY -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">📊 All Groups</h2>
+                        <p class="text-slate-500 text-sm mt-1">Teams organized by category and group</p>
+                    </div>
+                    
+                    <div id="all-groups-container" class="p-5 space-y-8"></div>
+                </div>
+            </div> <!-- End home-section -->
+
+            <!-- STANDINGS SECTION -->
+            <div id="standings-section" style="display: none;">
+                <!-- STANDINGS FOR ALL CATEGORIES -->
+
+            <div id="all-standings-container" class="space-y-6"></div>
+
+            <!-- MATCH HISTORY -->
+
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mt-6">
+                <div class="p-5 border-b border-slate-800">
+                    <h2 class="font-bold text-lg">Match History</h2>
+                </div>
+
+                <div id="match-history-list" class="p-5 space-y-3 max-h-[500px] overflow-y-auto"></div>
+            </div>
+            </div> <!-- End standings-section -->
+
+            <!-- FIXTURES SECTION -->
+            <div id="fixtures-section" style="display: none;">
+                <!-- FIXTURES CATEGORY NAV -->
+                <section id="fixtures-nav" class="bg-slate-900 border-b border-slate-800 rounded-t-3xl p-5 flex gap-2 overflow-x-auto">
+                    <button
+                        id="btn-fixtures-mens_singles"
+                        onclick="switchFixturesCategory('mens_singles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white whitespace-nowrap"
+                    >
+                        Men's Singles
+                    </button>
+                    <button
+                        id="btn-fixtures-mens_doubles"
+                        onclick="switchFixturesCategory('mens_doubles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Men's Doubles
+                    </button>
+                    <button
+                        id="btn-fixtures-womens_singles"
+                        onclick="switchFixturesCategory('womens_singles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Women's Singles
+                    </button>
+                    <button
+                        id="btn-fixtures-womens_doubles"
+                        onclick="switchFixturesCategory('womens_doubles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Women's Doubles
+                    </button>
+                    <button
+                        id="btn-fixtures-mix_doubles"
+                        onclick="switchFixturesCategory('mix_doubles')"
+                        class="fixtures-cat-btn px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 text-slate-300 whitespace-nowrap"
+                    >
+                        Mixed Doubles
+                    </button>
+                </section>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-b-3xl overflow-hidden">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">Fixtures & Groups - <span id="fixtures-title">Men's Singles</span></h2>
+                    </div>
+                    
+                    <div class="p-5 space-y-8">
+                        <!-- GROUP STAGE -->
+                        <div>
+                            <h3 class="text-sm font-bold text-blue-400 mb-4">GROUP STAGE</h3>
+                            <div id="fixtures-groups" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                        </div>
+
+                        <!-- MATCHES -->
+                        <div>
+                            <h3 class="text-sm font-bold text-blue-400 mb-4">MATCHES</h3>
+                            <div id="fixtures-matches" class="space-y-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End fixtures-section -->
+        </main>
+
+        <script>
+            /* ---------------------------------- */
+            /* TOURNAMENT DATA */
+            /* ---------------------------------- */
+
+            const SEED_DATA = {
+                mens_singles: {
+                    title: "Men Singles",
+                    teams: [
+                        {
+                            id: "ms1",
+                            name: "Rahul Sharma",
+                        },
+                        {
+                            id: "ms2",
+                            name: "Brajesh Kumar",
+                        },
+                    ],
+                    matches: [],
+                },
+
+                mens_doubles: {
+                    title: "Men Doubles",
+                    teams: [],
+                    matches: [],
+                },
+
+                womens_singles: {
+                    title: "Women Singles",
+                    teams: [],
+                    matches: [],
+                },
+
+                womens_doubles: {
+                    title: "Women Doubles",
+                    teams: [],
+                    matches: [],
+                },
+
+                mix_doubles: {
+                    title: "Mixed Doubles",
+                    teams: [],
+                    matches: [],
+                },
+            };
+
+            let currentCategory = "mens_singles";
+            let currentFixturesCategory = "mens_singles";
+            let currentTab = "home"; // Default to home view with upcoming matches
+            let tournamentState = {}; // Will be populated from Gist
+
+            /* ---------------------------------- */
+            /* FIXTURES DATA */
+            /* ---------------------------------- */
+
+            const FIXTURES_DATA = {
+                mens_singles: {
+                    groups: {
+                        "Group A": ["Aniket Ghodake", "Kshitij Babar", "Balachander Srinivasalu", "Suraj Kendre", "Suresh Rankhamb"],
+                        "Group B": ["Rishabh Mishra", "Prem Tamang", "Brajesh Kumar", "Sachin Sonone", "Shekhar Kothawade"],
+                        "Group C": ["Sanket Pande", "Akshay Prabhune", "Santosh Daware", "Sagar Zanjad", "Aditya Dhage"],
+                        "Group D": ["Swapnil Walivkar", "Jinish Shah", "Rahul Singh", "Saurabh Kulkarni", "Ajinkya"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { group: "Group A", match: "Aniket vs Kshitij" },
+                            { group: "Group B", match: "Rishabh vs Prem" },
+                            { group: "Group C", match: "Sanket vs Akshay" },
+                            { group: "Group D", match: "Swapnil vs Jinish" },
+                            { group: "Group A", match: "Balachander vs Suraj" },
+                            { group: "Group B", match: "Brajesh vs Sachin" },
+                            { group: "Group C", match: "Santosh vs Sagar" },
+                            { group: "Group D", match: "Rahul vs Saurabh" }
+                        ],
+                        "Round 2": [
+                            { group: "Group A", match: "Aniket vs Balachander" },
+                            { group: "Group B", match: "Rishabh vs Brajesh" },
+                            { group: "Group C", match: "Sanket vs Santosh" },
+                            { group: "Group D", match: "Swapnil vs Rahul" },
+                            { group: "Group A", match: "Kshitij vs Suresh" },
+                            { group: "Group B", match: "Prem vs Shekhar" },
+                            { group: "Group C", match: "Akshay vs Aditya" },
+                            { group: "Group D", match: "Jinish vs Ajinkya" }
+                        ],
+                        "Round 3": [
+                            { group: "Group A", match: "Aniket vs Suraj" },
+                            { group: "Group B", match: "Rishabh vs Sachin" },
+                            { group: "Group C", match: "Sanket vs Sagar" },
+                            { group: "Group D", match: "Swapnil vs Saurabh" },
+                            { group: "Group A", match: "Balachander vs Suresh" },
+                            { group: "Group B", match: "Brajesh vs Shekhar" },
+                            { group: "Group C", match: "Santosh vs Aditya" },
+                            { group: "Group D", match: "Rahul vs Ajinkya" }
+                        ],
+                        "Round 4": [
+                            { group: "Group A", match: "Aniket vs Suresh" },
+                            { group: "Group B", match: "Rishabh vs Shekhar" },
+                            { group: "Group C", match: "Sanket vs Aditya" },
+                            { group: "Group D", match: "Swapnil vs Ajinkya" },
+                            { group: "Group A", match: "Kshitij vs Suraj" },
+                            { group: "Group B", match: "Prem vs Sachin" },
+                            { group: "Group C", match: "Akshay vs Sagar" },
+                            { group: "Group D", match: "Jinish vs Saurabh" }
+                        ],
+                        "Round 5": [
+                            { group: "Group A", match: "Kshitij vs Balachander" },
+                            { group: "Group B", match: "Prem vs Brajesh" },
+                            { group: "Group C", match: "Akshay vs Santosh" },
+                            { group: "Group D", match: "Jinish vs Rahul" },
+                            { group: "Group A", match: "Suraj vs Suresh" },
+                            { group: "Group B", match: "Sachin vs Shekhar" },
+                            { group: "Group C", match: "Sagar vs Aditya" },
+                            { group: "Group D", match: "Saurabh vs Ajinkya" }
+                        ]
+                    }
+                },
+                mens_doubles: {
+                    groups: {
+                        "Group A": ["Balachander & Sachin", "Suresh & Prem", "Suraj & Rishabh"],
+                        "Group B": ["Kshitij & Saurabh", "Tushar & Brajesh", "Sanket & Amit"],
+                        "Group C": ["Anurag & Shekhar", "Akshay & Santosh", "Sagar & Aditya"],
+                        "Group D": ["Jinish & Birju", "Rahul & Mandar", "Shreyas & Ambuj"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Balachander & Sachin vs Suresh & Prem" },
+                            { number: "2", group: "Group B", match: "Kshitij & Saurabh vs Tushar & Brajesh" },
+                            { number: "3", group: "Group C", match: "Anurag & Shekhar vs Akshay & Santosh" },
+                            { number: "4", group: "Group D", match: "Jinish & Birju vs Rahul & Mandar" },
+                            { number: "5", group: "Group A", match: "Suresh & Prem vs Suraj & Rishabh" },
+                            { number: "6", group: "Group B", match: "Tushar & Brajesh vs Sanket & Amit" },
+                            { number: "7", group: "Group C", match: "Akshay & Santosh vs Sagar & Aditya" },
+                            { number: "8", group: "Group D", match: "Rahul & Mandar vs Shreyas & Ambuj" },
+                            { number: "9", group: "Group A", match: "Balachander & Sachin vs Suraj & Rishabh" },
+                            { number: "10", group: "Group B", match: "Kshitij & Saurabh vs Sanket & Amit" },
+                            { number: "11", group: "Group C", match: "Anurag & Shekhar vs Sagar & Aditya" },
+                            { number: "12", group: "Group D", match: "Jinish & Birju vs Shreyas & Ambuj" }
+                        ]
+                    }
+                },
+                womens_singles: {
+                    groups: {
+                        "Group A": ["Sheetal Pare", "Ankita Sharma", "Shivangi Agarwal", "Siddhi"],
+                        "Group B": ["Sneha", "Shivangi Nigam", "Pratishtha", "Payal Umekar"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Sheetal Pare vs Ankita Sharma" },
+                            { number: "2", group: "Group A", match: "Shivangi Agarwal vs Siddhi" },
+                            { number: "3", group: "Group B", match: "Sneha vs Shivangi Nigam" },
+                            { number: "4", group: "Group B", match: "Pratishtha vs Payal Umekar" },
+                            { number: "5", group: "Group A", match: "Sheetal Pare vs Shivangi Agarwal" },
+                            { number: "6", group: "Group A", match: "Ankita Sharma vs Siddhi" },
+                            { number: "7", group: "Group B", match: "Sneha vs Pratishtha" },
+                            { number: "8", group: "Group B", match: "Shivangi Nigam vs Payal Umekar" },
+                            { number: "9", group: "Group A", match: "Sheetal Pare vs Siddhi" },
+                            { number: "10", group: "Group A", match: "Ankita Sharma vs Shivangi Agarwal" },
+                            { number: "11", group: "Group B", match: "Sneha vs Payal Umekar" },
+                            { number: "12", group: "Group B", match: "Shivangi Nigam vs Pratishtha" }
+                        ]
+                    }
+                },
+                womens_doubles: {
+                    groups: {
+                        "All Teams": ["Ankita & Sheetal", "Shivangi A & Siddhi", "Sneha & Harshali", "Payal & Vimla", "Shivangi N & Pratishtha"]
+                    },
+                    matches: {
+                        "Round 1": [
+                            { number: "1", match: "Ankita & Sheetal vs Shivangi A & Siddhi", bye: "Sneha & Harshali" },
+                            { number: "2", match: "Payal & Vimla vs Shivangi N & Pratishtha", bye: "" }
+                        ],
+                        "Round 2": [
+                            { number: "3", match: "Ankita & Sheetal vs Payal & Vimla", bye: "Shivangi A & Siddhi" },
+                            { number: "4", match: "Shivangi N & Pratishtha vs Sneha & Harshali", bye: "" }
+                        ],
+                        "Round 3": [
+                            { number: "5", match: "Ankita & Sheetal vs Shivangi N & Pratishtha", bye: "Payal & Vimla" },
+                            { number: "6", match: "Shivangi A & Siddhi vs Sneha & Harshali", bye: "" }
+                        ],
+                        "Round 4": [
+                            { number: "7", match: "Ankita & Sheetal vs Sneha & Harshali", bye: "Shivangi N & Pratishtha" },
+                            { number: "8", match: "Shivangi A & Siddhi vs Payal & Vimla", bye: "" }
+                        ],
+                        "Round 5": [
+                            { number: "9", match: "Shivangi A & Siddhi vs Shivangi N & Pratishtha", bye: "Ankita & Sheetal" },
+                            { number: "10", match: "Payal & Vimla vs Sneha & Harshali", bye: "" }
+                        ]
+                    }
+                },
+                mix_doubles: {
+                    groups: {
+                        "Group A": ["Kshitij Babar & Sheetal Pare", "Suresh Rankhamb & Sneha", "Saurabh Kulkarni & Ankita Sharma", "Sachin Sonone & Siddhi Joshi", "Ajinkya & Harshali"],
+                        "Group B": ["Brajesh Kumar & Shivangi Nigam", "Amit Sharma & Shivangi Agarwal", "Shekhar & Payal Umekar", "Rahul & Vimla"]
+                    },
+                    matches: {
+                        "All Matches": [
+                            { number: "1", group: "Group A", match: "Kshitij & Sheetal vs Suresh & Sneha" },
+                            { number: "2", group: "Group A", match: "Saurabh & Ankita vs Sachin & Siddhi" },
+                            { number: "3", group: "Group B", match: "Brajesh & Shivangi N vs Amit & Shivangi A" },
+                            { number: "4", group: "Group B", match: "Shekhar & Payal vs Rahul & Vimla" },
+                            { number: "5", group: "Group A", match: "Kshitij & Sheetal vs Saurabh & Ankita" },
+                            { number: "6", group: "Group A", match: "Sachin & Siddhi vs Ajinkya & Harshali" },
+                            { number: "7", group: "Group B", match: "Brajesh & Shivangi N vs Shekhar & Payal" },
+                            { number: "8", group: "Group B", match: "Amit & Shivangi A vs Rahul & Vimla" },
+                            { number: "9", group: "Group A", match: "Kshitij & Sheetal vs Sachin & Siddhi" },
+                            { number: "10", group: "Group A", match: "Suresh & Sneha vs Ajinkya & Harshali" },
+                            { number: "11", group: "Group B", match: "Brajesh & Shivangi N vs Rahul & Vimla" },
+                            { number: "12", group: "Group B", match: "Amit & Shivangi A vs Shekhar & Payal" },
+                            { number: "13", group: "Group A", match: "Kshitij & Sheetal vs Ajinkya & Harshali" },
+                            { number: "14", group: "Group A", match: "Suresh & Sneha vs Saurabh & Ankita" },
+                            { number: "15", group: "Group A", match: "Suresh & Sneha vs Sachin & Siddhi" },
+                            { number: "16", group: "Group A", match: "Saurabh & Ankita vs Ajinkya & Harshali" }
+                        ]
+                    }
+                }
+            };
+
+            let liveMatch = {
+                team1Id: "",
+                team2Id: "",
+                points1: 0,
+                points2: 0,
+                sets1: 0,
+                sets2: 0,
+                setHistory: [],
+                matchFormat: 5,
+            };
+
+            let liveScore = {
+                isActive: false,
+                category: "",
+                team1Name: "",
+                team2Name: "",
+                team1Points: 0,
+                team2Points: 0,
+                team1Sets: 0,
+                team2Sets: 0,
+                setHistory: [],
+                matchFormat: 3,
+                timestamp: ""
+            };
+
+            /* ---------------------------------- */
+            /* TAB SWITCHING FUNCTIONS */
+            /* ---------------------------------- */
+
+            function switchTab(tab) {
+                currentTab = tab;
+
+                // Update tab buttons
+                document.querySelectorAll(".tab-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-${tab}-tab`).classList.remove("bg-slate-800", "text-slate-300");
+                document.getElementById(`btn-${tab}-tab`).classList.add("bg-blue-500", "text-white");
+
+                // Show/hide sections
+                document.getElementById("home-section").style.display = tab === "home" ? "" : "none";
+                document.getElementById("standings-nav").style.display = tab === "standings" ? "" : "none";
+                document.getElementById("standings-section").style.display = tab === "standings" ? "" : "none";
+                document.getElementById("fixtures-section").style.display = tab === "fixtures" ? "" : "none";
+
+                if (tab === "home") {
+                    renderHomeView();
+                } else if (tab === "fixtures") {
+                    renderFixtures();
+                } else if (tab === "standings") {
+                    renderDashboard();
+                }
+            }
+
+            /* ---------------------------------- */
+            /* GITHUB INTEGRATION - GIST READ */
+            /* ---------------------------------- */
+            // GitHub repository for tournament metadata
+            const REPO_OWNER = "bkumar-acsi";
+            const REPO_NAME = "ACSI-HIGH-FIVE-DATA";
+            const REPO_BRANCH = "main";
+            const DATA_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/data`;
+
+            // Gist ID (keep for backwards compatibility)
+            const PUBLIC_GIST_ID = "c0af02e95d49a4933b5846882f802e04";
+
+            /* ---------------------------------- */
+            /* FIREBASE - REAL-TIME DATA */
+            /* ---------------------------------- */
+            const FIREBASE_DB_URL = "https://tt-live-44a37-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+            // Firebase REST API helper - read data
+            async function firebaseGet(path) {
+                try {
+                    const url = `${FIREBASE_DB_URL}/${path}.json`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Firebase error: ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error(`❌ Firebase read error (${path}):`, error);
+                    return null;
+                }
+            }
+
+            // Local storage caching to reduce API calls
+            const CACHE_DURATION = 5 * 60 * 1000; // Cache for 5 minutes
+            const CACHE_KEYS = {
+                METADATA: 'tournament_metadata',
+                LIVE_DATA: 'tournament_live_data',
+                STANDINGS: 'tournament_standings',
+                HISTORY: 'tournament_history',
+                CACHE_TIMESTAMP: 'tournament_cache_timestamp'
+            };
+
+            function getCachedData(key) {
+                try {
+                    const cached = localStorage.getItem(key);
+                    if (!cached) return null;
+                    
+                    const timestamp = parseInt(localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP) || '0');
+                    const now = Date.now();
+                    
+                    if (now - timestamp > CACHE_DURATION) {
+                        console.log(`⏰ Cache expired for ${key}`);
+                        return null;
+                    }
+                    
+                    console.log(`✅ Using cached data for ${key}`);
+                    return JSON.parse(cached);
+                } catch (error) {
+                    console.error(`Error reading cache for ${key}:`, error);
+                    return null;
+                }
+            }
+
+            function setCachedData(key, data) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    localStorage.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now().toString());
+                    console.log(`💾 Cached ${key}`);
+                } catch (error) {
+                    console.error(`Error caching ${key}:`, error);
+                }
+            }
+
+            function clearCache() {
+                try {
+                    Object.values(CACHE_KEYS).forEach(key => localStorage.removeItem(key));
+                    console.log("🗑️ Cache cleared");
+                } catch (error) {
+                    console.error("Error clearing cache:", error);
+                }
+            }
+
+            // Retry helper function
+            async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                    try {
+                        console.log(`📡 Attempt ${attempt}/${maxRetries} - Fetching ${url}`);
+                        const response = await fetch(url, options);
+                        
+                        if (response.ok) {
+                            return response;
+                        }
+                        
+                        if (response.status === 403) {
+                            // Check rate limit headers
+                            const remaining = response.headers.get('x-ratelimit-remaining');
+                            const resetTime = response.headers.get('x-ratelimit-reset');
+                            const limit = response.headers.get('x-ratelimit-limit');
+                            console.warn(`⚠️ 403 Forbidden - Rate limit: ${remaining}/${limit}, Reset: ${new Date(resetTime * 1000)}`);
+                            
+                            if (remaining === '0') {
+                                // Rate limited, wait before retrying
+                                const waitTime = parseInt(resetTime) * 1000 - Date.now() + 1000;
+                                console.warn(`⏳ Rate limited. Waiting ${Math.ceil(waitTime/1000)}s before retry...`);
+                                await new Promise(resolve => setTimeout(resolve, Math.min(waitTime, 5000)));
+                                continue;
+                            }
+                        }
+                        
+                        if (response.status === 404) {
+                            throw new Error(`404 Not Found: Gist ID may be incorrect`);
+                        }
+                        
+                        if (attempt < maxRetries) {
+                            const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
+                            console.warn(`⚠️ Attempt ${attempt} failed with status ${response.status}, retrying in ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue;
+                        }
+                        
+                        return response;
+                    } catch (error) {
+                        if (attempt < maxRetries) {
+                            const delay = Math.pow(2, attempt - 1) * 1000;
+                            console.warn(`⚠️ Network error: ${error.message}, retrying in ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+            }
+
+            // Load ONLY metadata (team names, groups) from GitHub - this is static
+            async function loadMetadataFromGitHub() {
+                try {
+                    console.log("📥 Loading tournament metadata from GitHub...");
+                    const metadataUrl = `${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}`;
+                    const metadataResponse = await fetch(metadataUrl);
+                    const metadataContent = await metadataResponse.text();
+                    const metadata = metadataContent ? JSON.parse(metadataContent) : null;
+                    console.log("✅ Metadata loaded, categories:", Object.keys(metadata?.tournament || {}));
+                    return metadata?.tournament || {};
+                } catch (error) {
+                    console.error("Error loading metadata:", error);
+                    return null;
+                }
+            }
+
+            // Load visibility from Firebase (instant!)
+            async function loadVisibilityStatus() {
+                const data = await firebaseGet('visibility');
+                console.log("✅ Visibility loaded from Firebase:", data?.isActive);
+                return data ? (data.isActive || false) : false;
+            }
+
+            /* ---------------------------------- */
+            /* PAGE BOOTSTRAP */
+            /* ---------------------------------- */
+
+            // Load standings from Firebase and merge into tournamentState
+            async function loadStandingsData() {
+                console.log("📊 Loading standings from Firebase...");
+                const standings = await firebaseGet('standings');
+                if (standings) {
+                    // Replace teams in tournamentState with standings data (has wins/losses/points)
+                    Object.keys(standings).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].teams = standings[categoryKey].teams || [];
+                            console.log(`✅ Updated ${categoryKey}: ${standings[categoryKey].teams.length} teams`);
+                        }
+                    });
+                    console.log("✅ Standings merged into tournamentState");
+                    return standings;
+                } else {
+                    console.warn("⚠️ No standings in Firebase yet");
+                    return null;
+                }
+            }
+
+            async function loadTournamentData() {
+                console.log("=== LOADING TOURNAMENT DATA ===");
+                
+                // Step 1: Load metadata (team names, groups) from GitHub
+                const metadata = await loadMetadataFromGitHub();
+                if (!metadata) {
+                    console.error("❌ Failed to load metadata from GitHub");
+                    return;
+                }
+                tournamentState = metadata;
+                console.log("📋 Tournament categories:", Object.keys(tournamentState));
+
+                // Step 2: Load live score from Firebase (instant, always fresh!)
+                const freshLiveScore = await firebaseGet('liveScore');
+                if (freshLiveScore) {
+                    liveScore = freshLiveScore;
+                    liveMatch = freshLiveScore;
+                    console.log("📊 Live score from Firebase:", liveScore.team1Name, "vs", liveScore.team2Name);
+                } else {
+                    liveScore = {};
+                    liveMatch = {};
+                    console.log("📊 No live match data in Firebase");
+                }
+
+                // Step 3: Load standings from Firebase (instant, always fresh!)
+                await loadStandingsData();
+
+                // Step 4: Load match history from Firebase
+                const freshHistory = await firebaseGet('matchHistory');
+                if (freshHistory) {
+                    Object.keys(freshHistory).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
+                        }
+                    });
+                    console.log("✅ Match history loaded from Firebase");
+                }
+
+                // Step 5: Load visibility
+                const isVisible = await loadVisibilityStatus();
+                liveScore.isVisible = isVisible;
+                console.log("📌 Visibility:", isVisible);
+
+                // Step 5: Update displays
+                updateLiveScoreDisplay();
+                
+                if (currentTab === "home") {
+                    renderHomeView();
+                } else if (currentTab === "standings") {
+                    renderDashboard();
+                } else if (currentTab === "fixtures") {
+                    renderFixtures();
+                }
+                
+                console.log("✅ All data loaded!");
+            }
+
+            window.addEventListener("DOMContentLoaded", async () => {
+                console.log("View page loaded");
+                
+                // Set tab to home
+                currentTab = "home";
+                
+                // Load data first
+                try {
+                    await loadTournamentData();
+                    console.log("✅ Data loaded successfully");
+                } catch (e) {
+                    console.error("❌ Error loading data:", e);
+                }
+                
+                // Set initial visibility from what was loaded
+                let liveMatchActive = liveScore.isVisible || false;
+                console.log("📌 Initial visibility:", liveMatchActive);
+                let isLoading = false;
+                
+                // Full page reload every 5 minutes
+                setTimeout(() => { location.reload(); }, 300000);
+                
+                // Check visibility every 5 minutes (lightweight check)
+                setInterval(async () => {
+                    const isLive = await loadVisibilityStatus();
+                    if (liveMatchActive !== isLive) {
+                        console.log("📌 Visibility changed:", isLive);
+                        liveMatchActive = isLive;
+                        if (!isLive) {
+                            const section = document.getElementById("live-match-section");
+                            if (section) section.style.display = "none";
+                        }
+                    }
+                }, 300000);
+                
+                // Refresh match history every 2 minutes
+                setInterval(async () => {
+                    const freshHistory = await firebaseGet('matchHistory');
+                    if (freshHistory) {
+                        Object.keys(freshHistory).forEach(categoryKey => {
+                            if (tournamentState[categoryKey]) {
+                                tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
+                            }
+                        });
+                        if (currentTab === "standings") {
+                            renderDashboard();
+                        }
+                        console.log("✅ Match history refreshed");
+                    }
+                }, 120000);
+                
+                // Auto-refresh live data & standings every 5 sec ONLY when active
+                setInterval(async () => {
+                    if (!liveMatchActive || isLoading) return;
+                    
+                    isLoading = true;
+                    
+                    // Refresh live score from Firebase
+                    const freshLiveScore = await firebaseGet('liveScore');
+                    if (freshLiveScore) {
+                        liveScore = freshLiveScore;
+                        liveScore.isVisible = true;
+                        updateLiveScoreDisplay();
+                    }
+                    
+                    // Refresh standings from Firebase
+                    const freshStandings = await firebaseGet('standings');
+                    if (freshStandings) {
+                        Object.keys(freshStandings).forEach(categoryKey => {
+                            if (tournamentState[categoryKey]) {
+                                tournamentState[categoryKey].teams = freshStandings[categoryKey].teams || [];
+                            }
+                        });
+                        if (currentTab === "standings") {
+                            renderDashboard();
+                        }
+                    }
+                    
+                    isLoading = false;
+                }, 5000);
+            });
+
+            /* ---------------------------------- */
+            /* STORAGE */
+            /* ---------------------------------- */
+
+            /* ---------------------------------- */
+            /* SYNC LIVE MATCH VISIBILITY */
+            /* ---------------------------------- */
+
+            function applyLiveMatchVisibility() {
+                const section = document.getElementById("live-match-section");
+                
+                // In new architecture, we use liveScore.isActive instead
+                // Don't show live match section - use updateLiveScoreDisplay() instead
+                console.log("ℹ️ applyLiveMatchVisibility (legacy function - no longer used)");
+            }
+
+            /* ---------------------------------- */
+            /* CATEGORY SWITCHING */
+            /* ---------------------------------- */
+
+            function switchCategory(category) {
+                currentCategory = category;
+
+                document.querySelectorAll(".category-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-${category}`).classList.remove("bg-slate-800", "text-slate-300");
+                document.getElementById(`btn-${category}`).classList.add("bg-blue-500", "text-white");
+
+                // Update fixtures title
+                const categoryNames = {
+                    mens_singles: "Men's Singles",
+                    womens_singles: "Women's Singles",
+                    mens_doubles: "Men's Doubles",
+                    womens_doubles: "Women's Doubles",
+                    mix_doubles: "Mixed Doubles"
+                };
+                document.getElementById("fixtures-title").innerText = categoryNames[category] || category;
+
+                // Refresh fixtures if on that tab
+                if (currentTab === "fixtures") {
+                    renderFixtures();
+                } else {
+                    renderDashboard();
+                    updateLiveScoreDOM();
+                }
+            }
+
+            function formatTeamName(name) {
+                // Replace '&' with a colored span
+                let formatted = name.replace(/&/g, '<span class="text-blue-400 font-bold">&</span>');
+                // Replace ' vs ' with colored version
+                formatted = formatted.replace(/ vs /g, ' <span class="text-blue-400 font-bold">vs</span> ');
+                return formatted;
+            }
+
+            function updateLiveScoreDisplay() {
+                console.log("📊 updateLiveScoreDisplay called");
+                console.log("   liveScore:", liveScore);
+                console.log("   team1Name:", liveScore?.team1Name);
+                console.log("   team2Name:", liveScore?.team2Name);
+                console.log("   isVisible:", liveScore?.isVisible);
+                
+                // Check if live match has teams
+                const hasTeams = liveScore && liveScore.team1Name && liveScore.team2Name && liveScore.team1Name.trim() && liveScore.team2Name.trim();
+                
+                console.log("   hasTeams:", hasTeams);
+                
+                if (!hasTeams) {
+                    console.log("⚠️ No teams selected - hiding live match");
+                    const section = document.getElementById("live-match-section");
+                    if (section) section.style.display = "none";
+                    return;
+                }
+                
+                // Show live match section
+                const section = document.getElementById("live-match-section");
+                if (!section) {
+                    console.error("❌ live-match-section element not found!");
+                    return;
+                }
+                
+                section.style.display = "block";
+                console.log("✅ Live match section shown");
+                
+                // Get team names
+                const team1 = liveScore.team1Name || "Player 1";
+                const team2 = liveScore.team2Name || "Player 2";
+                
+                console.log(`📊 Updating display: ${team1} vs ${team2}`);
+                
+                // Update display names
+                const el1 = document.getElementById("display-name-1");
+                const el2 = document.getElementById("display-name-2");
+                if (el1) el1.innerText = team1;
+                if (el2) el2.innerText = team2;
+                
+                // Update points
+                const pts1 = document.getElementById("live-points-1");
+                const pts2 = document.getElementById("live-points-2");
+                if (pts1) pts1.innerText = liveScore.team1Points || 0;
+                if (pts2) pts2.innerText = liveScore.team2Points || 0;
+                
+                // Update sets
+                const sets1 = document.getElementById("live-sets-1");
+                const sets2 = document.getElementById("live-sets-2");
+                if (sets1) sets1.innerText = liveScore.team1Sets || 0;
+                if (sets2) sets2.innerText = liveScore.team2Sets || 0;
+                
+                // Update match format
+                const formatText = `Best Of ${liveScore.matchFormat || 3}`;
+                const format = document.getElementById("match-format-display");
+                if (format) format.innerText = formatText;
+                
+                // Update set history
+                const historyDisplay = liveScore.setHistory && liveScore.setHistory.length > 0
+                    ? `Sets: ${liveScore.setHistory.join(" | ")}`
+                    : "No Sets Completed Yet";
+                const history = document.getElementById("set-history-log");
+                if (history) history.innerText = historyDisplay;
+                
+                console.log("✅ Live score display updated");
+            }
+
+            // Fresh load via GitHub API (bypasses CDN cache - always returns latest data)
+            // Manual refresh function - loads ALL fresh data from Firebase (instant!)
+            async function refreshLiveData() {
+                console.log("🔄 Refreshing ALL data from Firebase...");
+                
+                // Fetch fresh live score from Firebase
+                const freshLiveScore = await firebaseGet('liveScore');
+                if (freshLiveScore) {
+                    liveScore = freshLiveScore;
+                    liveScore.isVisible = await loadVisibilityStatus();
+                    updateLiveScoreDisplay();
+                    console.log("✅ Live score refreshed");
+                }
+                
+                // Only refresh standings/history if tournamentState is loaded
+                if (!tournamentState || Object.keys(tournamentState).length === 0) {
+                    console.warn("⚠️ tournamentState empty - skipping standings/history refresh");
+                    return;
+                }
+                
+                // Fetch fresh standings from Firebase
+                const freshStandings = await loadStandingsData();
+                if (freshStandings && currentTab === "standings") {
+                    renderDashboard();
+                    console.log("✅ Standings refreshed");
+                }
+                
+                // Fetch fresh match history from Firebase
+                const freshHistory = await firebaseGet('matchHistory');
+                if (freshHistory) {
+                    Object.keys(freshHistory).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
+                        }
+                    });
+                    if (currentTab === "standings") {
+                        renderDashboard();
+                    }
+                    // Also refresh home view if on home tab
+                    if (currentTab === "home") {
+                        renderHomeView();
+                    }
+                    console.log("✅ Match history refreshed");
+                }
+                
+                console.log("✅ All data refreshed!");
+            }
+
+            function renderHomeView() {
+                console.log("🏠 renderHomeView called");
+                
+                console.log("📋 Populating upcoming and completed matches...");
+                
+                // Completed matches (19 Aug 2026)
+                const completedMatchesList = [
+                    { matchNum: "M1", match: "Aniket vs Kshitij" },
+                    { matchNum: "M2", match: "Rishabh vs Prem" },
+                    { matchNum: "M3", match: "Sanket vs Aditya" },
+                    { matchNum: "M4", match: "Swapnil vs Jinish" },
+                    { matchNum: "M5", match: "Balachander vs Suraj" },
+                    { matchNum: "M6", match: "Brajesh vs Sachin" },
+                    { matchNum: "M7", match: "Santosh vs Sagar" },
+                    { matchNum: "M8", match: "Rahul vs Saurabh" },
+                    { matchNum: "M9", match: "Aniket vs Balachander" },
+                    { matchNum: "M10", match: "Rishabh vs Brajesh" },
+                    { matchNum: "M11", match: "Sanket vs Akshay" }
+                ];
+
+                // Upcoming matches (20 Aug 2026)
+                const upcomingMatchesList = [
+                    { matchNum: "M12", match: "Swapnil vs Rahul" },
+                    { matchNum: "M13", match: "Kshitij vs Suraj" },
+                    { matchNum: "M14", match: "Prem vs Sachin" },
+                    { matchNum: "M15", match: "Sanket vs Santosh" },
+                    { matchNum: "M16", match: "Jinish vs Saurabh" },
+                    { matchNum: "M17", match: "Aniket vs Suraj" },
+                    { matchNum: "M18", match: "Rishabh vs Sachin" },
+                    { matchNum: "M19", match: "Akshay vs Sagar" },
+                    { matchNum: "M20", match: "Swapnil vs Saurabh" },
+                    { matchNum: "M21", match: "Kshitij vs Balachander" },
+                    { matchNum: "M22", match: "Prem vs Brajesh" },
+                    { matchNum: "M23", match: "Sanket vs Sagar" },
+                    { matchNum: "M24", match: "Jinish vs Rahul" },
+                    { matchNum: "M25", match: "Aniket vs Suresh" },
+                    { matchNum: "M26", match: "Rishabh vs Shekhar" }
+                ];
+                
+                // Build lookup of all teams from standings
+                const allTeams = [];
+                Object.keys(tournamentState).forEach(function(catKey) {
+                    var cat = tournamentState[catKey];
+                    if (cat.teams) {
+                        cat.teams.forEach(function(t) {
+                            allTeams.push({
+                                name: t.name,
+                                firstName: t.name.split(' ')[0].toLowerCase(),
+                                wins: t.wins || 0,
+                                losses: t.losses || 0,
+                                points: t.points || 0,
+                                played: (t.wins || 0) + (t.losses || 0)
+                            });
+                        });
+                    }
+                });
+                
+                // Also build completed matches from history
+                const completedMatches = [];
+                Object.keys(tournamentState).forEach(function(catKey) {
+                    var cat = tournamentState[catKey];
+                    if (cat.matches) {
+                        cat.matches.forEach(function(m) {
+                            completedMatches.push({
+                                team1: (m.team1Name || '').toLowerCase(),
+                                team2: (m.team2Name || '').toLowerCase(),
+                                winner: m.sets1 > m.sets2 ? m.team1Name : m.team2Name,
+                                sets1: m.sets1,
+                                sets2: m.sets2
+                            });
+                        });
+                    }
+                });
+                
+                function findTeam(firstName) {
+                    return allTeams.find(function(t) {
+                        return t.firstName === firstName.toLowerCase();
+                    });
+                }
+                
+                function getMatchResult(matchStr) {
+                    var parts = matchStr.toLowerCase().split(' vs ');
+                    if (parts.length !== 2) return null;
+                    var t1First = parts[0].trim();
+                    var t2First = parts[1].trim();
+                    
+                    // First check match history
+                    var historyMatch = completedMatches.find(function(m) {
+                        return (m.team1.includes(t1First) && m.team2.includes(t2First)) ||
+                               (m.team1.includes(t2First) && m.team2.includes(t1First));
+                    });
+                    
+                    if (historyMatch) {
+                        return { winner: historyMatch.winner, sets: historyMatch.sets1 + '-' + historyMatch.sets2, source: 'history' };
+                    }
+                    
+                    // Otherwise determine from standings
+                    var team1 = findTeam(t1First);
+                    var team2 = findTeam(t2First);
+                    
+                    if (team1 && team2 && team1.played > 0 && team2.played > 0) {
+                        // Both have played - determine winner by who has more wins
+                        if (team1.wins > team2.wins) {
+                            return { winner: team1.name, sets: '2-0', source: 'standings' };
+                        } else if (team2.wins > team1.wins) {
+                            return { winner: team2.name, sets: '2-0', source: 'standings' };
+                        } else {
+                            // Same wins - use points
+                            if (team1.points > team2.points) {
+                                return { winner: team1.name, sets: '2-0', source: 'standings' };
+                            } else {
+                                return { winner: team2.name, sets: '2-0', source: 'standings' };
+                            }
+                        }
+                    }
+                    
+                    return null;
+                }
+                
+                // Sort: completed first, upcoming below
+                var upcomingContainer = document.getElementById("upcoming-matches-list");
+                var completedContainer = document.getElementById("completed-matches-list");
+                
+                if (!upcomingContainer || !completedContainer) {
+                    console.error("❌ Match containers not found!");
+                    return;
+                }
+                
+                // Render completed matches (M1-M11) with winners from standings
+                var completedRows = '';
+                completedMatchesList.forEach(function(m) {
+                    var formattedMatch = formatTeamName(m.match);
+                    var result = getMatchResult(m.match);
+                    var winnerDisplay = result ? '🏆 ' + formatTeamName(result.winner) : '✅ Done';
+                    
+                    completedRows += 
+                    '<tr class="border-b border-slate-700 bg-green-900/10">' +
+                        '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
+                        '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">' + winnerDisplay + '</td>' +
+                    '</tr>';
+                });
+                
+                // Render upcoming matches (M12-M26) - auto-move completed ones to completed section
+                var upcomingRows = '';
+                upcomingMatchesList.forEach(function(m) {
+                    var formattedMatch = formatTeamName(m.match);
+                    var result = getMatchResult(m.match);
+                    
+                    if (result) {
+                        // Match completed! Move to completed section
+                        completedRows += 
+                        '<tr class="border-b border-slate-700 bg-green-900/10">' +
+                            '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
+                            '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
+                            '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(result.winner) + '</td>' +
+                        '</tr>';
+                    } else {
+                        upcomingRows += 
+                        '<tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">' +
+                            '<td class="py-2 px-2 text-blue-400 font-bold text-center">' + m.matchNum + '</td>' +
+                            '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
+                            '<td class="py-2 px-2 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
+                        '</tr>';
+                    }
+                });
+                
+                upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-green-400">All matches completed! 🎉</td></tr>';
+                completedContainer.innerHTML = completedRows;
+                
+                console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
+                
+                // Render all groups by category
+                const groupsContainer = document.getElementById("all-groups-container");
+                groupsContainer.innerHTML = "";
+                
+                Object.entries(tournamentState).forEach(([categoryKey, category]) => {
+                    const categoryNames = {
+                        mens_singles: "Men's Singles",
+                        womens_singles: "Women's Singles",
+                        mens_doubles: "Men's Doubles",
+                        womens_doubles: "Women's Doubles",
+                        mix_doubles: "Mixed Doubles"
+                    };
+                    
+                    // Group teams by group field
+                    const groupedTeams = {};
+                    category.teams.forEach(team => {
+                        const group = team.group || "No Group";
+                        if (!groupedTeams[group]) {
+                            groupedTeams[group] = [];
+                        }
+                        groupedTeams[group].push(team.name);
+                    });
+                    
+                    // Sort groups in order A, B, C, D, All Teams
+                    const groupOrder = ["Group A", "Group B", "Group C", "Group D", "All Teams"];
+                    const sortedGroups = Object.keys(groupedTeams).sort((a, b) => {
+                        const aIndex = groupOrder.indexOf(a);
+                        const bIndex = groupOrder.indexOf(b);
+                        if (aIndex === -1) return 1;
+                        if (bIndex === -1) return 1;
+                        return aIndex - bIndex;
+                    });
+                    
+                    let categoryHTML = `
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+    <h3 class="font-bold text-blue-400 mb-4">${categoryNames[categoryKey] || categoryKey}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+`;
+                    
+                    sortedGroups.forEach((groupName) => {
+                        const teamNames = groupedTeams[groupName];
+                        categoryHTML += `
+        <div class="bg-slate-900 rounded-lg p-3 border border-slate-700 hover:border-blue-500/50 transition">
+            <h4 class="text-sm font-bold text-blue-300 mb-3 uppercase tracking-wide">${groupName}</h4>
+            <ul class="text-sm space-y-2">
+                ${teamNames.map(name => `<li class="text-slate-200 font-medium flex items-center gap-2"><span class="text-blue-400">▸</span>${formatTeamName(name)}</li>`).join('')}
+            </ul>
+        </div>
+`;
+                    });
+                    
+                    categoryHTML += `
+    </div>
+</div>
+`;
+                    groupsContainer.innerHTML += categoryHTML;
+                });
+            }
+
+            function switchFixturesCategory(category) {
+                currentFixturesCategory = category;
+
+                // Update button styles
+                document.querySelectorAll(".fixtures-cat-btn").forEach((btn) => {
+                    btn.classList.remove("bg-blue-500", "text-white");
+                    btn.classList.add("bg-slate-800", "text-slate-300");
+                });
+
+                document.getElementById(`btn-fixtures-${category}`).classList.remove("bg-slate-800", "text-slate-300");
+                document.getElementById(`btn-fixtures-${category}`).classList.add("bg-blue-500", "text-white");
+
+                // Render fixtures for selected category
+                renderFixtures();
+            }
+
+            function renderFixtures() {
+                const category = tournamentState[currentFixturesCategory];
+                const fixtures = FIXTURES_DATA[currentFixturesCategory];
+                
+                if (!category || !fixtures) {
+                    console.log("No data for", currentFixturesCategory);
+                    return;
+                }
+                
+                // Update title
+                const categoryNames = {
+                    mens_singles: "Men's Singles",
+                    womens_singles: "Women's Singles",
+                    mens_doubles: "Men's Doubles",
+                    womens_doubles: "Women's Doubles",
+                    mix_doubles: "Mixed Doubles"
+                };
+                document.getElementById("fixtures-title").innerText = categoryNames[currentFixturesCategory] || currentFixturesCategory;
+                
+                // Render groups from database
+                const groupsContainer = document.getElementById("fixtures-groups");
+                groupsContainer.innerHTML = "";
+                
+                // Get unique groups from teams in database
+                const groupedTeams = {};
+                category.teams.forEach(team => {
+                    const group = team.group || "No Group";
+                    if (!groupedTeams[group]) {
+                        groupedTeams[group] = [];
+                    }
+                    groupedTeams[group].push(team.name);
+                });
+                
+                // Sort groups in order A, B, C, D, All Teams
+                const groupOrder = ["Group A", "Group B", "Group C", "Group D", "All Teams"];
+                const sortedGroups = Object.keys(groupedTeams).sort((a, b) => {
+                    const aIndex = groupOrder.indexOf(a);
+                    const bIndex = groupOrder.indexOf(b);
+                    if (aIndex === -1) return 1;
+                    if (bIndex === -1) return 1;
+                    return aIndex - bIndex;
+                });
+                
+                // Render groups from database in sorted order
+                sortedGroups.forEach((groupName) => {
+                    const teamNames = groupedTeams[groupName];
+                    groupsContainer.innerHTML += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 hover:border-blue-500/50 transition">
+                            <h4 class="font-bold text-blue-300 mb-3 uppercase tracking-wide">${groupName}</h4>
+                            <ul class="space-y-2 text-sm">
+                                ${teamNames.map(name => `<li class="text-slate-200 font-medium flex items-center gap-2"><span class="text-blue-400">▸</span>${formatTeamName(name)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                // Render matches from fixtures
+                const matchesContainer = document.getElementById("fixtures-matches");
+                matchesContainer.innerHTML = "";
+                
+                Object.entries(fixtures.matches).forEach(([roundName, matches]) => {
+                    let roundHTML = `<div class="bg-slate-950 border border-slate-800 rounded-xl p-4 hover:border-blue-500/50 transition">
+                        <h4 class="font-bold text-blue-300 mb-3 uppercase tracking-wide">${roundName}</h4>
+                        <div class="space-y-2">`;
+                    
+                    matches.forEach(({ number, group, match, bye }) => {
+                        const formattedMatch = formatTeamName(match);
+                        const displayText = number ? `${number}. ${formattedMatch}` : formattedMatch;
+                        roundHTML += `<div class="text-sm text-slate-200 font-medium p-2 bg-slate-900 rounded hover:bg-slate-800 transition">
+                            <div class="flex justify-between items-start gap-2">
+                                <span>${displayText}</span>
+                                <span class="text-slate-500 text-xs flex-shrink-0">${group || ''}</span>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    roundHTML += `</div></div>`;
+                    matchesContainer.innerHTML += roundHTML;
+                });
+            }
+
+            /* ---------------------------------- */
+            /* SCOREBOARD */
+            /* ---------------------------------- */
+
+            function updateLiveScoreDOM() {
+                // This function is no longer needed - updateLiveScoreDisplay handles it
+                // Keep for backward compatibility but do nothing
+                console.log("updateLiveScoreDOM called (deprecated)");
+            }
+
+            /* ---------------------------------- */
+            /* STANDINGS */
+            /* ---------------------------------- */
+
+            function calculateStats(team) {
+                // Use the team's stats directly from live-standings.json
+                // These are already calculated and stored
+                const wins = team.wins || 0;
+                const losses = team.losses || 0;
+                const points = team.points || 0;
+                const played = wins + losses;
+
+                return {
+                    played,
+                    wins,
+                    losses,
+                    points,
+                };
+            }
+
+            /* ---------------------------------- */
+            /* RENDER */
+            /* ---------------------------------- */
+
+            /* ---------------------------------- */
+            /* TOGGLE LIVE MATCH */
+            /* ---------------------------------- */
+
+            /* View page is read-only, no toggle button needed */
+            /* Live match visibility is controlled by admin in index.html */
+
+            function renderDashboard() {
+                // Render standings for ONLY the current category selected
+                const container = document.getElementById("all-standings-container");
+                if (!container) return;
+                container.innerHTML = "";
+                
+                console.log("📊 VIEW renderDashboard - currentCategory:", currentCategory);
+                console.log("📊 VIEW tournamentState keys:", Object.keys(tournamentState));
+                
+                // Safety check - if tournamentState is empty, show loading message
+                if (!tournamentState || Object.keys(tournamentState).length === 0) {
+                    container.innerHTML = '<div class="text-slate-400 text-center py-8">Loading tournament data...</div>';
+                    return;
+                }
+                
+                console.log("📊 VIEW currentCategoryData teams:", tournamentState[currentCategory]?.teams?.slice(0, 3));
+
+                // Render match history for current category
+                const currentCategoryData = tournamentState[currentCategory] || tournamentState["mens_singles"] || {};
+                const history = document.getElementById("match-history-list");
+                if (history) {
+                    history.innerHTML = "";
+
+                    if (currentCategoryData.matches && currentCategoryData.matches.length > 0) {
+                        currentCategoryData.matches.forEach((match) => {
+                            history.innerHTML += `
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+<div class="text-xs text-slate-500 mb-2">${match.timestamp}</div>
+<div class="font-semibold text-lg">
+${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span class="text-blue-400">${match.sets2}</span> ${match.team2Name}
+</div>
+<div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
+</div>
+`;
+                    });
+                }
+                }
+
+                // Render ONLY current category standings
+                const categoryKey = currentCategory;
+                const category = tournamentState[categoryKey];
+                    
+                if (category && category.teams && category.teams.length > 0) {
+                    // Group teams by their group
+                    const groupedTeams = {};
+                    category.teams.forEach(team => {
+                        const group = team.group || "No Group";
+                        if (!groupedTeams[group]) {
+                            groupedTeams[group] = [];
+                        }
+                        groupedTeams[group].push(team);
+                    });
+                    
+                    // Sort each group by points (highest first)
+                    Object.keys(groupedTeams).forEach(group => {
+                        groupedTeams[group].sort((a, b) => (b.points || 0) - (a.points || 0));
+                    });
+                    
+                    let standings = `
+<div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+    <div class="p-5 border-b border-slate-800 flex justify-between">
+        <div>
+            <h2 class="font-bold text-lg">${category.title} Standings</h2>
+            <p class="text-slate-500 text-sm">Group-wise rankings</p>
+        </div>
+        <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            ${category.matches ? category.matches.length : 0} Matches
+
+        </div>
+    </div>
+    <div class="p-5 space-y-4">
+`;
+
+                    // Render standings for each group
+                    Object.keys(groupedTeams).forEach(groupName => {
+                        standings += `
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+            <h3 class="font-bold text-blue-400 mb-3 text-sm">${groupName}</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400">
+                            <th class="py-2 px-2 text-center">#</th>
+                            <th class="py-2 px-2 text-left">Team / Player</th>
+                            <th class="py-2 px-2 text-center">Played</th>
+                            <th class="py-2 px-2 text-center">Wins</th>
+                            <th class="py-2 px-2 text-center">Losses</th>
+                            <th class="py-2 px-2 text-center">Diff</th>
+                            <th class="py-2 px-2 text-center">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+`;
+
+                        groupedTeams[groupName].forEach((team, index) => {
+                            const stats = calculateStats(team);
+                            standings += `
+                        <tr class="border-b border-slate-700">
+                            <td class="py-2 px-2 text-center text-xs">${index + 1}</td>
+                            <td class="py-2 px-2 text-slate-300 text-xs">${team.name}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.played}</td>
+                            <td class="py-2 px-2 text-center text-green-400 text-xs">${stats.wins}</td>
+                            <td class="py-2 px-2 text-center text-red-400 text-xs">${stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-xs">${stats.wins - stats.losses}</td>
+                            <td class="py-2 px-2 text-center text-blue-400 text-xs font-bold">${stats.points}</td>
+                        </tr>
+`;
+                        });
+
+                        standings += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+`;
+                    });
+
+                    standings += `
+    </div>
+</div>
+`;
+
+                    container.innerHTML += standings;
+                }
+            }
+        </script>
+    </body>
+</html>
