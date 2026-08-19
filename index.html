@@ -1735,11 +1735,88 @@
                 await saveStandingsOnly();
                 await saveMatchHistoryOnly();
                 
+                // Move match from upcoming to completed in matchTables
+                await moveMatchToCompleted(team1Name, team2Name, liveMatch.sets1 > liveMatch.sets2 ? team1Name : team2Name);
+                
                 // Refresh standings display
                 renderDashboard();
                 renderMatchHistory();
                 
                 console.log("✅ Match completed, saved to history and standings");
+            }
+            
+            // Move a match from upcoming to completed in Firebase matchTables
+            async function moveMatchToCompleted(team1Name, team2Name, winnerName) {
+                try {
+                    const matchTables = await firebaseGet('matchTables');
+                    if (!matchTables) {
+                        console.warn("⚠️ No matchTables in Firebase");
+                        return;
+                    }
+                    
+                    var upcoming = matchTables.upcomingMatches || [];
+                    var completed = matchTables.completedMatches || [];
+                    
+                    var t1 = team1Name.toLowerCase().trim();
+                    var t2 = team2Name.toLowerCase().trim();
+                    
+                    var foundIndex = -1;
+                    for (var i = 0; i < upcoming.length; i++) {
+                        var matchStr = upcoming[i].match.toLowerCase();
+                        
+                        // Split match into two sides by " vs "
+                        var sides = matchStr.split(' vs ');
+                        if (sides.length !== 2) continue;
+                        
+                        var side1 = sides[0].trim();
+                        var side2 = sides[1].trim();
+                        
+                        // Check if both teams match (in either order)
+                        var match1 = (t1.includes(side1) || side1.includes(t1.split(' ')[0])) && 
+                                     (t2.includes(side2) || side2.includes(t2.split(' ')[0]));
+                        var match2 = (t1.includes(side2) || side2.includes(t1.split(' ')[0])) && 
+                                     (t2.includes(side1) || side1.includes(t2.split(' ')[0]));
+                        
+                        // For doubles: check all parts separated by &
+                        if (!match1 && !match2) {
+                            var t1Parts = t1.split('&').map(function(s) { return s.trim().split(' ')[0]; });
+                            var t2Parts = t2.split('&').map(function(s) { return s.trim().split(' ')[0]; });
+                            var s1Parts = side1.split('&').map(function(s) { return s.trim().split(' ')[0]; });
+                            var s2Parts = side2.split('&').map(function(s) { return s.trim().split(' ')[0]; });
+                            
+                            var doublesMatch1 = t1Parts.every(function(p) { return side1.includes(p); }) && 
+                                               t2Parts.every(function(p) { return side2.includes(p); });
+                            var doublesMatch2 = t1Parts.every(function(p) { return side2.includes(p); }) && 
+                                               t2Parts.every(function(p) { return side1.includes(p); });
+                            
+                            match1 = doublesMatch1;
+                            match2 = doublesMatch2;
+                        }
+                        
+                        if (match1 || match2) {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    if (foundIndex >= 0) {
+                        // Move from upcoming to completed
+                        var movedMatch = upcoming.splice(foundIndex, 1)[0];
+                        movedMatch.winner = winnerName;
+                        completed.push(movedMatch);
+                        
+                        // Save back to Firebase
+                        matchTables.upcomingMatches = upcoming;
+                        matchTables.completedMatches = completed;
+                        await firebaseSet('matchTables', matchTables);
+                        
+                        console.log("✅ Moved " + movedMatch.matchNum + " from upcoming to completed. Winner: " + winnerName);
+                    } else {
+                        console.log("ℹ️ Match not found in upcoming list (might be from a different day)");
+                    }
+                } catch (error) {
+                    console.error("Error moving match:", error);
+                }
             }
 
             /* ---------------------------------- */
