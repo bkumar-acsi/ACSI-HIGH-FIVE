@@ -780,7 +780,7 @@
             }
 
             // Save visibility status to separate file
-            // Save visibility status to Firebase (instant!)
+            // Save visibility to Firebase (instant!)
             async function saveVisibilityStatus() {
                 await firebaseSet('visibility', {
                     isActive: liveScore.isActive || false,
@@ -921,8 +921,10 @@
             }
 
             // Load visibility status from Firebase
+            // Load visibility from Firebase
             async function loadVisibilityStatus() {
                 const data = await firebaseGet('visibility');
+                console.log("✅ Visibility loaded from Firebase:", data?.isActive);
                 return data ? (data.isActive || false) : false;
             }
 
@@ -1009,6 +1011,21 @@
                 
                 // Load standings separately
                 await loadStandingsData();
+                
+                // Load match history from Firebase and merge into tournamentState
+                console.log("📊 Loading match history from Firebase...");
+                const matchHistory = await firebaseGet('matchHistory');
+                if (matchHistory) {
+                    Object.keys(matchHistory).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].matches = matchHistory[categoryKey].matches || [];
+                            console.log(`✅ Loaded ${(matchHistory[categoryKey].matches || []).length} matches for ${categoryKey}`);
+                        }
+                    });
+                    console.log("✅ Match history loaded from Firebase");
+                } else {
+                    console.log("⚠️ No match history in Firebase yet");
+                }
                 
                 console.log("✅ Initializing live score selectors");
                 initLiveSelectors();
@@ -1826,6 +1843,11 @@
                             groupedTeams[group] = [];
                         }
                         groupedTeams[group].push(team);
+                    });
+                    
+                    // Sort each group by points (highest first)
+                    Object.keys(groupedTeams).forEach(group => {
+                        groupedTeams[group].sort((a, b) => (b.points || 0) - (a.points || 0));
                     });
                     
                     let standings = `
