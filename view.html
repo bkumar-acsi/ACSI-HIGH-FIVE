@@ -945,6 +945,22 @@
                     }
                 }, 300000);
                 
+                // Refresh match history every 2 minutes
+                setInterval(async () => {
+                    const freshHistory = await firebaseGet('matchHistory');
+                    if (freshHistory) {
+                        Object.keys(freshHistory).forEach(categoryKey => {
+                            if (tournamentState[categoryKey]) {
+                                tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
+                            }
+                        });
+                        if (currentTab === "standings") {
+                            renderDashboard();
+                        }
+                        console.log("✅ Match history refreshed");
+                    }
+                }, 120000);
+                
                 // Auto-refresh live data & standings every 5 sec ONLY when active
                 setInterval(async () => {
                     if (!liveMatchActive || isLoading) return;
