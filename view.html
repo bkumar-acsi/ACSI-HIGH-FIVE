@@ -261,7 +261,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
                         <div class="p-5 border-b border-slate-800">
                             <h2 class="font-bold text-lg">✅ Completed Matches</h2>
-                            <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
+                            <p class="text-slate-500 text-sm mt-1">19 August 2026</p>
                         </div>
                         <div class="p-3 overflow-x-auto">
                             <table class="w-full text-sm">
@@ -1127,8 +1127,23 @@
                 
                 console.log("📋 Populating upcoming and completed matches...");
                 
-                // Tomorrow's scheduled matches (20 Aug 2026)
-                const tomorrowMatches = [
+                // Completed matches (19 Aug 2026)
+                const completedMatchesList = [
+                    { matchNum: "M1", match: "Aniket vs Kshitij" },
+                    { matchNum: "M2", match: "Rishabh vs Prem" },
+                    { matchNum: "M3", match: "Sanket vs Aditya" },
+                    { matchNum: "M4", match: "Swapnil vs Jinish" },
+                    { matchNum: "M5", match: "Balachander vs Suraj" },
+                    { matchNum: "M6", match: "Brajesh vs Sachin" },
+                    { matchNum: "M7", match: "Santosh vs Sagar" },
+                    { matchNum: "M8", match: "Rahul vs Saurabh" },
+                    { matchNum: "M9", match: "Aniket vs Balachander" },
+                    { matchNum: "M10", match: "Rishabh vs Brajesh" },
+                    { matchNum: "M11", match: "Sanket vs Akshay" }
+                ];
+
+                // Upcoming matches (20 Aug 2026)
+                const upcomingMatchesList = [
                     { matchNum: "M12", match: "Swapnil vs Rahul" },
                     { matchNum: "M13", match: "Kshitij vs Suraj" },
                     { matchNum: "M14", match: "Prem vs Sachin" },
@@ -1235,15 +1250,15 @@
                     return;
                 }
                 
+                // Render upcoming matches (M12-M26)
                 var upcomingRows = '';
-                var completedRows = '';
-                
-                tomorrowMatches.forEach(function(m) {
+                upcomingMatchesList.forEach(function(m) {
                     var formattedMatch = formatTeamName(m.match);
                     var result = getMatchResult(m.match);
                     
                     if (result) {
-                        completedRows += 
+                        // Match was completed (from standings/history)
+                        upcomingRows += 
                         '<tr class="border-b border-slate-700 bg-green-900/10">' +
                             '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
                             '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
@@ -1258,9 +1273,23 @@
                         '</tr>';
                     }
                 });
+                upcomingContainer.innerHTML = upcomingRows;
                 
-                upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">All matches completed! 🎉</td></tr>';
-                completedContainer.innerHTML = completedRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">No matches completed yet</td></tr>';
+                // Render completed matches (M1-M11) with winners from standings
+                var completedRows = '';
+                completedMatchesList.forEach(function(m) {
+                    var formattedMatch = formatTeamName(m.match);
+                    var result = getMatchResult(m.match);
+                    var winnerDisplay = result ? '🏆 ' + formatTeamName(result.winner) : '✅ Done';
+                    
+                    completedRows += 
+                    '<tr class="border-b border-slate-700 bg-green-900/10">' +
+                        '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
+                        '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">' + winnerDisplay + '</td>' +
+                    '</tr>';
+                });
+                completedContainer.innerHTML = completedRows;
                 
                 console.log("✅ Upcoming matches populated:", tomorrowMatches.length);
                 
