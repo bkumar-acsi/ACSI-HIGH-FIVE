@@ -1094,15 +1094,20 @@
                 const freshLiveScore = await firebaseGet('liveScore');
                 if (freshLiveScore) {
                     liveScore = freshLiveScore;
-                    // Reload visibility from GitHub
                     liveScore.isVisible = await loadVisibilityStatus();
                     updateLiveScoreDisplay();
                     console.log("✅ Live score refreshed");
                 }
                 
+                // Only refresh standings/history if tournamentState is loaded
+                if (!tournamentState || Object.keys(tournamentState).length === 0) {
+                    console.warn("⚠️ tournamentState empty - skipping standings/history refresh");
+                    return;
+                }
+                
                 // Fetch fresh standings from Firebase
                 const freshStandings = await loadStandingsData();
-                if (freshStandings) {
+                if (freshStandings && currentTab === "standings") {
                     renderDashboard();
                     console.log("✅ Standings refreshed");
                 }
@@ -1115,7 +1120,13 @@
                             tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
                         }
                     });
-                    renderDashboard();
+                    if (currentTab === "standings") {
+                        renderDashboard();
+                    }
+                    // Also refresh home view if on home tab
+                    if (currentTab === "home") {
+                        renderHomeView();
+                    }
                     console.log("✅ Match history refreshed");
                 }
                 
@@ -1292,7 +1303,7 @@
                 upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-green-400">All matches completed! 🎉</td></tr>';
                 completedContainer.innerHTML = completedRows;
                 
-                console.log("✅ Upcoming matches populated:", tomorrowMatches.length);
+                console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
                 
                 // Render all groups by category
                 const groupsContainer = document.getElementById("all-groups-container");
@@ -1494,20 +1505,29 @@
             function renderDashboard() {
                 // Render standings for ONLY the current category selected
                 const container = document.getElementById("all-standings-container");
+                if (!container) return;
                 container.innerHTML = "";
                 
                 console.log("📊 VIEW renderDashboard - currentCategory:", currentCategory);
                 console.log("📊 VIEW tournamentState keys:", Object.keys(tournamentState));
+                
+                // Safety check - if tournamentState is empty, show loading message
+                if (!tournamentState || Object.keys(tournamentState).length === 0) {
+                    container.innerHTML = '<div class="text-slate-400 text-center py-8">Loading tournament data...</div>';
+                    return;
+                }
+                
                 console.log("📊 VIEW currentCategoryData teams:", tournamentState[currentCategory]?.teams?.slice(0, 3));
 
                 // Render match history for current category
-                const currentCategoryData = tournamentState[currentCategory] || tournamentState["mens_singles"];
+                const currentCategoryData = tournamentState[currentCategory] || tournamentState["mens_singles"] || {};
                 const history = document.getElementById("match-history-list");
-                history.innerHTML = "";
+                if (history) {
+                    history.innerHTML = "";
 
-                if (currentCategoryData.matches && currentCategoryData.matches.length > 0) {
-                    currentCategoryData.matches.forEach((match) => {
-                        history.innerHTML += `
+                    if (currentCategoryData.matches && currentCategoryData.matches.length > 0) {
+                        currentCategoryData.matches.forEach((match) => {
+                            history.innerHTML += `
 <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
 <div class="text-xs text-slate-500 mb-2">${match.timestamp}</div>
 <div class="font-semibold text-lg">
@@ -1518,12 +1538,13 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 `;
                     });
                 }
+                }
 
                 // Render ONLY current category standings
                 const categoryKey = currentCategory;
                 const category = tournamentState[categoryKey];
                     
-                if (category.teams && category.teams.length > 0) {
+                if (category && category.teams && category.teams.length > 0) {
                     // Group teams by their group
                     const groupedTeams = {};
                     category.teams.forEach(team => {
