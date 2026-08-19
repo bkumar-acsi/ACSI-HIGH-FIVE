@@ -885,7 +885,18 @@
                 // Step 3: Load standings from Firebase (instant, always fresh!)
                 await loadStandingsData();
 
-                // Step 4: Load visibility from GitHub repo
+                // Step 4: Load match history from Firebase
+                const freshHistory = await firebaseGet('matchHistory');
+                if (freshHistory) {
+                    Object.keys(freshHistory).forEach(categoryKey => {
+                        if (tournamentState[categoryKey]) {
+                            tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
+                        }
+                    });
+                    console.log("✅ Match history loaded from Firebase");
+                }
+
+                // Step 5: Load visibility
                 const isVisible = await loadVisibilityStatus();
                 liveScore.isVisible = isVisible;
                 console.log("📌 Visibility:", isVisible);
