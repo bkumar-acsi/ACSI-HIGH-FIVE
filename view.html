@@ -233,87 +233,51 @@
                 </div>
             </div>
 
-                <!-- UPCOMING MATCHES -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
-                    <div class="p-5 border-b border-slate-800">
-                        <h2 class="font-bold text-lg">🎯 Upcoming Matches</h2>
-                        <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
+                <!-- MATCHES - Two column layout -->
+                <div class="flex flex-col lg:flex-row gap-4 mb-6">
+                    
+                    <!-- UPCOMING MATCHES (Left on desktop, First on mobile) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
+                        <div class="p-5 border-b border-slate-800">
+                            <h2 class="font-bold text-lg">⏳ Upcoming Matches</h2>
+                            <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
+                        </div>
+                        <div class="p-3 overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-700 bg-slate-950">
+                                        <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">#</th>
+                                        <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
+                                        <th class="py-2 px-2 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="upcoming-matches-list">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     
-                    <div class="p-5 overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-700 bg-slate-950">
-                                    <th class="py-3 px-3 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
-                                    <th class="py-3 px-3 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Details</th>
-                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Winner</th>
-                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="upcoming-matches-list">
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M1</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:00</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:10</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Aniket <span class="text-blue-400 font-bold">vs</span> Kshitij</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M2</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:10</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:20</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Rishabh <span class="text-blue-400 font-bold">vs</span> Prem</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M3</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:20</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:30</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Sanket <span class="text-blue-400 font-bold">vs</span> Akshay</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M4</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:30</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:40</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Swapnil <span class="text-blue-400 font-bold">vs</span> Jinish</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M5</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:40</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:50</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Balachander <span class="text-blue-400 font-bold">vs</span> Suraj</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M6</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">09:50</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:00</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Brajesh <span class="text-blue-400 font-bold">vs</span> Sachin</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M7</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:00</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:10</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Santosh <span class="text-blue-400 font-bold">vs</span> Sagar</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M8</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:10</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:20</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Rahul <span class="text-blue-400 font-bold">vs</span> Saurabh</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M9</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:20</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:30</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Aniket <span class="text-blue-400 font-bold">vs</span> Balachander</td>
-                                </tr>
-                                <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
-                                    <td class="py-3 px-3 text-blue-400 font-bold text-center">M10</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:30</td>
-                                    <td class="py-3 px-3 text-center text-slate-300 font-medium">10:40</td>
-                                    <td class="py-3 px-3 text-slate-100 font-semibold">Rishabh <span class="text-blue-400 font-bold">vs</span> Brajesh</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- COMPLETED MATCHES (Right on desktop, Second on mobile) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
+                        <div class="p-5 border-b border-slate-800">
+                            <h2 class="font-bold text-lg">✅ Completed Matches</h2>
+                            <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
+                        </div>
+                        <div class="p-3 overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-700 bg-slate-950">
+                                        <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">#</th>
+                                        <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">Match</th>
+                                        <th class="py-2 px-2 text-center text-green-400 font-bold uppercase tracking-wide text-xs">Winner</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completed-matches-list">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                    
                 </div>
 
                 <!-- ALL GROUPS BY CATEGORY -->
@@ -1161,15 +1125,7 @@
             function renderHomeView() {
                 console.log("🏠 renderHomeView called");
                 
-                // Render upcoming matches - first 10 from Men's Singles (as per PDF)
-                const upcomingContainer = document.getElementById("upcoming-matches-list");
-                if (!upcomingContainer) {
-                    console.error("❌ upcoming-matches-list container not found!");
-                    return;
-                }
-                
-                console.log("📋 Clearing and populating upcoming matches...");
-                upcomingContainer.innerHTML = "";
+                console.log("📋 Populating upcoming and completed matches...");
                 
                 // Tomorrow's scheduled matches (20 Aug 2026)
                 const tomorrowMatches = [
@@ -1271,33 +1227,40 @@
                 }
                 
                 // Sort: completed first, upcoming below
-                var doneRows = '';
+                var upcomingContainer = document.getElementById("upcoming-matches-list");
+                var completedContainer = document.getElementById("completed-matches-list");
+                
+                if (!upcomingContainer || !completedContainer) {
+                    console.error("❌ Match containers not found!");
+                    return;
+                }
+                
                 var upcomingRows = '';
+                var completedRows = '';
                 
                 tomorrowMatches.forEach(function(m) {
                     var formattedMatch = formatTeamName(m.match);
                     var result = getMatchResult(m.match);
                     
                     if (result) {
-                        doneRows += 
-                        '<tr class="border-b border-slate-700 bg-green-900/20">' +
-                            '<td class="py-3 px-3 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
-                            '<td class="py-3 px-3 text-slate-100 font-semibold">' + formattedMatch + '</td>' +
-                            '<td class="py-3 px-3 text-center text-yellow-400 font-bold">🏆 ' + formatTeamName(result.winner) + '</td>' +
-                            '<td class="py-3 px-3 text-center"><span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">Done</span></td>' +
+                        completedRows += 
+                        '<tr class="border-b border-slate-700 bg-green-900/10">' +
+                            '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
+                            '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
+                            '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(result.winner) + '</td>' +
                         '</tr>';
                     } else {
                         upcomingRows += 
                         '<tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">' +
-                            '<td class="py-3 px-3 text-blue-400 font-bold text-center">' + m.matchNum + '</td>' +
-                            '<td class="py-3 px-3 text-slate-100 font-semibold">' + formattedMatch + '</td>' +
-                            '<td class="py-3 px-3 text-center text-slate-500">-</td>' +
-                            '<td class="py-3 px-3 text-center"><span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
+                            '<td class="py-2 px-2 text-blue-400 font-bold text-center">' + m.matchNum + '</td>' +
+                            '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
+                            '<td class="py-2 px-2 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
                         '</tr>';
                     }
                 });
                 
-                upcomingContainer.innerHTML = doneRows + upcomingRows;
+                upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">All matches completed! 🎉</td></tr>';
+                completedContainer.innerHTML = completedRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">No matches completed yet</td></tr>';
                 
                 console.log("✅ Upcoming matches populated:", tomorrowMatches.length);
                 
