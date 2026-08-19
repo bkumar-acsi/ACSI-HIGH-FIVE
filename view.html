@@ -245,9 +245,9 @@
                             <thead>
                                 <tr class="border-b border-slate-700 bg-slate-950">
                                     <th class="py-3 px-3 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
-                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Start Time</th>
-                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">End Time</th>
                                     <th class="py-3 px-3 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Details</th>
+                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Winner</th>
+                                    <th class="py-3 px-3 text-center text-blue-400 font-bold uppercase tracking-wide text-xs">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="upcoming-matches-list">
@@ -1171,45 +1171,44 @@
                 console.log("📋 Clearing and populating upcoming matches...");
                 upcomingContainer.innerHTML = "";
                 
-                // Today's scheduled matches (19 Aug 2026) - Starting at 9:00 AM, 10 mins per match
+                // Today's scheduled matches (19 Aug 2026)
                 const tomorrowMatches = [
-                    { matchNum: "M1", startTime: "09:00", endTime: "09:10", match: "Aniket vs Kshitij" },
-                    { matchNum: "M2", startTime: "09:10", endTime: "09:20", match: "Rishabh vs Prem" },
-                    { matchNum: "M3", startTime: "09:20", endTime: "09:30", match: "Sanket vs Aditya", done: true, sets1: 2, sets2: 0, setScores: "11-8, 13-11" },
-                    { matchNum: "M4", startTime: "09:30", endTime: "09:40", match: "Swapnil vs Jinish" },
-                    { matchNum: "M5", startTime: "09:40", endTime: "09:50", match: "Balachander vs Suraj" },
-                    { matchNum: "M6", startTime: "09:50", endTime: "10:00", match: "Brajesh vs Sachin" },
-                    { matchNum: "M7", startTime: "10:00", endTime: "10:10", match: "Santosh vs Sagar" },
-                    { matchNum: "M8", startTime: "10:10", endTime: "10:20", match: "Rahul vs Saurabh" },
-                    { matchNum: "M9", startTime: "10:20", endTime: "10:30", match: "Aniket vs Balachander" },
-                    { matchNum: "M10", startTime: "10:30", endTime: "10:40", match: "Rishabh vs Brajesh" },
-                    { matchNum: "M11", startTime: "10:40", endTime: "10:50", match: "Sanket vs Akshay" }
+                    { matchNum: "M1", match: "Aniket vs Kshitij" },
+                    { matchNum: "M2", match: "Rishabh vs Prem" },
+                    { matchNum: "M3", match: "Sanket vs Aditya" },
+                    { matchNum: "M4", match: "Swapnil vs Jinish" },
+                    { matchNum: "M5", match: "Balachander vs Suraj" },
+                    { matchNum: "M6", match: "Brajesh vs Sachin" },
+                    { matchNum: "M7", match: "Santosh vs Sagar" },
+                    { matchNum: "M8", match: "Rahul vs Saurabh" },
+                    { matchNum: "M9", match: "Aniket vs Balachander" },
+                    { matchNum: "M10", match: "Rishabh vs Brajesh" },
+                    { matchNum: "M11", match: "Sanket vs Akshay" }
                 ];
                 
-                // Check which matches are completed from match history
+                // Build completed matches list from match history
                 const allCompletedMatches = [];
                 Object.keys(tournamentState).forEach(categoryKey => {
                     const category = tournamentState[categoryKey];
                     if (category.matches) {
                         category.matches.forEach(m => {
+                            const winnerName = m.sets1 > m.sets2 ? m.team1Name : m.team2Name;
                             allCompletedMatches.push({
                                 team1: (m.team1Name || '').toLowerCase().trim(),
                                 team2: (m.team2Name || '').toLowerCase().trim(),
+                                winner: winnerName,
                                 sets1: m.sets1,
-                                sets2: m.sets2,
-                                setHistory: m.setHistory || []
+                                sets2: m.sets2
                             });
                         });
                     }
                 });
                 
-                function isMatchCompleted(matchStr) {
-                    // Extract team names from "X vs Y"
+                function findMatchResult(matchStr) {
                     const parts = matchStr.toLowerCase().split(' vs ');
                     if (parts.length !== 2) return null;
                     const t1 = parts[0].trim();
                     const t2 = parts[1].trim();
-                    
                     return allCompletedMatches.find(m => 
                         (m.team1.includes(t1) && m.team2.includes(t2)) ||
                         (m.team1.includes(t2) && m.team2.includes(t1))
@@ -1218,32 +1217,24 @@
                 
                 tomorrowMatches.forEach((m) => {
                     const formattedMatch = formatTeamName(m.match);
-                    const completed = m.done ? m : isMatchCompleted(m.match);
+                    const result = findMatchResult(m.match);
                     
-                    if (completed) {
-                        const score = m.done ? m.setScores : completed.setHistory.join(", ");
-                        const s1 = m.done ? m.sets1 : completed.sets1;
-                        const s2 = m.done ? m.sets2 : completed.sets2;
+                    if (result) {
                         upcomingContainer.innerHTML += `
                         <tr class="border-b border-slate-700 bg-green-900/20">
                             <td class="py-3 px-3 text-green-400 font-bold text-center">${m.matchNum}</td>
-                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.startTime}</td>
-                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.endTime}</td>
-                            <td class="py-3 px-3">
-                                <div class="text-slate-100 font-semibold">${formattedMatch}</div>
-                                <div class="text-xs text-green-400 mt-1">✅ Done · ${s1}-${s2} (${score})</div>
-                            </td>
-                        </tr>
-`;
+                            <td class="py-3 px-3 text-slate-100 font-semibold">${formattedMatch}</td>
+                            <td class="py-3 px-3 text-center text-yellow-400 font-bold">🏆 ${formatTeamName(result.winner)}</td>
+                            <td class="py-3 px-3 text-center"><span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">${result.sets1}-${result.sets2} Done</span></td>
+                        </tr>`;
                     } else {
                         upcomingContainer.innerHTML += `
                         <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
                             <td class="py-3 px-3 text-blue-400 font-bold text-center">${m.matchNum}</td>
-                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.startTime}</td>
-                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.endTime}</td>
                             <td class="py-3 px-3 text-slate-100 font-semibold">${formattedMatch}</td>
-                        </tr>
-`;
+                            <td class="py-3 px-3 text-center text-slate-500">-</td>
+                            <td class="py-3 px-3 text-center"><span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold">Upcoming</span></td>
+                        </tr>`;
                     }
                 });
                 
