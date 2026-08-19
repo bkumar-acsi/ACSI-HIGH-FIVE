@@ -1172,7 +1172,7 @@
                 const tomorrowMatches = [
                     { matchNum: "M1", startTime: "09:00", endTime: "09:10", match: "Aniket vs Kshitij" },
                     { matchNum: "M2", startTime: "09:10", endTime: "09:20", match: "Rishabh vs Prem" },
-                    { matchNum: "M3", startTime: "09:20", endTime: "09:30", match: "Sanket vs Akshay" },
+                    { matchNum: "M3", startTime: "09:20", endTime: "09:30", match: "Sanket vs Aditya" },
                     { matchNum: "M4", startTime: "09:30", endTime: "09:40", match: "Swapnil vs Jinish" },
                     { matchNum: "M5", startTime: "09:40", endTime: "09:50", match: "Balachander vs Suraj" },
                     { matchNum: "M6", startTime: "09:50", endTime: "10:00", match: "Brajesh vs Sachin" },
@@ -1182,9 +1182,56 @@
                     { matchNum: "M10", startTime: "10:30", endTime: "10:40", match: "Rishabh vs Brajesh" }
                 ];
                 
+                // Check which matches are completed from match history
+                const allCompletedMatches = [];
+                Object.keys(tournamentState).forEach(categoryKey => {
+                    const category = tournamentState[categoryKey];
+                    if (category.matches) {
+                        category.matches.forEach(m => {
+                            allCompletedMatches.push({
+                                team1: (m.team1Name || '').toLowerCase().trim(),
+                                team2: (m.team2Name || '').toLowerCase().trim(),
+                                sets1: m.sets1,
+                                sets2: m.sets2,
+                                setHistory: m.setHistory || []
+                            });
+                        });
+                    }
+                });
+                
+                function isMatchCompleted(matchStr) {
+                    // Extract team names from "X vs Y"
+                    const parts = matchStr.toLowerCase().split(' vs ');
+                    if (parts.length !== 2) return null;
+                    const t1 = parts[0].trim();
+                    const t2 = parts[1].trim();
+                    
+                    return allCompletedMatches.find(m => 
+                        (m.team1.includes(t1) && m.team2.includes(t2)) ||
+                        (m.team1.includes(t2) && m.team2.includes(t1))
+                    );
+                }
+                
                 tomorrowMatches.forEach((m) => {
                     const formattedMatch = formatTeamName(m.match);
-                    upcomingContainer.innerHTML += `
+                    const completed = isMatchCompleted(m.match);
+                    
+                    if (completed) {
+                        const score = completed.setHistory.join(", ");
+                        const winner = completed.sets1 > completed.sets2 ? completed.team1 : completed.team2;
+                        upcomingContainer.innerHTML += `
+                        <tr class="border-b border-slate-700 bg-green-900/20">
+                            <td class="py-3 px-3 text-green-400 font-bold text-center">${m.matchNum}</td>
+                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.startTime}</td>
+                            <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.endTime}</td>
+                            <td class="py-3 px-3">
+                                <div class="text-slate-100 font-semibold">${formattedMatch}</div>
+                                <div class="text-xs text-green-400 mt-1">✅ Done · ${completed.sets1}-${completed.sets2} (${score})</div>
+                            </td>
+                        </tr>
+`;
+                    } else {
+                        upcomingContainer.innerHTML += `
                         <tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">
                             <td class="py-3 px-3 text-blue-400 font-bold text-center">${m.matchNum}</td>
                             <td class="py-3 px-3 text-center text-slate-300 font-medium">${m.startTime}</td>
@@ -1192,6 +1239,7 @@
                             <td class="py-3 px-3 text-slate-100 font-semibold">${formattedMatch}</td>
                         </tr>
 `;
+                    }
                 });
                 
                 console.log("✅ Upcoming matches populated:", tomorrowMatches.length);
