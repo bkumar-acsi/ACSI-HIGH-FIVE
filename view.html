@@ -237,7 +237,7 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">🎯 Upcoming Matches</h2>
-                        <p class="text-slate-500 text-sm mt-1">19 August 2026</p>
+                        <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
                     </div>
                     
                     <div class="p-5 overflow-x-auto">
@@ -1171,19 +1171,23 @@
                 console.log("📋 Clearing and populating upcoming matches...");
                 upcomingContainer.innerHTML = "";
                 
-                // Today's scheduled matches (19 Aug 2026)
+                // Tomorrow's scheduled matches (20 Aug 2026)
                 const tomorrowMatches = [
-                    { matchNum: "M1", match: "Aniket vs Kshitij" },
-                    { matchNum: "M2", match: "Rishabh vs Prem" },
-                    { matchNum: "M3", match: "Sanket vs Aditya" },
-                    { matchNum: "M4", match: "Swapnil vs Jinish" },
-                    { matchNum: "M5", match: "Balachander vs Suraj" },
-                    { matchNum: "M6", match: "Brajesh vs Sachin" },
-                    { matchNum: "M7", match: "Santosh vs Sagar" },
-                    { matchNum: "M8", match: "Rahul vs Saurabh" },
-                    { matchNum: "M9", match: "Aniket vs Balachander" },
-                    { matchNum: "M10", match: "Rishabh vs Brajesh" },
-                    { matchNum: "M11", match: "Sanket vs Akshay" }
+                    { matchNum: "M12", match: "Swapnil vs Rahul" },
+                    { matchNum: "M13", match: "Kshitij vs Suraj" },
+                    { matchNum: "M14", match: "Prem vs Sachin" },
+                    { matchNum: "M15", match: "Sanket vs Santosh" },
+                    { matchNum: "M16", match: "Jinish vs Saurabh" },
+                    { matchNum: "M17", match: "Aniket vs Suraj" },
+                    { matchNum: "M18", match: "Rishabh vs Sachin" },
+                    { matchNum: "M19", match: "Akshay vs Sagar" },
+                    { matchNum: "M20", match: "Swapnil vs Saurabh" },
+                    { matchNum: "M21", match: "Kshitij vs Balachander" },
+                    { matchNum: "M22", match: "Prem vs Brajesh" },
+                    { matchNum: "M23", match: "Sanket vs Sagar" },
+                    { matchNum: "M24", match: "Jinish vs Rahul" },
+                    { matchNum: "M25", match: "Aniket vs Suresh" },
+                    { matchNum: "M26", match: "Rishabh vs Shekhar" }
                 ];
                 
                 // Build lookup of all teams from standings
