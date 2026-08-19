@@ -1420,6 +1420,11 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
                         groupedTeams[group].push(team);
                     });
                     
+                    // Sort each group by points (highest first)
+                    Object.keys(groupedTeams).forEach(group => {
+                        groupedTeams[group].sort((a, b) => (b.points || 0) - (a.points || 0));
+                    });
+                    
                     let standings = `
 <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
     <div class="p-5 border-b border-slate-800 flex justify-between">
