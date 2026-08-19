@@ -882,14 +882,16 @@
             window.addEventListener("DOMContentLoaded", async () => {
                 console.log("View page loaded");
                 
-                // Always render home view first (static upcoming matches)
-                renderHomeView();
-                
-                // Load data
-                await loadTournamentData();
-                
                 // Set tab to home
                 currentTab = "home";
+                
+                // Load data first
+                try {
+                    await loadTournamentData();
+                    console.log("✅ Data loaded successfully");
+                } catch (e) {
+                    console.error("❌ Error loading data:", e);
+                }
                 
                 // Set initial visibility from what was loaded
                 let liveMatchActive = liveScore.isVisible || false;
@@ -1213,46 +1215,44 @@
                     });
                 }
                 
-                function getMatchResult(matchStr) {
+                // For COMPLETED matches (M1-M11) - use standings + history
+                function getWinnerFromStandings(matchStr) {
                     var parts = matchStr.toLowerCase().split(' vs ');
                     if (parts.length !== 2) return null;
                     var t1First = parts[0].trim();
                     var t2First = parts[1].trim();
                     
-                    // First check match history
                     var historyMatch = completedMatches.find(function(m) {
                         return (m.team1.includes(t1First) && m.team2.includes(t2First)) ||
                                (m.team1.includes(t2First) && m.team2.includes(t1First));
                     });
+                    if (historyMatch) return historyMatch.winner;
                     
-                    if (historyMatch) {
-                        return { winner: historyMatch.winner, sets: historyMatch.sets1 + '-' + historyMatch.sets2, source: 'history' };
-                    }
-                    
-                    // Otherwise determine from standings
                     var team1 = findTeam(t1First);
                     var team2 = findTeam(t2First);
-                    
-                    if (team1 && team2 && team1.played > 0 && team2.played > 0) {
-                        // Both have played - determine winner by who has more wins
-                        if (team1.wins > team2.wins) {
-                            return { winner: team1.name, sets: '2-0', source: 'standings' };
-                        } else if (team2.wins > team1.wins) {
-                            return { winner: team2.name, sets: '2-0', source: 'standings' };
-                        } else {
-                            // Same wins - use points
-                            if (team1.points > team2.points) {
-                                return { winner: team1.name, sets: '2-0', source: 'standings' };
-                            } else {
-                                return { winner: team2.name, sets: '2-0', source: 'standings' };
-                            }
-                        }
+                    if (team1 && team2) {
+                        if (team1.points > team2.points) return team1.name;
+                        if (team2.points > team1.points) return team2.name;
+                        if (team1.wins > team2.wins) return team1.name;
+                        return team2.name;
                     }
-                    
                     return null;
                 }
                 
-                // Sort: completed first, upcoming below
+                // For UPCOMING matches (M12-M26) - ONLY check match history
+                function getWinnerFromHistory(matchStr) {
+                    var parts = matchStr.toLowerCase().split(' vs ');
+                    if (parts.length !== 2) return null;
+                    var t1First = parts[0].trim();
+                    var t2First = parts[1].trim();
+                    
+                    var historyMatch = completedMatches.find(function(m) {
+                        return (m.team1.includes(t1First) && m.team2.includes(t2First)) ||
+                               (m.team1.includes(t2First) && m.team2.includes(t1First));
+                    });
+                    return historyMatch ? historyMatch.winner : null;
+                }
+                
                 var upcomingContainer = document.getElementById("upcoming-matches-list");
                 var completedContainer = document.getElementById("completed-matches-list");
                 
@@ -1261,12 +1261,12 @@
                     return;
                 }
                 
-                // Render completed matches (M1-M11) with winners from standings
+                // Render completed matches (M1-M11)
                 var completedRows = '';
                 completedMatchesList.forEach(function(m) {
                     var formattedMatch = formatTeamName(m.match);
-                    var result = getMatchResult(m.match);
-                    var winnerDisplay = result ? '🏆 ' + formatTeamName(result.winner) : '✅ Done';
+                    var winner = getWinnerFromStandings(m.match);
+                    var winnerDisplay = winner ? '🏆 ' + formatTeamName(winner) : '✅ Done';
                     
                     completedRows += 
                     '<tr class="border-b border-slate-700 bg-green-900/10">' +
@@ -1276,19 +1276,18 @@
                     '</tr>';
                 });
                 
-                // Render upcoming matches (M12-M26) - auto-move completed ones to completed section
+                // Render upcoming matches (M12-M26) - only move to completed if in MATCH HISTORY
                 var upcomingRows = '';
                 upcomingMatchesList.forEach(function(m) {
                     var formattedMatch = formatTeamName(m.match);
-                    var result = getMatchResult(m.match);
+                    var winner = getWinnerFromHistory(m.match);
                     
-                    if (result) {
-                        // Match completed! Move to completed section
+                    if (winner) {
                         completedRows += 
                         '<tr class="border-b border-slate-700 bg-green-900/10">' +
                             '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
                             '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formattedMatch + '</td>' +
-                            '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(result.winner) + '</td>' +
+                            '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(winner) + '</td>' +
                         '</tr>';
                     } else {
                         upcomingRows += 
