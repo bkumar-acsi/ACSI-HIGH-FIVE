@@ -932,6 +932,9 @@
                 console.log("📌 Initial visibility:", liveMatchActive);
                 let isLoading = false;
                 
+                // Full page reload every 5 minutes
+                setTimeout(() => { location.reload(); }, 300000);
+                
                 // Check visibility every 5 minutes (lightweight check)
                 setInterval(async () => {
                     const isLive = await loadVisibilityStatus();
