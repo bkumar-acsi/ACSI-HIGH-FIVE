@@ -240,7 +240,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
                         <div class="p-5 border-b border-slate-800">
                             <h2 class="font-bold text-lg">⏳ Upcoming Matches</h2>
-                            <p class="text-slate-500 text-sm mt-1">20 August 2026</p>
+                            <p class="text-slate-500 text-sm mt-1" id="upcoming-date"></p>
                         </div>
                         <div class="p-3 overflow-x-auto">
                             <table class="w-full text-sm">
@@ -261,7 +261,6 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
                         <div class="p-5 border-b border-slate-800">
                             <h2 class="font-bold text-lg">✅ Completed Matches</h2>
-                            <p class="text-slate-500 text-sm mt-1">19 August 2026</p>
                         </div>
                         <div class="p-3 overflow-x-auto">
                             <table class="w-full text-sm">
@@ -1139,6 +1138,14 @@
                 console.log("🏠 renderHomeView called");
                 
                 console.log("📋 Populating upcoming and completed matches...");
+                
+                // Set today's date for upcoming
+                var dateEl = document.getElementById("upcoming-date");
+                if (dateEl) {
+                    var today = new Date();
+                    var options = { day: 'numeric', month: 'long', year: 'numeric' };
+                    dateEl.textContent = today.toLocaleDateString('en-IN', options);
+                }
                 
                 // Load match tables from Firebase
                 var matchTables = await firebaseGet('matchTables');
