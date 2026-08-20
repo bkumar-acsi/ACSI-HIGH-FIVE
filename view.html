@@ -1336,7 +1336,7 @@
 <div class="font-semibold text-lg">
 ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span class="text-blue-400">${match.sets2}</span> ${match.team2Name}
 </div>
-<div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
+<div class="text-xs text-slate-400 mt-2">${(match.setHistory && match.setHistory.length > 0) ? match.setHistory.join(" | ") : ""}</div>
 </div>
 `;
                     });
