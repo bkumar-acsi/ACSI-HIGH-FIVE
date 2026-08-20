@@ -7,6 +7,7 @@
         <title>ACSII HiFive TT Tournament 2026</title>
 
         <script src="https://cdn.tailwindcss.com"></script>
+
         <style>
             @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
@@ -325,6 +326,13 @@
                                 class="py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-slate-950 font-bold text-sm transition"
                             >
                                 Save Match
+                            </button>
+
+                            <button
+                                onclick="submitTieMatch()"
+                                class="py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-950 font-bold text-sm transition"
+                            >
+                                🤝 Tie Match
                             </button>
                         </div>
                     </div>
@@ -1514,6 +1522,81 @@
                 updateLiveScore();
                 
                 console.log("✅ Set recorded and saved");
+            }
+
+            /* ---------------------------------- */
+            /* TIE MATCH */
+            /* ---------------------------------- */
+
+            async function submitTieMatch() {
+                const team1Name = document.getElementById("live-team-1").value;
+                const team2Name = document.getElementById("live-team-2").value;
+
+                if (!team1Name || !team2Name) {
+                    alert("Please select both teams first!");
+                    return;
+                }
+
+                if (!confirm("Declare TIE between " + team1Name + " and " + team2Name + "?\nBoth teams will get 1 point each.")) {
+                    return;
+                }
+
+                const category = tournamentState[currentCategory];
+                
+                // Find teams
+                const team1 = category.teams.find(t => t.name === team1Name);
+                const team2 = category.teams.find(t => t.name === team2Name);
+
+                if (!team1 || !team2) {
+                    alert("Teams not found in standings!");
+                    return;
+                }
+
+                // Give 1 point to each team (no wins/losses)
+                team1.points = (team1.points || 0) + 1;
+                team2.points = (team2.points || 0) + 1;
+
+                // Save match record
+                const matchRecord = {
+                    id: "m_tie_" + Date.now(),
+                    team1Name: team1Name,
+                    team2Name: team2Name,
+                    team1Id: team1.id,
+                    team2Id: team2.id,
+                    sets1: liveMatch.sets1 || 0,
+                    sets2: liveMatch.sets2 || 0,
+                    setHistory: [...(liveMatch.setHistory || [])],
+                    timestamp: new Date().toLocaleString(),
+                    category: currentCategory,
+                    isTie: true
+                };
+
+                if (!category.matches) category.matches = [];
+                category.matches.unshift(matchRecord);
+
+                // Clear live match
+                liveMatch.points1 = 0;
+                liveMatch.points2 = 0;
+                liveMatch.sets1 = 0;
+                liveMatch.sets2 = 0;
+                liveMatch.setHistory = [];
+                document.getElementById("live-team-1").value = "";
+                document.getElementById("live-team-2").value = "";
+                updateLiveScoreDOM();
+
+                // Save to Firebase
+                await updateLiveScore();
+                await saveStandingsOnly();
+                await saveMatchHistoryOnly();
+
+                // Move from upcoming to completed with "Tie" as winner
+                await moveMatchToCompleted(team1Name, team2Name, "Tie 🤝");
+
+                renderDashboard();
+                renderMatchHistory();
+
+                alert("🤝 Tie declared! Both " + team1Name + " and " + team2Name + " get 1 point each.");
+                console.log("✅ Tie match saved");
             }
 
             /* ---------------------------------- */
