@@ -489,23 +489,23 @@
                 },
                 mens_doubles: {
                     groups: {
-                        "Group A": ["Balachander & Sachin", "Suresh & Prem", "Suraj & Rishabh"],
-                        "Group B": ["Kshitij & Saurabh", "Tushar & Brajesh", "Sanket & Amit"],
+                        "Group A": ["Amit & Sachin", "Brajesh & Prem", "Suraj & Rishab"],
+                        "Group B": ["Kshitij & Sourabh", "Bala & Raghav", "Sanket & Sumeet"],
                         "Group C": ["Anurag & Shekhar", "Akshay & Santosh", "Sagar & Aditya"],
                         "Group D": ["Jinish & Birju", "Rahul & Mandar", "Shreyas & Ambuj"]
                     },
                     matches: {
                         "All Matches": [
-                            { number: "1", group: "Group A", match: "Balachander & Sachin vs Suresh & Prem" },
-                            { number: "2", group: "Group B", match: "Kshitij & Saurabh vs Tushar & Brajesh" },
+                            { number: "1", group: "Group A", match: "Amit & Sachin vs Brajesh & Prem" },
+                            { number: "2", group: "Group B", match: "Kshitij & Sourabh vs Bala & Raghav" },
                             { number: "3", group: "Group C", match: "Anurag & Shekhar vs Akshay & Santosh" },
                             { number: "4", group: "Group D", match: "Jinish & Birju vs Rahul & Mandar" },
-                            { number: "5", group: "Group A", match: "Suresh & Prem vs Suraj & Rishabh" },
-                            { number: "6", group: "Group B", match: "Tushar & Brajesh vs Sanket & Amit" },
+                            { number: "5", group: "Group A", match: "Brajesh & Prem vs Suraj & Rishab" },
+                            { number: "6", group: "Group B", match: "Bala & Raghav vs Sanket & Sumeet" },
                             { number: "7", group: "Group C", match: "Akshay & Santosh vs Sagar & Aditya" },
                             { number: "8", group: "Group D", match: "Rahul & Mandar vs Shreyas & Ambuj" },
-                            { number: "9", group: "Group A", match: "Balachander & Sachin vs Suraj & Rishabh" },
-                            { number: "10", group: "Group B", match: "Kshitij & Saurabh vs Sanket & Amit" },
+                            { number: "9", group: "Group A", match: "Amit & Sachin vs Suraj & Rishab" },
+                            { number: "10", group: "Group B", match: "Kshitij & Sourabh vs Sanket & Sumeet" },
                             { number: "11", group: "Group C", match: "Anurag & Shekhar vs Sagar & Aditya" },
                             { number: "12", group: "Group D", match: "Jinish & Birju vs Shreyas & Ambuj" }
                         ]
@@ -1152,14 +1152,18 @@
                 
                 if (!upcomingContainer || !completedContainer) return;
                 
-                // Render completed
+                // Reverse completed so latest matches show on top
+                var reversedCompleted = completedMatchesList.slice().reverse();
+                
+                // Render completed (latest first)
                 var completedRows = '';
-                completedMatchesList.forEach(function(m) {
+                reversedCompleted.forEach(function(m) {
+                    var winnerDisplay = m.winner ? '🏆 ' + formatTeamName(m.winner) : '✅ Done';
                     completedRows += 
                     '<tr class="border-b border-slate-700 bg-green-900/10">' +
                         '<td class="py-2 px-2 text-green-400 font-bold text-center">' + m.matchNum + '</td>' +
                         '<td class="py-2 px-2 text-slate-100 font-semibold text-sm">' + formatTeamName(m.match) + '</td>' +
-                        '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">🏆 ' + formatTeamName(m.winner) + '</td>' +
+                        '<td class="py-2 px-2 text-center text-yellow-400 font-bold text-sm">' + winnerDisplay + '</td>' +
                     '</tr>';
                 });
                 completedContainer.innerHTML = completedRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">No matches completed yet</td></tr>';
