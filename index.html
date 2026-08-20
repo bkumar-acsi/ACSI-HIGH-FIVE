@@ -1698,6 +1698,10 @@
                     console.log(`✅ ${team2Name} won! Updated stats - Wins: ${team2.wins}, Points: ${team2.points}`);
                 }
 
+                // Determine winner BEFORE resetting
+                const winnerName = liveMatch.sets1 > liveMatch.sets2 ? team1Name : team2Name;
+                console.log("🏆 Winner determined:", winnerName);
+
                 // Save match to history
                 const matchRecord = {
                     id: "m_" + Date.now(),
@@ -1735,8 +1739,8 @@
                 await saveStandingsOnly();
                 await saveMatchHistoryOnly();
                 
-                // Move match from upcoming to completed in matchTables
-                await moveMatchToCompleted(team1Name, team2Name, liveMatch.sets1 > liveMatch.sets2 ? team1Name : team2Name);
+                // Move match from upcoming to completed in matchTables (using saved winner)
+                await moveMatchToCompleted(team1Name, team2Name, winnerName);
                 
                 // Refresh standings display
                 renderDashboard();
