@@ -1541,20 +1541,31 @@
                     return;
                 }
 
+                console.log("🤝 Declaring tie:", team1Name, "vs", team2Name);
+                console.log("Current category:", currentCategory);
+                
                 const category = tournamentState[currentCategory];
+                if (!category) {
+                    alert("Category not found: " + currentCategory);
+                    return;
+                }
                 
                 // Find teams
                 const team1 = category.teams.find(t => t.name === team1Name);
                 const team2 = category.teams.find(t => t.name === team2Name);
 
+                console.log("Team1 found:", team1);
+                console.log("Team2 found:", team2);
+
                 if (!team1 || !team2) {
-                    alert("Teams not found in standings!");
+                    alert("Teams not found in standings!\nTeam1: " + team1Name + " = " + (team1 ? "Found" : "NOT FOUND") + "\nTeam2: " + team2Name + " = " + (team2 ? "Found" : "NOT FOUND"));
                     return;
                 }
 
                 // Give 1 point to each team (no wins/losses)
                 team1.points = (team1.points || 0) + 1;
                 team2.points = (team2.points || 0) + 1;
+                console.log("Points updated:", team1.name, "=", team1.points, team2.name, "=", team2.points);
 
                 // Save match record
                 const matchRecord = {
@@ -1573,6 +1584,7 @@
 
                 if (!category.matches) category.matches = [];
                 category.matches.unshift(matchRecord);
+                console.log("Match record added, total matches:", category.matches.length);
 
                 // Clear live match
                 liveMatch.points1 = 0;
@@ -1584,19 +1596,31 @@
                 document.getElementById("live-team-2").value = "";
                 updateLiveScoreDOM();
 
-                // Save to Firebase
-                await updateLiveScore();
-                await saveStandingsOnly();
-                await saveMatchHistoryOnly();
+                // Save standings (teams with updated points)
+                console.log("📤 Saving standings...");
+                await firebaseSet('tournamentData/' + currentCategory + '/teams', category.teams.map(t => ({
+                    id: t.id, name: t.name, group: t.group,
+                    wins: t.wins || 0, losses: t.losses || 0, points: t.points || 0
+                })));
+                console.log("✅ Standings saved directly");
 
-                // Move from upcoming to completed with "Tie" as winner
+                // Save match history
+                console.log("📤 Saving match history...");
+                await firebaseSet('tournamentData/' + currentCategory + '/matches', category.matches);
+                console.log("✅ Match history saved directly");
+
+                // Save live score
+                await updateLiveScore();
+
+                // Move from upcoming to completed
+                console.log("📤 Moving to completed...");
                 await moveMatchToCompleted(team1Name, team2Name, "Tie 🤝");
 
                 renderDashboard();
                 renderMatchHistory();
 
                 alert("🤝 Tie declared! Both " + team1Name + " and " + team2Name + " get 1 point each.");
-                console.log("✅ Tie match saved");
+                console.log("✅ Tie match fully saved");
             }
 
             /* ---------------------------------- */
