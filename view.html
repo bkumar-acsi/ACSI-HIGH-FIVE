@@ -233,18 +233,27 @@
                 </div>
             </div>
 
-                <!-- MATCHES - Two column layout -->
+                <!-- LEADERBOARD - Top 2 from each group (ABOVE matches) -->
+                <div id="leaderboard-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">🏆 Leaderboard - Group Toppers</h2>
+                        <p class="text-slate-500 text-sm mt-1">Top 2 from each group qualify for knockouts</p>
+                    </div>
+                    <div id="leaderboard-container" class="p-5 space-y-6"></div>
+                </div>
+
+                <!-- MATCHES - Two column layout with fixed height -->
                 <div class="flex flex-col lg:flex-row gap-4 mb-6">
                     
-                    <!-- UPCOMING MATCHES (Left on desktop, First on mobile) -->
+                    <!-- UPCOMING MATCHES -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
-                        <div class="p-5 border-b border-slate-800">
+                        <div class="p-5 border-b border-slate-800 flex justify-between items-center">
                             <h2 class="font-bold text-lg">⏳ Upcoming Matches</h2>
-                            <p class="text-slate-500 text-sm mt-1" id="upcoming-date"></p>
+                            <span class="text-slate-500 text-sm" id="upcoming-date"></span>
                         </div>
-                        <div class="p-3 overflow-x-auto">
+                        <div class="p-3" style="max-height:200px;overflow-y:auto;">
                             <table class="w-full text-sm">
-                                <thead>
+                                <thead class="sticky top-0 bg-slate-950 z-10">
                                     <tr class="border-b border-slate-700 bg-slate-950">
                                         <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">#</th>
                                         <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
@@ -257,14 +266,14 @@
                         </div>
                     </div>
                     
-                    <!-- COMPLETED MATCHES (Right on desktop, Second on mobile) -->
+                    <!-- COMPLETED MATCHES -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
                         <div class="p-5 border-b border-slate-800">
                             <h2 class="font-bold text-lg">✅ Completed Matches</h2>
                         </div>
-                        <div class="p-3 overflow-x-auto">
+                        <div class="p-3" style="max-height:200px;overflow-y:auto;">
                             <table class="w-full text-sm">
-                                <thead>
+                                <thead class="sticky top-0 bg-slate-950 z-10">
                                     <tr class="border-b border-slate-700 bg-slate-950">
                                         <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">#</th>
                                         <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">Match</th>
@@ -277,6 +286,15 @@
                         </div>
                     </div>
                     
+                </div>
+
+                <!-- KNOCKOUT STAGE (BELOW matches) -->
+                <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
+                        <p class="text-slate-500 text-sm mt-1">Semi Finals & Finals</p>
+                    </div>
+                    <div id="knockout-container" class="p-5 space-y-6"></div>
                 </div>
 
                 <!-- ALL GROUPS BY CATEGORY -->
@@ -295,6 +313,14 @@
                 <!-- STANDINGS FOR ALL CATEGORIES -->
 
             <div id="all-standings-container" class="space-y-6"></div>
+
+            <!-- KNOCKOUT STAGE in Standings -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mt-6">
+                <div class="p-5 border-b border-slate-800">
+                    <h2 class="font-bold text-lg">⚡ Knockout Stage - Semi Finals & Finals</h2>
+                </div>
+                <div id="standings-knockout-container" class="p-5 space-y-4"></div>
+            </div>
 
             <!-- MATCH HISTORY -->
 
@@ -1058,12 +1084,10 @@
                 
                 console.log("📋 Populating upcoming and completed matches...");
                 
-                // Set today's date for upcoming
+                // Set date for upcoming matches
                 var dateEl = document.getElementById("upcoming-date");
                 if (dateEl) {
-                    var today = new Date();
-                    var options = { day: 'numeric', month: 'long', year: 'numeric' };
-                    dateEl.textContent = today.toLocaleDateString('en-IN', options);
+                    dateEl.textContent = "24 August 2026";
                 }
                 
                 // Load match tables from Firebase
@@ -1107,6 +1131,10 @@
                 upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-green-400">All matches completed! 🎉</td></tr>';
                 
                 console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
+                
+                // Render leaderboard and knockout brackets
+                renderLeaderboard();
+                renderKnockout("knockout-container");
                 
                 // Render all groups by category
                 const groupsContainer = document.getElementById("all-groups-container");
@@ -1305,6 +1333,154 @@
             /* View page is read-only, no toggle button needed */
             /* Live match visibility is controlled by admin in index.html */
 
+            // Generate knockout bracket from standings
+            function getGroupToppers(category) {
+                if (!category || !category.teams || category.teams.length === 0) return null;
+                
+                // Check if any matches played
+                var hasMatches = category.teams.some(function(t) { return (t.wins || 0) + (t.losses || 0) > 0; });
+                if (!hasMatches) return null;
+                
+                // Group teams
+                var groups = {};
+                category.teams.forEach(function(t) {
+                    var g = t.group || "All";
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(t);
+                });
+                
+                // Sort each group by points, get top 2
+                var toppers = {};
+                for (var g in groups) {
+                    groups[g].sort(function(a, b) { return (b.points || 0) - (a.points || 0); });
+                    toppers[g] = groups[g].slice(0, 2);
+                }
+                return toppers;
+            }
+            
+            function renderLeaderboard() {
+                var container = document.getElementById("leaderboard-container");
+                if (!container) return;
+                container.innerHTML = "";
+                
+                var hasData = false;
+                var cats = Object.keys(tournamentState);
+                
+                cats.forEach(function(catKey) {
+                    var cat = tournamentState[catKey];
+                    var toppers = getGroupToppers(cat);
+                    if (!toppers) return;
+                    
+                    hasData = true;
+                    var html = '<div class="mb-4"><h3 class="text-blue-400 font-bold text-sm mb-3">' + (cat.title || catKey) + '</h3>';
+                    html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">';
+                    
+                    var groupNames = Object.keys(toppers).sort();
+                    groupNames.forEach(function(g) {
+                        var teams = toppers[g];
+                        html += '<div class="bg-slate-950 border border-slate-700 rounded-xl p-3">';
+                        html += '<div class="text-xs text-slate-500 mb-2 font-bold">' + g + '</div>';
+                        teams.forEach(function(t, i) {
+                            var medal = i === 0 ? '🥇' : '🥈';
+                            var color = i === 0 ? 'text-yellow-400' : 'text-slate-300';
+                            html += '<div class="flex justify-between items-center py-1">';
+                            html += '<span class="' + color + ' font-semibold text-sm">' + medal + ' ' + formatTeamName(t.name) + '</span>';
+                            html += '<span class="text-xs text-slate-500">' + t.points + 'pts</span>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    });
+                    
+                    html += '</div></div>';
+                    container.innerHTML += html;
+                });
+                
+                if (!hasData) {
+                    document.getElementById("leaderboard-section").style.display = "none";
+                } else {
+                    document.getElementById("leaderboard-section").style.display = "block";
+                }
+            }
+            
+            function renderKnockout(containerId) {
+                var container = document.getElementById(containerId);
+                if (!container) return;
+                container.innerHTML = "";
+                
+                var hasData = false;
+                var cats = Object.keys(tournamentState);
+                
+                cats.forEach(function(catKey) {
+                    var cat = tournamentState[catKey];
+                    var toppers = getGroupToppers(cat);
+                    if (!toppers) return;
+                    
+                    var groupNames = Object.keys(toppers).sort();
+                    // Need at least 2 groups for knockouts
+                    if (groupNames.length < 2) return;
+                    
+                    hasData = true;
+                    var html = '<div class="mb-6"><h3 class="text-blue-400 font-bold text-sm mb-3">⚡ ' + (cat.title || catKey) + ' - Knockouts</h3>';
+                    
+                    // Generate semi-finals: Group A #1 vs Group B #2, Group B #1 vs Group A #2
+                    // For 4 groups: A1 vs D2, B1 vs C2, C1 vs B2, D1 vs A2
+                    html += '<table class="w-full text-sm">';
+                    html += '<thead><tr class="border-b border-slate-700 bg-slate-950">';
+                    html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">MATCH</th>';
+                    html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">TEAM 1</th>';
+                    html += '<th class="py-2 px-3 text-center text-purple-400 font-bold text-xs">VS</th>';
+                    html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">TEAM 2</th>';
+                    html += '<th class="py-2 px-3 text-center text-purple-400 font-bold text-xs">STATUS</th>';
+                    html += '</tr></thead><tbody>';
+                    
+                    if (groupNames.length === 2) {
+                        // 2 groups: SF1: A1 vs B2, SF2: B1 vs A2
+                        var a = toppers[groupNames[0]];
+                        var b = toppers[groupNames[1]];
+                        
+                        html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2");
+                        html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2");
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner");
+                    } else if (groupNames.length === 4) {
+                        // 4 groups: SF1: A1 vs D2, SF2: B1 vs C2, SF3: C1 vs B2, SF4: D1 vs A2
+                        var ga = toppers[groupNames[0]];
+                        var gb = toppers[groupNames[1]];
+                        var gc = toppers[groupNames[2]];
+                        var gd = toppers[groupNames[3]];
+                        
+                        html += renderKnockoutRow("QF1", ga[0], gd.length > 1 ? gd[1] : null, groupNames[0] + " #1", groupNames[3] + " #2");
+                        html += renderKnockoutRow("QF2", gb[0], gc.length > 1 ? gc[1] : null, groupNames[1] + " #1", groupNames[2] + " #2");
+                        html += renderKnockoutRow("QF3", gc[0], gb.length > 1 ? gb[1] : null, groupNames[2] + " #1", groupNames[1] + " #2");
+                        html += renderKnockoutRow("QF4", gd[0], ga.length > 1 ? ga[1] : null, groupNames[3] + " #1", groupNames[0] + " #2");
+                        html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── SEMI FINALS ─────</td></tr>';
+                        html += renderKnockoutRow("SF1", null, null, "QF1 Winner", "QF2 Winner");
+                        html += renderKnockoutRow("SF2", null, null, "QF3 Winner", "QF4 Winner");
+                        html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner");
+                    }
+                    
+                    html += '</tbody></table></div>';
+                    container.innerHTML += html;
+                });
+                
+                if (!hasData) container.innerHTML = '<p class="text-slate-500 text-center py-4">Knockout brackets will appear once group matches are completed</p>';
+            }
+            
+            function renderKnockoutRow(label, team1, team2, desc1, desc2) {
+                var t1Name = team1 ? formatTeamName(team1.name) : '<span class="text-slate-500 italic">' + desc1 + '</span>';
+                var t2Name = team2 ? formatTeamName(team2.name) : '<span class="text-slate-500 italic">' + desc2 + '</span>';
+                var bgClass = label.includes("FINAL") ? 'bg-yellow-900/20' : (label.includes("SF") ? 'bg-purple-900/20' : 'bg-slate-800/50');
+                var labelColor = label.includes("FINAL") ? 'text-yellow-400' : (label.includes("SF") ? 'text-purple-400' : 'text-cyan-400');
+                
+                return '<tr class="border-b border-slate-700 ' + bgClass + '">' +
+                    '<td class="py-3 px-3 ' + labelColor + ' font-bold text-sm">' + label + '</td>' +
+                    '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t1Name + '</td>' +
+                    '<td class="py-3 px-3 text-center text-slate-500 font-bold">vs</td>' +
+                    '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t2Name + '</td>' +
+                    '<td class="py-3 px-3 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
+                '</tr>';
+            }
+
             function renderDashboard() {
                 // Render standings for ONLY the current category selected
                 const container = document.getElementById("all-standings-container");
@@ -1429,6 +1605,9 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 
                     container.innerHTML += standings;
                 }
+                
+                // Render knockout bracket in standings page
+                renderKnockout("standings-knockout-container");
             }
         </script>
     </body>
