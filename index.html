@@ -39,6 +39,65 @@
     </head>
 
     <body class="min-h-screen pb-10">
+
+        <!-- LOGIN OVERLAY -->
+        <div id="login-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:9999;display:flex;align-items:center;justify-content:center;">
+            <div style="background:#1e293b;border:1px solid #334155;border-radius:24px;padding:40px;max-width:400px;width:90%;text-align:center;">
+                <div style="font-size:48px;margin-bottom:16px;">🏓</div>
+                <h1 style="font-size:24px;font-weight:800;margin-bottom:8px;">Admin Login</h1>
+                <p style="color:#94a3b8;margin-bottom:24px;font-size:14px;">ACSII HiFive TT Tournament 2026</p>
+                
+                <div style="margin-bottom:16px;text-align:left;">
+                    <label style="color:#94a3b8;font-size:12px;display:block;margin-bottom:4px;">Username</label>
+                    <input id="login-user" type="text" placeholder="Enter username" 
+                        style="width:100%;padding:12px;border-radius:12px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:16px;box-sizing:border-box;">
+                </div>
+                
+                <div style="margin-bottom:24px;text-align:left;">
+                    <label style="color:#94a3b8;font-size:12px;display:block;margin-bottom:4px;">Password</label>
+                    <input id="login-pass" type="password" placeholder="Enter password" 
+                        style="width:100%;padding:12px;border-radius:12px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:16px;box-sizing:border-box;">
+                </div>
+                
+                <button onclick="doLogin()" 
+                    style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(to right,#3b82f6,#06b6d4);color:white;font-weight:700;font-size:16px;border:none;cursor:pointer;">
+                    Login
+                </button>
+                
+                <p id="login-error" style="color:#ef4444;margin-top:12px;font-size:14px;display:none;">Invalid username or password</p>
+            </div>
+        </div>
+
+        <script>
+            // Admin credentials (change these!)
+            const ADMIN_USER = "admin";
+            const ADMIN_PASS = "hifive2026";
+            
+            function doLogin() {
+                var user = document.getElementById("login-user").value.trim();
+                var pass = document.getElementById("login-pass").value.trim();
+                
+                if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                    document.getElementById("login-overlay").style.display = "none";
+                    sessionStorage.setItem("adminLoggedIn", "true");
+                } else {
+                    document.getElementById("login-error").style.display = "block";
+                    document.getElementById("login-pass").value = "";
+                }
+            }
+            
+            // Check if already logged in this session
+            if (sessionStorage.getItem("adminLoggedIn") === "true") {
+                document.getElementById("login-overlay").style.display = "none";
+            }
+            
+            // Allow Enter key to login
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Enter" && document.getElementById("login-overlay").style.display !== "none") {
+                    doLogin();
+                }
+            });
+        </script>
         <!-- HEADER -->
 
         <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/80 border-b border-slate-800">
@@ -1734,50 +1793,20 @@
                 try {
                     const matchTables = await firebaseGet('matchTables');
                     if (!matchTables) {
-                        console.warn("⚠️ No matchTables in Firebase");
-                        return;
+                        console.warn("⚠️ No matchTables in Firebase - creating new");
                     }
                     
-                    var upcoming = matchTables.upcomingMatches || [];
-                    var completed = matchTables.completedMatches || [];
+                    var upcoming = (matchTables && matchTables.upcomingMatches) || [];
+                    var completed = (matchTables && matchTables.completedMatches) || [];
                     
-                    var t1 = team1Name.toLowerCase().trim();
-                    var t2 = team2Name.toLowerCase().trim();
+                    var t1First = team1Name.toLowerCase().trim().split(' ')[0];
+                    var t2First = team2Name.toLowerCase().trim().split(' ')[0];
                     
+                    // Find in upcoming
                     var foundIndex = -1;
                     for (var i = 0; i < upcoming.length; i++) {
                         var matchStr = upcoming[i].match.toLowerCase();
-                        
-                        // Split match into two sides by " vs "
-                        var sides = matchStr.split(' vs ');
-                        if (sides.length !== 2) continue;
-                        
-                        var side1 = sides[0].trim();
-                        var side2 = sides[1].trim();
-                        
-                        // Check if both teams match (in either order)
-                        var match1 = (t1.includes(side1) || side1.includes(t1.split(' ')[0])) && 
-                                     (t2.includes(side2) || side2.includes(t2.split(' ')[0]));
-                        var match2 = (t1.includes(side2) || side2.includes(t1.split(' ')[0])) && 
-                                     (t2.includes(side1) || side1.includes(t2.split(' ')[0]));
-                        
-                        // For doubles: check all parts separated by &
-                        if (!match1 && !match2) {
-                            var t1Parts = t1.split('&').map(function(s) { return s.trim().split(' ')[0]; });
-                            var t2Parts = t2.split('&').map(function(s) { return s.trim().split(' ')[0]; });
-                            var s1Parts = side1.split('&').map(function(s) { return s.trim().split(' ')[0]; });
-                            var s2Parts = side2.split('&').map(function(s) { return s.trim().split(' ')[0]; });
-                            
-                            var doublesMatch1 = t1Parts.every(function(p) { return side1.includes(p); }) && 
-                                               t2Parts.every(function(p) { return side2.includes(p); });
-                            var doublesMatch2 = t1Parts.every(function(p) { return side2.includes(p); }) && 
-                                               t2Parts.every(function(p) { return side1.includes(p); });
-                            
-                            match1 = doublesMatch1;
-                            match2 = doublesMatch2;
-                        }
-                        
-                        if (match1 || match2) {
+                        if (matchStr.includes(t1First) && matchStr.includes(t2First)) {
                             foundIndex = i;
                             break;
                         }
@@ -1788,18 +1817,27 @@
                         var movedMatch = upcoming.splice(foundIndex, 1)[0];
                         movedMatch.winner = winnerName;
                         completed.push(movedMatch);
-                        
-                        // Save back to Firebase
-                        matchTables.upcomingMatches = upcoming;
-                        matchTables.completedMatches = completed;
-                        await firebaseSet('matchTables', matchTables);
-                        
                         console.log("✅ Moved " + movedMatch.matchNum + " from upcoming to completed. Winner: " + winnerName);
                     } else {
-                        console.log("ℹ️ Match not found in upcoming list (might be from a different day)");
+                        // Not in upcoming - still add to completed!
+                        var matchNum = "M" + (completed.length + upcoming.length + 1);
+                        completed.push({
+                            matchNum: matchNum,
+                            match: team1Name.split(' ')[0] + " vs " + team2Name.split(' ')[0],
+                            winner: winnerName
+                        });
+                        console.log("✅ Added " + matchNum + " directly to completed (not in upcoming). Winner: " + winnerName);
                     }
+                    
+                    // Save back to Firebase
+                    await firebaseSet('matchTables', {
+                        upcomingMatches: upcoming,
+                        completedMatches: completed
+                    });
+                    console.log("✅ matchTables saved! Completed: " + completed.length + " Upcoming: " + upcoming.length);
+                    
                 } catch (error) {
-                    console.error("Error moving match:", error);
+                    console.error("❌ Error moving match:", error);
                 }
             }
 
