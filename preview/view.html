@@ -279,6 +279,24 @@
                     
                 </div>
 
+                <!-- LEADERBOARD - Top 2 from each group -->
+                <div id="leaderboard-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">🏆 Leaderboard - Group Toppers</h2>
+                        <p class="text-slate-500 text-sm mt-1">Top 2 from each group qualify for knockouts</p>
+                    </div>
+                    <div id="leaderboard-container" class="p-5 space-y-6"></div>
+                </div>
+
+                <!-- KNOCKOUT STAGE - Semi Finals & Finals -->
+                <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
+                        <p class="text-slate-500 text-sm mt-1">Semi Finals & Finals</p>
+                    </div>
+                    <div id="knockout-container" class="p-5 space-y-6"></div>
+                </div>
+
                 <!-- ALL GROUPS BY CATEGORY -->
                 <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
                     <div class="p-5 border-b border-slate-800">
@@ -295,6 +313,14 @@
                 <!-- STANDINGS FOR ALL CATEGORIES -->
 
             <div id="all-standings-container" class="space-y-6"></div>
+
+            <!-- KNOCKOUT STAGE in Standings -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mt-6">
+                <div class="p-5 border-b border-slate-800">
+                    <h2 class="font-bold text-lg">⚡ Knockout Stage - Semi Finals & Finals</h2>
+                </div>
+                <div id="standings-knockout-container" class="p-5 space-y-4"></div>
+            </div>
 
             <!-- MATCH HISTORY -->
 
@@ -774,108 +800,55 @@
                 }
             }
 
-            // Load ONLY metadata (team names, groups) from GitHub - this is static
-            async function loadMetadataFromGitHub() {
-                try {
-                    console.log("📥 Loading tournament metadata from GitHub...");
-                    const metadataUrl = `${DATA_BASE_URL}/tournament-metadata.json?t=${Date.now()}`;
-                    const metadataResponse = await fetch(metadataUrl);
-                    const metadataContent = await metadataResponse.text();
-                    const metadata = metadataContent ? JSON.parse(metadataContent) : null;
-                    console.log("✅ Metadata loaded, categories:", Object.keys(metadata?.tournament || {}));
-                    return metadata?.tournament || {};
-                } catch (error) {
-                    console.error("Error loading metadata:", error);
-                    return null;
-                }
-            }
-
-            // Load visibility from Firebase (instant!)
-            async function loadVisibilityStatus() {
-                const data = await firebaseGet('visibility');
-                console.log("✅ Visibility loaded from Firebase:", data?.isActive);
-                return data ? (data.isActive || false) : false;
-            }
-
             /* ---------------------------------- */
-            /* PAGE BOOTSTRAP */
+            /* PAGE BOOTSTRAP - ALL FROM FIREBASE */
             /* ---------------------------------- */
-
-            // Load standings from Firebase and merge into tournamentState
-            async function loadStandingsData() {
-                console.log("📊 Loading standings from Firebase...");
-                const standings = await firebaseGet('standings');
-                if (standings) {
-                    // Replace teams in tournamentState with standings data (has wins/losses/points)
-                    Object.keys(standings).forEach(categoryKey => {
-                        if (tournamentState[categoryKey]) {
-                            tournamentState[categoryKey].teams = standings[categoryKey].teams || [];
-                            console.log(`✅ Updated ${categoryKey}: ${standings[categoryKey].teams.length} teams`);
-                        }
-                    });
-                    console.log("✅ Standings merged into tournamentState");
-                    return standings;
-                } else {
-                    console.warn("⚠️ No standings in Firebase yet");
-                    return null;
-                }
-            }
 
             async function loadTournamentData() {
-                console.log("=== LOADING TOURNAMENT DATA ===");
+                console.log("=== LOADING ALL DATA FROM FIREBASE ===");
                 
-                // Step 1: Load metadata (team names, groups) from GitHub
-                const metadata = await loadMetadataFromGitHub();
-                if (!metadata) {
-                    console.error("❌ Failed to load metadata from GitHub");
-                    return;
+                // Step 1: Load tournamentData (teams + matches) from Firebase
+                const tournamentData = await firebaseGet('tournamentData');
+                if (tournamentData) {
+                    tournamentState = tournamentData;
+                    console.log("✅ Tournament data loaded:", Object.keys(tournamentState));
+                    Object.keys(tournamentState).forEach(function(cat) {
+                        var c = tournamentState[cat];
+                        console.log("  " + cat + ": " + (c.teams ? c.teams.length : 0) + " teams, " + (c.matches ? c.matches.length : 0) + " matches");
+                    });
+                } else {
+                    console.error("❌ No tournamentData in Firebase!");
+                    tournamentState = {};
                 }
-                tournamentState = metadata;
-                console.log("📋 Tournament categories:", Object.keys(tournamentState));
 
-                // Step 2: Load live score from Firebase (instant, always fresh!)
+                // Step 2: Load live score from Firebase
                 const freshLiveScore = await firebaseGet('liveScore');
                 if (freshLiveScore) {
                     liveScore = freshLiveScore;
                     liveMatch = freshLiveScore;
-                    console.log("📊 Live score from Firebase:", liveScore.team1Name, "vs", liveScore.team2Name);
+                    console.log("📊 Live score:", liveScore.team1Name, "vs", liveScore.team2Name);
                 } else {
                     liveScore = {};
                     liveMatch = {};
-                    console.log("📊 No live match data in Firebase");
                 }
 
-                // Step 3: Load standings from Firebase (instant, always fresh!)
-                await loadStandingsData();
+                // Step 3: Load visibility from Firebase
+                const visData = await firebaseGet('visibility');
+                liveScore.isVisible = visData ? (visData.isActive || false) : false;
+                console.log("📌 Visibility:", liveScore.isVisible);
 
-                // Step 4: Load match history from Firebase
-                const freshHistory = await firebaseGet('matchHistory');
-                if (freshHistory) {
-                    Object.keys(freshHistory).forEach(categoryKey => {
-                        if (tournamentState[categoryKey]) {
-                            tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
-                        }
-                    });
-                    console.log("✅ Match history loaded from Firebase");
-                }
-
-                // Step 5: Load visibility
-                const isVisible = await loadVisibilityStatus();
-                liveScore.isVisible = isVisible;
-                console.log("📌 Visibility:", isVisible);
-
-                // Step 5: Update displays
+                // Step 4: Update displays
                 updateLiveScoreDisplay();
                 
                 if (currentTab === "home") {
-                    renderHomeView();
+                    await renderHomeView();
                 } else if (currentTab === "standings") {
                     renderDashboard();
                 } else if (currentTab === "fixtures") {
                     renderFixtures();
                 }
                 
-                console.log("✅ All data loaded!");
+                console.log("✅ ALL DATA LOADED FROM FIREBASE!");
             }
 
             window.addEventListener("DOMContentLoaded", async () => {
@@ -915,17 +888,16 @@
                 
                 // Refresh match history every 2 minutes
                 setInterval(async () => {
-                    const freshHistory = await firebaseGet('matchHistory');
-                    if (freshHistory) {
-                        Object.keys(freshHistory).forEach(categoryKey => {
-                            if (tournamentState[categoryKey]) {
-                                tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
-                            }
-                        });
+                    const freshData = await firebaseGet('tournamentData');
+                    if (freshData) {
+                        tournamentState = freshData;
                         if (currentTab === "standings") {
                             renderDashboard();
                         }
-                        console.log("✅ Match history refreshed");
+                        if (currentTab === "home") {
+                            await renderHomeView();
+                        }
+                        console.log("✅ Tournament data refreshed");
                     }
                 }, 120000);
                 
@@ -943,14 +915,10 @@
                         updateLiveScoreDisplay();
                     }
                     
-                    // Refresh standings from Firebase
-                    const freshStandings = await firebaseGet('standings');
-                    if (freshStandings) {
-                        Object.keys(freshStandings).forEach(categoryKey => {
-                            if (tournamentState[categoryKey]) {
-                                tournamentState[categoryKey].teams = freshStandings[categoryKey].teams || [];
-                            }
-                        });
+                    // Refresh tournament data from Firebase
+                    const freshData = await firebaseGet('tournamentData');
+                    if (freshData) {
+                        tournamentState = freshData;
                         if (currentTab === "standings") {
                             renderDashboard();
                         }
@@ -1091,47 +1059,24 @@
             async function refreshLiveData() {
                 console.log("🔄 Refreshing ALL data from Firebase...");
                 
-                // Fetch fresh live score from Firebase
+                // Refresh live score
                 const freshLiveScore = await firebaseGet('liveScore');
                 if (freshLiveScore) {
                     liveScore = freshLiveScore;
-                    liveScore.isVisible = await loadVisibilityStatus();
+                    const visData = await firebaseGet('visibility');
+                    liveScore.isVisible = visData ? (visData.isActive || false) : false;
                     updateLiveScoreDisplay();
-                    console.log("✅ Live score refreshed");
                 }
                 
-                // Only refresh standings/history if tournamentState is loaded
-                if (!tournamentState || Object.keys(tournamentState).length === 0) {
-                    console.warn("⚠️ tournamentState empty - skipping standings/history refresh");
-                    return;
+                // Refresh tournament data (teams + matches)
+                const freshData = await firebaseGet('tournamentData');
+                if (freshData) {
+                    tournamentState = freshData;
+                    if (currentTab === "standings") renderDashboard();
+                    if (currentTab === "home") await renderHomeView();
                 }
                 
-                // Fetch fresh standings from Firebase
-                const freshStandings = await loadStandingsData();
-                if (freshStandings && currentTab === "standings") {
-                    renderDashboard();
-                    console.log("✅ Standings refreshed");
-                }
-                
-                // Fetch fresh match history from Firebase
-                const freshHistory = await firebaseGet('matchHistory');
-                if (freshHistory) {
-                    Object.keys(freshHistory).forEach(categoryKey => {
-                        if (tournamentState[categoryKey]) {
-                            tournamentState[categoryKey].matches = freshHistory[categoryKey].matches || [];
-                        }
-                    });
-                    if (currentTab === "standings") {
-                        renderDashboard();
-                    }
-                    // Also refresh home view if on home tab
-                    if (currentTab === "home") {
-                        renderHomeView();
-                    }
-                    console.log("✅ Match history refreshed");
-                }
-                
-                console.log("✅ All data refreshed!");
+                console.log("✅ All data refreshed from Firebase!");
             }
 
             async function renderHomeView() {
@@ -1188,6 +1133,10 @@
                 upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-green-400">All matches completed! 🎉</td></tr>';
                 
                 console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
+                
+                // Render leaderboard and knockout brackets
+                renderLeaderboard();
+                renderKnockout("knockout-container");
                 
                 // Render all groups by category
                 const groupsContainer = document.getElementById("all-groups-container");
@@ -1386,6 +1335,154 @@
             /* View page is read-only, no toggle button needed */
             /* Live match visibility is controlled by admin in index.html */
 
+            // Generate knockout bracket from standings
+            function getGroupToppers(category) {
+                if (!category || !category.teams || category.teams.length === 0) return null;
+                
+                // Check if any matches played
+                var hasMatches = category.teams.some(function(t) { return (t.wins || 0) + (t.losses || 0) > 0; });
+                if (!hasMatches) return null;
+                
+                // Group teams
+                var groups = {};
+                category.teams.forEach(function(t) {
+                    var g = t.group || "All";
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(t);
+                });
+                
+                // Sort each group by points, get top 2
+                var toppers = {};
+                for (var g in groups) {
+                    groups[g].sort(function(a, b) { return (b.points || 0) - (a.points || 0); });
+                    toppers[g] = groups[g].slice(0, 2);
+                }
+                return toppers;
+            }
+            
+            function renderLeaderboard() {
+                var container = document.getElementById("leaderboard-container");
+                if (!container) return;
+                container.innerHTML = "";
+                
+                var hasData = false;
+                var cats = Object.keys(tournamentState);
+                
+                cats.forEach(function(catKey) {
+                    var cat = tournamentState[catKey];
+                    var toppers = getGroupToppers(cat);
+                    if (!toppers) return;
+                    
+                    hasData = true;
+                    var html = '<div class="mb-4"><h3 class="text-blue-400 font-bold text-sm mb-3">' + (cat.title || catKey) + '</h3>';
+                    html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">';
+                    
+                    var groupNames = Object.keys(toppers).sort();
+                    groupNames.forEach(function(g) {
+                        var teams = toppers[g];
+                        html += '<div class="bg-slate-950 border border-slate-700 rounded-xl p-3">';
+                        html += '<div class="text-xs text-slate-500 mb-2 font-bold">' + g + '</div>';
+                        teams.forEach(function(t, i) {
+                            var medal = i === 0 ? '🥇' : '🥈';
+                            var color = i === 0 ? 'text-yellow-400' : 'text-slate-300';
+                            html += '<div class="flex justify-between items-center py-1">';
+                            html += '<span class="' + color + ' font-semibold text-sm">' + medal + ' ' + formatTeamName(t.name) + '</span>';
+                            html += '<span class="text-xs text-slate-500">' + t.points + 'pts</span>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    });
+                    
+                    html += '</div></div>';
+                    container.innerHTML += html;
+                });
+                
+                if (!hasData) {
+                    document.getElementById("leaderboard-section").style.display = "none";
+                } else {
+                    document.getElementById("leaderboard-section").style.display = "block";
+                }
+            }
+            
+            function renderKnockout(containerId) {
+                var container = document.getElementById(containerId);
+                if (!container) return;
+                container.innerHTML = "";
+                
+                var hasData = false;
+                var cats = Object.keys(tournamentState);
+                
+                cats.forEach(function(catKey) {
+                    var cat = tournamentState[catKey];
+                    var toppers = getGroupToppers(cat);
+                    if (!toppers) return;
+                    
+                    var groupNames = Object.keys(toppers).sort();
+                    // Need at least 2 groups for knockouts
+                    if (groupNames.length < 2) return;
+                    
+                    hasData = true;
+                    var html = '<div class="mb-6"><h3 class="text-blue-400 font-bold text-sm mb-3">⚡ ' + (cat.title || catKey) + ' - Knockouts</h3>';
+                    
+                    // Generate semi-finals: Group A #1 vs Group B #2, Group B #1 vs Group A #2
+                    // For 4 groups: A1 vs D2, B1 vs C2, C1 vs B2, D1 vs A2
+                    html += '<table class="w-full text-sm">';
+                    html += '<thead><tr class="border-b border-slate-700 bg-slate-950">';
+                    html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">MATCH</th>';
+                    html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">TEAM 1</th>';
+                    html += '<th class="py-2 px-3 text-center text-purple-400 font-bold text-xs">VS</th>';
+                    html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">TEAM 2</th>';
+                    html += '<th class="py-2 px-3 text-center text-purple-400 font-bold text-xs">STATUS</th>';
+                    html += '</tr></thead><tbody>';
+                    
+                    if (groupNames.length === 2) {
+                        // 2 groups: SF1: A1 vs B2, SF2: B1 vs A2
+                        var a = toppers[groupNames[0]];
+                        var b = toppers[groupNames[1]];
+                        
+                        html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2");
+                        html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2");
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner");
+                    } else if (groupNames.length === 4) {
+                        // 4 groups: SF1: A1 vs D2, SF2: B1 vs C2, SF3: C1 vs B2, SF4: D1 vs A2
+                        var ga = toppers[groupNames[0]];
+                        var gb = toppers[groupNames[1]];
+                        var gc = toppers[groupNames[2]];
+                        var gd = toppers[groupNames[3]];
+                        
+                        html += renderKnockoutRow("QF1", ga[0], gd.length > 1 ? gd[1] : null, groupNames[0] + " #1", groupNames[3] + " #2");
+                        html += renderKnockoutRow("QF2", gb[0], gc.length > 1 ? gc[1] : null, groupNames[1] + " #1", groupNames[2] + " #2");
+                        html += renderKnockoutRow("QF3", gc[0], gb.length > 1 ? gb[1] : null, groupNames[2] + " #1", groupNames[1] + " #2");
+                        html += renderKnockoutRow("QF4", gd[0], ga.length > 1 ? ga[1] : null, groupNames[3] + " #1", groupNames[0] + " #2");
+                        html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── SEMI FINALS ─────</td></tr>';
+                        html += renderKnockoutRow("SF1", null, null, "QF1 Winner", "QF2 Winner");
+                        html += renderKnockoutRow("SF2", null, null, "QF3 Winner", "QF4 Winner");
+                        html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner");
+                    }
+                    
+                    html += '</tbody></table></div>';
+                    container.innerHTML += html;
+                });
+                
+                if (!hasData) container.innerHTML = '<p class="text-slate-500 text-center py-4">Knockout brackets will appear once group matches are completed</p>';
+            }
+            
+            function renderKnockoutRow(label, team1, team2, desc1, desc2) {
+                var t1Name = team1 ? formatTeamName(team1.name) : '<span class="text-slate-500 italic">' + desc1 + '</span>';
+                var t2Name = team2 ? formatTeamName(team2.name) : '<span class="text-slate-500 italic">' + desc2 + '</span>';
+                var bgClass = label.includes("FINAL") ? 'bg-yellow-900/20' : (label.includes("SF") ? 'bg-purple-900/20' : 'bg-slate-800/50');
+                var labelColor = label.includes("FINAL") ? 'text-yellow-400' : (label.includes("SF") ? 'text-purple-400' : 'text-cyan-400');
+                
+                return '<tr class="border-b border-slate-700 ' + bgClass + '">' +
+                    '<td class="py-3 px-3 ' + labelColor + ' font-bold text-sm">' + label + '</td>' +
+                    '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t1Name + '</td>' +
+                    '<td class="py-3 px-3 text-center text-slate-500 font-bold">vs</td>' +
+                    '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t2Name + '</td>' +
+                    '<td class="py-3 px-3 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
+                '</tr>';
+            }
+
             function renderDashboard() {
                 // Render standings for ONLY the current category selected
                 const container = document.getElementById("all-standings-container");
@@ -1417,7 +1514,7 @@
 <div class="font-semibold text-lg">
 ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span class="text-blue-400">${match.sets2}</span> ${match.team2Name}
 </div>
-<div class="text-xs text-slate-400 mt-2">${match.setHistory.join(" | ")}</div>
+<div class="text-xs text-slate-400 mt-2">${(match.setHistory && match.setHistory.length > 0) ? match.setHistory.join(" | ") : ""}</div>
 </div>
 `;
                     });
@@ -1510,6 +1607,9 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
 
                     container.innerHTML += standings;
                 }
+                
+                // Render knockout bracket in standings page
+                renderKnockout("standings-knockout-container");
             }
         </script>
     </body>
