@@ -233,18 +233,27 @@
                 </div>
             </div>
 
-                <!-- MATCHES - Two column layout -->
+                <!-- LEADERBOARD - Top 2 from each group (ABOVE matches) -->
+                <div id="leaderboard-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">🏆 Leaderboard - Group Toppers</h2>
+                        <p class="text-slate-500 text-sm mt-1">Top 2 from each group qualify for knockouts</p>
+                    </div>
+                    <div id="leaderboard-container" class="p-5 space-y-6"></div>
+                </div>
+
+                <!-- MATCHES - Two column layout with fixed height -->
                 <div class="flex flex-col lg:flex-row gap-4 mb-6">
                     
-                    <!-- UPCOMING MATCHES (Left on desktop, First on mobile) -->
+                    <!-- UPCOMING MATCHES -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
                         <div class="p-5 border-b border-slate-800">
                             <h2 class="font-bold text-lg">⏳ Upcoming Matches</h2>
                             <p class="text-slate-500 text-sm mt-1" id="upcoming-date"></p>
                         </div>
-                        <div class="p-3 overflow-x-auto">
+                        <div class="p-3" style="max-height:400px;overflow-y:auto;">
                             <table class="w-full text-sm">
-                                <thead>
+                                <thead class="sticky top-0 bg-slate-950 z-10">
                                     <tr class="border-b border-slate-700 bg-slate-950">
                                         <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">#</th>
                                         <th class="py-2 px-2 text-left text-blue-400 font-bold uppercase tracking-wide text-xs">Match</th>
@@ -257,14 +266,14 @@
                         </div>
                     </div>
                     
-                    <!-- COMPLETED MATCHES (Right on desktop, Second on mobile) -->
+                    <!-- COMPLETED MATCHES -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden lg:w-1/2">
                         <div class="p-5 border-b border-slate-800">
                             <h2 class="font-bold text-lg">✅ Completed Matches</h2>
                         </div>
-                        <div class="p-3 overflow-x-auto">
+                        <div class="p-3" style="max-height:400px;overflow-y:auto;">
                             <table class="w-full text-sm">
-                                <thead>
+                                <thead class="sticky top-0 bg-slate-950 z-10">
                                     <tr class="border-b border-slate-700 bg-slate-950">
                                         <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">#</th>
                                         <th class="py-2 px-2 text-left text-green-400 font-bold uppercase tracking-wide text-xs">Match</th>
@@ -279,16 +288,7 @@
                     
                 </div>
 
-                <!-- LEADERBOARD - Top 2 from each group -->
-                <div id="leaderboard-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
-                    <div class="p-5 border-b border-slate-800">
-                        <h2 class="font-bold text-lg">🏆 Leaderboard - Group Toppers</h2>
-                        <p class="text-slate-500 text-sm mt-1">Top 2 from each group qualify for knockouts</p>
-                    </div>
-                    <div id="leaderboard-container" class="p-5 space-y-6"></div>
-                </div>
-
-                <!-- KNOCKOUT STAGE - Semi Finals & Finals -->
+                <!-- KNOCKOUT STAGE (BELOW matches) -->
                 <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
@@ -1084,12 +1084,10 @@
                 
                 console.log("📋 Populating upcoming and completed matches...");
                 
-                // Set today's date for upcoming
+                // Set date for upcoming matches
                 var dateEl = document.getElementById("upcoming-date");
                 if (dateEl) {
-                    var today = new Date();
-                    var options = { day: 'numeric', month: 'long', year: 'numeric' };
-                    dateEl.textContent = today.toLocaleDateString('en-IN', options);
+                    dateEl.textContent = "24 August 2026";
                 }
                 
                 // Load match tables from Firebase
