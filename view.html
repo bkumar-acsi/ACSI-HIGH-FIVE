@@ -1143,7 +1143,7 @@
                 
                 // Render leaderboard and knockout brackets
                 renderLeaderboard();
-                renderKnockout("knockout-container");
+                await renderKnockout("knockout-container");
                 
                 // Render all groups by category
                 const groupsContainer = document.getElementById("all-groups-container");
@@ -1342,6 +1342,32 @@
             /* View page is read-only, no toggle button needed */
             /* Live match visibility is controlled by admin in index.html */
 
+            // Check if all league matches are completed for a category
+            function allLeagueMatchesCompleted(category) {
+                if (!category || !category.teams || category.teams.length === 0) return false;
+                
+                // Group teams
+                var groups = {};
+                category.teams.forEach(function(t) {
+                    var g = t.group || "All";
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(t);
+                });
+                
+                // Calculate total possible matches (round-robin within each group)
+                var totalPossible = 0;
+                for (var g in groups) {
+                    var n = groups[g].length;
+                    totalPossible += n * (n - 1) / 2;
+                }
+                
+                // Count actual matches played
+                var matchesPlayed = (category.matches || []).length;
+                
+                console.log("League check: " + matchesPlayed + "/" + totalPossible + " matches played");
+                return matchesPlayed >= totalPossible;
+            }
+
             // Generate knockout bracket from standings
             function getGroupToppers(category) {
                 if (!category || !category.teams || category.teams.length === 0) return null;
@@ -1411,31 +1437,31 @@
                 }
             }
             
-            function renderKnockout(containerId) {
+            async function renderKnockout(containerId) {
                 var container = document.getElementById(containerId);
                 if (!container) return;
                 container.innerHTML = "";
+                
+                // Load knockout results from Firebase
+                currentKnockoutData = await firebaseGet('knockoutData') || {};
                 
                 var hasData = false;
                 var cats = Object.keys(tournamentState);
                 
                 cats.forEach(function(catKey) {
-                    // Skip mens_doubles knockout for now
-                    if (catKey === "mens_doubles") return;
-                    
                     var cat = tournamentState[catKey];
                     var toppers = getGroupToppers(cat);
                     if (!toppers) return;
                     
+                    // Only show knockout if ALL league matches are completed
+                    if (!allLeagueMatchesCompleted(cat)) return;
+                    
                     var groupNames = Object.keys(toppers).sort();
-                    // Need at least 2 groups for knockouts
-                    if (groupNames.length < 2) return;
+                    if (groupNames.length < 1) return;
                     
                     hasData = true;
                     var html = '<div class="mb-6"><h3 class="text-blue-400 font-bold text-sm mb-3">⚡ ' + (cat.title || catKey) + ' - Knockouts</h3>';
                     
-                    // Generate semi-finals: Group A #1 vs Group B #2, Group B #1 vs Group A #2
-                    // For 4 groups: A1 vs D2, B1 vs C2, C1 vs B2, D1 vs A2
                     html += '<table class="w-full text-sm">';
                     html += '<thead><tr class="border-b border-slate-700 bg-slate-950">';
                     html += '<th class="py-2 px-3 text-left text-purple-400 font-bold text-xs">MATCH</th>';
@@ -1445,30 +1471,43 @@
                     html += '<th class="py-2 px-3 text-center text-purple-400 font-bold text-xs">STATUS</th>';
                     html += '</tr></thead><tbody>';
                     
-                    if (groupNames.length === 2) {
-                        // 2 groups: SF1: A1 vs B2, SF2: B1 vs A2
-                        var a = toppers[groupNames[0]];
-                        var b = toppers[groupNames[1]];
+                    if (catKey === "mens_singles" && groupNames.length === 4) {
+                        var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
+                        var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
                         
-                        html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2");
-                        html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2");
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner");
-                    } else if (groupNames.length === 4) {
-                        // 4 groups: SF1: A1 vs D2, SF2: B1 vs C2, SF3: C1 vs B2, SF4: D1 vs A2
-                        var ga = toppers[groupNames[0]];
-                        var gb = toppers[groupNames[1]];
-                        var gc = toppers[groupNames[2]];
-                        var gd = toppers[groupNames[3]];
-                        
-                        html += renderKnockoutRow("QF1", ga[0], gd.length > 1 ? gd[1] : null, groupNames[0] + " #1", groupNames[3] + " #2");
-                        html += renderKnockoutRow("QF2", gb[0], gc.length > 1 ? gc[1] : null, groupNames[1] + " #1", groupNames[2] + " #2");
-                        html += renderKnockoutRow("QF3", gc[0], gb.length > 1 ? gb[1] : null, groupNames[2] + " #1", groupNames[1] + " #2");
-                        html += renderKnockoutRow("QF4", gd[0], ga.length > 1 ? ga[1] : null, groupNames[3] + " #1", groupNames[0] + " #2");
+                        html += renderKnockoutRow("QF1", ga[0], gd.length > 1 ? gd[1] : null, groupNames[0] + " #1", groupNames[3] + " #2", catKey);
+                        html += renderKnockoutRow("QF2", gb[0], gc.length > 1 ? gc[1] : null, groupNames[1] + " #1", groupNames[2] + " #2", catKey);
+                        html += renderKnockoutRow("QF3", gc[0], gb.length > 1 ? gb[1] : null, groupNames[2] + " #1", groupNames[1] + " #2", catKey);
+                        html += renderKnockoutRow("QF4", gd[0], ga.length > 1 ? ga[1] : null, groupNames[3] + " #1", groupNames[0] + " #2", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── SEMI FINALS ─────</td></tr>';
-                        html += renderKnockoutRow("SF1", null, null, "QF1 Winner", "QF2 Winner");
-                        html += renderKnockoutRow("SF2", null, null, "QF3 Winner", "QF4 Winner");
+                        html += renderKnockoutRow("SF1", null, null, "QF1 Winner", "QF2 Winner", catKey);
+                        html += renderKnockoutRow("SF2", null, null, "QF3 Winner", "QF4 Winner", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner");
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        
+                    } else if (catKey === "mens_doubles" && groupNames.length === 4) {
+                        var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
+                        var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
+                        
+                        html += renderKnockoutRow("SF1", ga[0], gd[0], groupNames[0] + " #1", groupNames[3] + " #1", catKey);
+                        html += renderKnockoutRow("SF2", gb[0], gc[0], groupNames[1] + " #1", groupNames[2] + " #1", catKey);
+                        html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        
+                    } else if (catKey === "womens_doubles") {
+                        var allTeams = [];
+                        for (var g in toppers) { toppers[g].forEach(function(t) { allTeams.push(t); }); }
+                        allTeams.sort(function(a, b) { return (b.points || 0) - (a.points || 0); });
+                        if (allTeams.length >= 2) {
+                            html += renderKnockoutRow("FINAL", allTeams[0], allTeams[1], "#1", "#2", catKey);
+                        }
+                        
+                    } else if (groupNames.length === 2) {
+                        var a = toppers[groupNames[0]], b = toppers[groupNames[1]];
+                        html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
+                        html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
+                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
                     }
                     
                     html += '</tbody></table></div>';
@@ -1478,18 +1517,31 @@
                 if (!hasData) container.innerHTML = '<p class="text-slate-500 text-center py-4">Knockout brackets will appear once group matches are completed</p>';
             }
             
-            function renderKnockoutRow(label, team1, team2, desc1, desc2) {
+            var currentKnockoutData = {};
+            
+            function renderKnockoutRow(label, team1, team2, desc1, desc2, catKey) {
                 var t1Name = team1 ? formatTeamName(team1.name) : '<span class="text-slate-500 italic">' + desc1 + '</span>';
                 var t2Name = team2 ? formatTeamName(team2.name) : '<span class="text-slate-500 italic">' + desc2 + '</span>';
                 var bgClass = label.includes("FINAL") ? 'bg-yellow-900/20' : (label.includes("SF") ? 'bg-purple-900/20' : 'bg-slate-800/50');
                 var labelColor = label.includes("FINAL") ? 'text-yellow-400' : (label.includes("SF") ? 'text-purple-400' : 'text-cyan-400');
+                var status = '<span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
+                
+                // Check if knockout result exists
+                var koData = currentKnockoutData[catKey] || {};
+                if (koData[label]) {
+                    var ko = koData[label];
+                    t1Name = formatTeamName(ko.team1Name);
+                    t2Name = formatTeamName(ko.team2Name);
+                    status = '<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(ko.winner) + '</span>';
+                    bgClass = 'bg-green-900/20';
+                }
                 
                 return '<tr class="border-b border-slate-700 ' + bgClass + '">' +
                     '<td class="py-3 px-3 ' + labelColor + ' font-bold text-sm">' + label + '</td>' +
                     '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t1Name + '</td>' +
                     '<td class="py-3 px-3 text-center text-slate-500 font-bold">vs</td>' +
                     '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t2Name + '</td>' +
-                    '<td class="py-3 px-3 text-center"><span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span></td>' +
+                    '<td class="py-3 px-3 text-center">' + status + '</td>' +
                 '</tr>';
             }
 
@@ -1619,7 +1671,7 @@ ${match.team1Name} <span class="text-blue-400">${match.sets1}</span> : <span cla
                 }
                 
                 // Render knockout bracket in standings page
-                renderKnockout("standings-knockout-container");
+                await renderKnockout("standings-knockout-container");
             }
         </script>
     </body>
