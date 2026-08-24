@@ -1550,6 +1550,84 @@
                 updateLiveScoreDOM();
             }
 
+            // Check if all league matches completed for current category
+            function isLeagueComplete() {
+                var category = tournamentState[currentCategory];
+                if (!category || !category.teams) return false;
+                
+                var groups = {};
+                category.teams.forEach(function(t) {
+                    var g = t.group || "All";
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(t);
+                });
+                
+                var totalPossible = 0;
+                for (var g in groups) {
+                    var n = groups[g].length;
+                    totalPossible += n * (n - 1) / 2;
+                }
+                
+                var matchesPlayed = (category.matches || []).length;
+                console.log("League: " + matchesPlayed + "/" + totalPossible);
+                return matchesPlayed >= totalPossible;
+            }
+
+            // Save knockout match result to Firebase
+            async function saveKnockoutMatch(team1Name, team2Name, winnerName, sets1, sets2, setHistory) {
+                try {
+                    // Load existing knockout data
+                    var knockoutData = await firebaseGet('knockoutData/' + currentCategory) || {};
+                    
+                    // Determine match label based on what's already played
+                    var matchLabel = "";
+                    var catKey = currentCategory;
+                    
+                    if (catKey === "mens_singles") {
+                        if (!knockoutData.QF1) matchLabel = "QF1";
+                        else if (!knockoutData.QF2) matchLabel = "QF2";
+                        else if (!knockoutData.QF3) matchLabel = "QF3";
+                        else if (!knockoutData.QF4) matchLabel = "QF4";
+                        else if (!knockoutData.SF1) matchLabel = "SF1";
+                        else if (!knockoutData.SF2) matchLabel = "SF2";
+                        else if (!knockoutData.FINAL) matchLabel = "FINAL";
+                    } else if (catKey === "mens_doubles") {
+                        if (!knockoutData.SF1) matchLabel = "SF1";
+                        else if (!knockoutData.SF2) matchLabel = "SF2";
+                        else if (!knockoutData.FINAL) matchLabel = "FINAL";
+                    } else if (catKey === "womens_doubles") {
+                        if (!knockoutData.FINAL) matchLabel = "FINAL";
+                    } else {
+                        // womens_singles, mix_doubles (2 groups → SF + Final)
+                        if (!knockoutData.SF1) matchLabel = "SF1";
+                        else if (!knockoutData.SF2) matchLabel = "SF2";
+                        else if (!knockoutData.FINAL) matchLabel = "FINAL";
+                    }
+                    
+                    if (!matchLabel) {
+                        alert("All knockout matches already completed for this category!");
+                        return;
+                    }
+                    
+                    knockoutData[matchLabel] = {
+                        team1Name: team1Name,
+                        team2Name: team2Name,
+                        winner: winnerName,
+                        sets1: sets1,
+                        sets2: sets2,
+                        setHistory: setHistory,
+                        timestamp: new Date().toLocaleString()
+                    };
+                    
+                    await firebaseSet('knockoutData/' + currentCategory, knockoutData);
+                    console.log("✅ Knockout match saved: " + matchLabel + " → " + winnerName);
+                    alert("✅ Knockout " + matchLabel + " saved!\n" + team1Name + " vs " + team2Name + "\nWinner: " + winnerName);
+                    
+                } catch (error) {
+                    console.error("Error saving knockout match:", error);
+                }
+            }
+
             function confirmSetWinner() {
                 // Check if at least one player has scored
                 if (liveMatch.points1 === 0 && liveMatch.points2 === 0) {
@@ -1701,7 +1779,6 @@
                     return;
                 }
 
-                // Find team IDs by matching names
                 const category = tournamentState[currentCategory];
                 const team1 = category.teams.find(t => t.name === team1Name);
                 const team2 = category.teams.find(t => t.name === team2Name);
@@ -1711,6 +1788,47 @@
                     return;
                 }
 
+                // Determine winner BEFORE anything else
+                const winnerName = liveMatch.sets1 > liveMatch.sets2 ? team1Name : team2Name;
+                const savedSets1 = liveMatch.sets1;
+                const savedSets2 = liveMatch.sets2;
+                const savedSetHistory = [...liveMatch.setHistory];
+
+                // CHECK: Is league complete? → Save as knockout match
+                if (isLeagueComplete()) {
+                    console.log("🏆 KNOCKOUT MATCH - league is complete!");
+                    
+                    alert(`🏆 Knockout Match Saved!\n\n${team1Name} vs ${team2Name}\nSets: ${savedSets1} - ${savedSets2}\nWinner: ${winnerName}`);
+                    
+                    // Save knockout match (no standings update!)
+                    await saveKnockoutMatch(team1Name, team2Name, winnerName, savedSets1, savedSets2, savedSetHistory);
+                    
+                    // Clear live match
+                    liveMatch.points1 = 0;
+                    liveMatch.points2 = 0;
+                    liveMatch.sets1 = 0;
+                    liveMatch.sets2 = 0;
+                    liveMatch.setHistory = [];
+                    document.getElementById("live-team-1").value = "";
+                    document.getElementById("live-team-2").value = "";
+                    updateLiveScoreDOM();
+                    await updateLiveScore();
+                    
+                    // Move from upcoming to completed
+                    await moveMatchToCompleted(team1Name, team2Name, winnerName);
+                    
+                    renderDashboard();
+                    renderMatchHistory();
+                    console.log("✅ Knockout match completed");
+                    return;
+                }
+
+                // LEAGUE MATCH - normal flow
+                console.log("📊 LEAGUE MATCH - updating standings");
+
+                // Show match summary
+                alert(`✅ Match Saved!\n\n${team1Name} vs ${team2Name}\nSets: ${savedSets1} - ${savedSets2}\nHistory: ${savedSetHistory.join(", ")}`);
+
                 // Initialize stats if not present
                 if (!team1.wins) team1.wins = 0;
                 if (!team1.losses) team1.losses = 0;
@@ -1719,27 +1837,18 @@
                 if (!team2.losses) team2.losses = 0;
                 if (!team2.points) team2.points = 0;
 
-                // Show match summary
-                alert(`✅ Match Saved!\n\n${team1Name} vs ${team2Name}\nSets: ${liveMatch.sets1} - ${liveMatch.sets2}\nHistory: ${liveMatch.setHistory.join(", ")}`);
-
-                // Update team standings based on match result
-                if (liveMatch.sets1 > liveMatch.sets2) {
-                    // Team 1 won
+                // Update team standings
+                if (savedSets1 > savedSets2) {
                     team1.wins++;
                     team2.losses++;
                     team1.points += 2;
-                    console.log(`✅ ${team1Name} won! Updated stats - Wins: ${team1.wins}, Points: ${team1.points}`);
+                    console.log(`✅ ${team1Name} won!`);
                 } else {
-                    // Team 2 won
                     team2.wins++;
                     team1.losses++;
                     team2.points += 2;
-                    console.log(`✅ ${team2Name} won! Updated stats - Wins: ${team2.wins}, Points: ${team2.points}`);
+                    console.log(`✅ ${team2Name} won!`);
                 }
-
-                // Determine winner BEFORE resetting
-                const winnerName = liveMatch.sets1 > liveMatch.sets2 ? team1Name : team2Name;
-                console.log("🏆 Winner determined:", winnerName);
 
                 // Save match to history
                 const matchRecord = {
@@ -1748,27 +1857,22 @@
                     team2Name: team2Name,
                     team1Id: team1.id,
                     team2Id: team2.id,
-                    sets1: liveMatch.sets1,
-                    sets2: liveMatch.sets2,
-                    setHistory: [...liveMatch.setHistory],
+                    sets1: savedSets1,
+                    sets2: savedSets2,
+                    setHistory: savedSetHistory,
                     timestamp: new Date().toLocaleString(),
                     category: currentCategory
                 };
 
-                // Add to match history
-                if (!category.matches) {
-                    category.matches = [];
-                }
-                category.matches.unshift(matchRecord); // Add to beginning of list
+                if (!category.matches) category.matches = [];
+                category.matches.unshift(matchRecord);
 
-                // Clear live match data
+                // Clear live match
                 liveMatch.points1 = 0;
                 liveMatch.points2 = 0;
                 liveMatch.sets1 = 0;
                 liveMatch.sets2 = 0;
                 liveMatch.setHistory = [];
-                
-                // Reset UI
                 document.getElementById("live-team-1").value = "";
                 document.getElementById("live-team-2").value = "";
                 updateLiveScoreDOM();
