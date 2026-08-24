@@ -1411,6 +1411,9 @@
                 var cats = Object.keys(tournamentState);
                 
                 cats.forEach(function(catKey) {
+                    // Skip mens_doubles knockout for now
+                    if (catKey === "mens_doubles") return;
+                    
                     var cat = tournamentState[catKey];
                     var toppers = getGroupToppers(cat);
                     if (!toppers) return;
