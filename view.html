@@ -30,6 +30,17 @@
                 border-radius: 999px;
             }
 
+            /* Mobile responsive */
+            @media (max-width: 640px) {
+                .mobile-text-xs { font-size: 11px !important; }
+                .mobile-px-1 { padding-left: 4px !important; padding-right: 4px !important; }
+                .mobile-py-1 { padding-top: 4px !important; padding-bottom: 4px !important; }
+                table { font-size: 12px; }
+                table th, table td { padding: 6px 4px !important; }
+                .knockout-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+                h2 { font-size: 16px !important; }
+            }
+
             .score-glow {
                 text-shadow:
                     0 0 20px rgba(59, 130, 246, 0.8),
@@ -51,14 +62,14 @@
         <!-- HEADER -->
 
         <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/80 border-b border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-                <div class="flex items-center gap-4">
+            <div class="max-w-7xl mx-auto px-2 sm:px-4 h-16 sm:h-20 flex items-center justify-between">
+                <div class="flex items-center gap-2 sm:gap-4">
                     <!-- TT LOGO -->
 
                     <div
-                        class="bg-gradient-to-tr from-blue-500 to-cyan-500 p-3 rounded-2xl shadow-lg shadow-blue-500/20"
+                        class="bg-gradient-to-tr from-blue-500 to-cyan-500 p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/20"
                     >
-                        <svg width="34" height="34" viewBox="0 0 64 64">
+                        <svg width="24" height="24" viewBox="0 0 64 64" class="sm:w-[34px] sm:h-[34px]">
                             <circle cx="26" cy="24" r="16" fill="#2563EB" />
                             <circle cx="26" cy="24" r="12" fill="#60A5FA" />
 
@@ -184,7 +195,7 @@
 
         <!-- MAIN -->
 
-        <main class="max-w-7xl mx-auto px-4 mt-6">
+        <main class="max-w-7xl mx-auto px-2 sm:px-4 mt-4 sm:mt-6">
             <!-- HOME SECTION (DEFAULT VIEW) -->
             <div id="home-section" style="display: block;">
                 <!-- LIVE SCOREBOARD -->
@@ -199,9 +210,9 @@
 
                 <div class="grid grid-cols-2 gap-4 text-center relative">
                     <div>
-                        <div id="display-name-1" class="text-2xl font-bold mb-4">Player 1</div>
+                        <div id="display-name-1" class="text-sm sm:text-2xl truncate font-bold mb-4">Player 1</div>
 
-                        <div id="live-points-1" class="score-glow text-[5rem] font-black leading-none">0</div>
+                        <div id="live-points-1" class="score-glow text-[3rem] sm:text-[5rem] font-black leading-none">0</div>
 
                         <div class="mt-2">
                             <div class="text-sm text-slate-500">Sets Won</div>
@@ -211,9 +222,9 @@
                     </div>
 
                     <div>
-                        <div id="display-name-2" class="text-2xl font-bold mb-4">Player 2</div>
+                        <div id="display-name-2" class="text-sm sm:text-2xl truncate font-bold mb-4">Player 2</div>
 
-                        <div id="live-points-2" class="score-glow text-[5rem] font-black leading-none">0</div>
+                        <div id="live-points-2" class="score-glow text-[3rem] sm:text-[5rem] font-black leading-none">0</div>
 
                         <div class="mt-2">
                             <div class="text-sm text-slate-500">Sets Won</div>
@@ -239,7 +250,7 @@
                         <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
                         <p class="text-slate-500 text-sm mt-1">Semi Finals & Finals</p>
                     </div>
-                    <div id="knockout-container" class="p-5 space-y-6"></div>
+                    <div id="knockout-container" class="p-3 sm:p-5 space-y-6 knockout-table-wrap"></div>
                 </div>
 
                 <!-- LEADERBOARD -->
@@ -320,7 +331,7 @@
                 <div class="p-5 border-b border-slate-800">
                     <h2 class="font-bold text-lg">⚡ Knockout Stage - Semi Finals & Finals</h2>
                 </div>
-                <div id="standings-knockout-container" class="p-5 space-y-4"></div>
+                <div id="standings-knockout-container" class="p-3 sm:p-5 space-y-4 knockout-table-wrap"></div>
             </div>
 
             <!-- MATCH HISTORY -->
@@ -1415,7 +1426,7 @@
                     
                     hasData = true;
                     var html = '<div class="mb-4"><h3 class="text-blue-400 font-bold text-sm mb-3">' + (cat.title || catKey) + '</h3>';
-                    html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">';
+                    html += '<div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">';
                     
                     var groupNames = Object.keys(toppers).sort();
                     groupNames.forEach(function(g) {
@@ -1533,11 +1544,11 @@
             var currentKnockoutData = {};
             
             function renderKnockoutRow(label, team1, team2, desc1, desc2, catKey) {
-                var t1Name = team1 ? formatTeamName(team1.name) : '<span class="text-slate-500 italic">' + desc1 + '</span>';
-                var t2Name = team2 ? formatTeamName(team2.name) : '<span class="text-slate-500 italic">' + desc2 + '</span>';
+                var t1Name = team1 ? formatTeamName(team1.name) : '<span class="text-slate-500 italic text-xs">' + desc1 + '</span>';
+                var t2Name = team2 ? formatTeamName(team2.name) : '<span class="text-slate-500 italic text-xs">' + desc2 + '</span>';
                 var bgClass = label.includes("FINAL") ? 'bg-yellow-900/20' : (label.includes("SF") ? 'bg-purple-900/20' : 'bg-slate-800/50');
                 var labelColor = label.includes("FINAL") ? 'text-yellow-400' : (label.includes("SF") ? 'text-purple-400' : 'text-cyan-400');
-                var status = '<span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
+                var status = '<span class="bg-blue-500/20 text-blue-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
                 
                 // Check if knockout result exists
                 var koData = currentKnockoutData[catKey] || {};
@@ -1545,16 +1556,16 @@
                     var ko = koData[label];
                     t1Name = formatTeamName(ko.team1Name);
                     t2Name = formatTeamName(ko.team2Name);
-                    status = '<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(ko.winner) + '</span>';
+                    status = '<span class="bg-green-500/20 text-green-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(ko.winner) + '</span>';
                     bgClass = 'bg-green-900/20';
                 }
                 
                 return '<tr class="border-b border-slate-700 ' + bgClass + '">' +
-                    '<td class="py-3 px-3 ' + labelColor + ' font-bold text-sm">' + label + '</td>' +
-                    '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t1Name + '</td>' +
-                    '<td class="py-3 px-3 text-center text-slate-500 font-bold">vs</td>' +
-                    '<td class="py-3 px-3 text-slate-100 font-semibold text-sm">' + t2Name + '</td>' +
-                    '<td class="py-3 px-3 text-center">' + status + '</td>' +
+                    '<td class="py-2 px-1 sm:px-3 ' + labelColor + ' font-bold text-xs sm:text-sm whitespace-nowrap">' + label + '</td>' +
+                    '<td class="py-2 px-1 sm:px-3 text-slate-100 font-semibold text-xs sm:text-sm">' + t1Name + '</td>' +
+                    '<td class="py-2 px-1 text-center text-slate-500 font-bold text-xs">vs</td>' +
+                    '<td class="py-2 px-1 sm:px-3 text-slate-100 font-semibold text-xs sm:text-sm">' + t2Name + '</td>' +
+                    '<td class="py-2 px-1 sm:px-3 text-center">' + status + '</td>' +
                 '</tr>';
             }
 
