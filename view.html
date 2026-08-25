@@ -1507,8 +1507,8 @@
                         var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
                         var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
                         
-                        html += renderKnockoutRow("SF1", ga[0], gd[0], groupNames[0] + " #1", groupNames[3] + " #1", catKey);
-                        html += renderKnockoutRow("SF2", gb[0], gc[0], groupNames[1] + " #1", groupNames[2] + " #1", catKey);
+                        html += renderKnockoutRow("SF1", ga[0], gc[0], groupNames[0] + " #1", groupNames[2] + " #1", catKey);
+                        html += renderKnockoutRow("SF2", gb[0], gd[0], groupNames[1] + " #1", groupNames[3] + " #1", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
                         html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
                         
