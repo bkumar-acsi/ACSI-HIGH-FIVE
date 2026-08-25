@@ -1495,11 +1495,17 @@
                         html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
                         
                     } else if (catKey === "womens_doubles") {
-                        var allTeams = [];
-                        for (var g in toppers) { toppers[g].forEach(function(t) { allTeams.push(t); }); }
-                        allTeams.sort(function(a, b) { return (b.points || 0) - (a.points || 0); });
-                        if (allTeams.length >= 2) {
-                            html += renderKnockoutRow("FINAL", allTeams[0], allTeams[1], "#1", "#2", catKey);
+                        // WOMENS DOUBLES: Custom final teams from knockoutData or top 2
+                        var wdKo = currentKnockoutData["womens_doubles"] || {};
+                        if (wdKo.finalTeams) {
+                            html += renderKnockoutRow("FINAL", { name: wdKo.finalTeams.team1 }, { name: wdKo.finalTeams.team2 }, "#1", "#2", catKey);
+                        } else {
+                            var allTeams = [];
+                            for (var g in toppers) { toppers[g].forEach(function(t) { allTeams.push(t); }); }
+                            allTeams.sort(function(a, b) { return (b.points || 0) - (a.points || 0); });
+                            if (allTeams.length >= 2) {
+                                html += renderKnockoutRow("FINAL", allTeams[0], allTeams[1], "#1", "#2", catKey);
+                            }
                         }
                         
                     } else if (groupNames.length === 2) {
