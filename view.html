@@ -233,7 +233,16 @@
                 </div>
             </div>
 
-                <!-- LEADERBOARD - Top 2 from each group (ABOVE matches) -->
+                <!-- KNOCKOUT STAGE (TOP - below live score) -->
+                <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-800">
+                        <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
+                        <p class="text-slate-500 text-sm mt-1">Semi Finals & Finals</p>
+                    </div>
+                    <div id="knockout-container" class="p-5 space-y-6"></div>
+                </div>
+
+                <!-- LEADERBOARD -->
                 <div id="leaderboard-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">🏆 Leaderboard - Group Toppers</h2>
@@ -287,15 +296,6 @@
                         </div>
                     </div>
                     
-                </div>
-
-                <!-- KNOCKOUT STAGE (BELOW matches) -->
-                <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
-                    <div class="p-5 border-b border-slate-800">
-                        <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
-                        <p class="text-slate-500 text-sm mt-1">Semi Finals & Finals</p>
-                    </div>
-                    <div id="knockout-container" class="p-5 space-y-6"></div>
                 </div>
 
                 <!-- ALL GROUPS BY CATEGORY -->
@@ -1119,14 +1119,21 @@
                 });
                 completedContainer.innerHTML = completedRows || '<tr><td colspan="3" class="py-4 text-center text-slate-500">No matches completed yet</td></tr>';
                 
-                // Render upcoming with time slots (9:00 AM start, 5 min each)
+                // Render upcoming with time slots
                 var upcomingRows = '';
                 var matchIndex = 0;
                 upcomingMatchesList.forEach(function(m) {
-                    var totalMins = matchIndex * 5;
-                    var h = 9 + Math.floor(totalMins / 60);
-                    var mins = totalMins % 60;
-                    var timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
+                    var timeStr;
+                    if (m.time) {
+                        // Use stored time (knockout matches have their own time)
+                        timeStr = m.time;
+                    } else {
+                        // Calculate time (9:00 AM start, 5 min each)
+                        var totalMins = matchIndex * 5;
+                        var h = 9 + Math.floor(totalMins / 60);
+                        var mins = totalMins % 60;
+                        timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
+                    }
                     
                     upcomingRows += 
                     '<tr class="border-b border-slate-700 hover:bg-slate-800/70 transition">' +
