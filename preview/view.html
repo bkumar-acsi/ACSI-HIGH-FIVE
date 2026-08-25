@@ -244,7 +244,18 @@
                 </div>
             </div>
 
-                <!-- KNOCKOUT STAGE (TOP - below live score) -->
+                <!-- 🔥 FINAL SHOWDOWN SECTION -->
+                <div id="showdown-section" class="bg-gradient-to-br from-slate-900 via-purple-950/30 to-slate-900 border border-purple-500/30 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-purple-500/30 text-center">
+                        <h2 class="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 bg-clip-text text-transparent">🔥 Ready for the Final Showdown! 🔥</h2>
+                        <p class="text-purple-300 text-sm mt-2">📅 26 August 2026 | ⏰ Starting 9:30 AM | 🏓 10 mins per match</p>
+                    </div>
+                    <div class="p-3 sm:p-5">
+                        <div id="showdown-container" class="knockout-table-wrap"></div>
+                    </div>
+                </div>
+
+                <!-- KNOCKOUT STAGE -->
                 <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
@@ -1141,7 +1152,7 @@
                     } else {
                         // Calculate time (9:00 AM start, 5 min each)
                         var totalMins = matchIndex * 5;
-                        var h = 9 + Math.floor(totalMins / 60);
+                        var h = 13 + Math.floor(totalMins / 60);
                         var mins = totalMins % 60;
                         timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
                     }
@@ -1158,6 +1169,9 @@
                 upcomingContainer.innerHTML = upcomingRows || '<tr><td colspan="3" class="py-4 text-center text-green-400">All matches completed! 🎉</td></tr>';
                 
                 console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
+                
+                // Render showdown schedule
+                await renderShowdown();
                 
                 // Render leaderboard and knockout brackets
                 renderLeaderboard();
@@ -1379,11 +1393,19 @@
                     totalPossible += n * (n - 1) / 2;
                 }
                 
-                // Count actual matches played
-                var matchesPlayed = (category.matches || []).length;
+                // Count only WITHIN-GROUP matches (exclude cross-group knockout matches)
+                var leagueMatches = 0;
+                (category.matches || []).forEach(function(m) {
+                    // Find both teams' groups
+                    var t1 = category.teams.find(function(t) { return t.id === m.team1Id; });
+                    var t2 = category.teams.find(function(t) { return t.id === m.team2Id; });
+                    if (t1 && t2 && t1.group === t2.group) {
+                        leagueMatches++;
+                    }
+                });
                 
-                console.log("League check: " + matchesPlayed + "/" + totalPossible + " matches played");
-                return matchesPlayed >= totalPossible;
+                console.log("League check: " + leagueMatches + "/" + totalPossible + " within-group matches");
+                return leagueMatches >= totalPossible;
             }
 
             // Generate knockout bracket from standings
@@ -1411,6 +1433,134 @@
                 return toppers;
             }
             
+            async function renderShowdown() {
+                var container = document.getElementById("showdown-container");
+                if (!container) return;
+                
+                // Load knockout data
+                var koResp = await firebaseGet('knockoutData') || {};
+                
+                // Load upcoming matches for SF/Final entries
+                var matchTables = await firebaseGet('matchTables') || {};
+                var upcoming = matchTables.upcomingMatches || [];
+                var completed = matchTables.completedMatches || [];
+                
+                // Collect all SF and Final matches
+                var sfMatches = [];
+                var finalMatches = [];
+                
+                // From upcoming table
+                upcoming.concat(completed).forEach(function(m) {
+                    var label = (m.matchNum || "").toUpperCase();
+                    if (label.includes("SF")) sfMatches.push(m);
+                    else if (label.includes("FINAL")) finalMatches.push(m);
+                });
+                
+                // Also check knockoutData for matches not in upcoming
+                var categories = {
+                    "mens_singles": "Men Singles",
+                    "womens_singles": "Women Singles", 
+                    "mens_doubles": "Men Doubles",
+                    "womens_doubles": "Women Doubles",
+                    "mix_doubles": "Mixed Doubles"
+                };
+                
+                var startMins = 0; // minutes from 9:30
+                var html = '';
+                
+                // SEMI FINALS
+                html += '<div class="mb-4"><h3 class="text-purple-400 font-bold text-sm mb-3">⚡ SEMI FINALS</h3>';
+                html += '<table class="w-full text-sm"><tbody>';
+                
+                var allSFs = upcoming.filter(function(m) { return (m.matchNum || "").toUpperCase().includes("SF"); });
+                var allSFList = allSFs;
+                
+                // Sort: MS first, then WS, MD, MX
+                var sfOrder = ["MS-SF", "WS-SF", "MD-SF", "MX-SF"];
+                allSFList.sort(function(a, b) {
+                    var aIdx = sfOrder.findIndex(function(p) { return a.matchNum.toUpperCase().startsWith(p); });
+                    var bIdx = sfOrder.findIndex(function(p) { return b.matchNum.toUpperCase().startsWith(p); });
+                    if (aIdx === -1) aIdx = 99;
+                    if (bIdx === -1) bIdx = 99;
+                    if (aIdx !== bIdx) return aIdx - bIdx;
+                    return a.matchNum.localeCompare(b.matchNum);
+                });
+                
+                allSFList.forEach(function(m) {
+                    var h = 9 + Math.floor((30 + startMins) / 60);
+                    var mins = (30 + startMins) % 60;
+                    var timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
+                    
+                    var isCompleted = false; //(function(c) { return c.matchNum === m.matchNum; });
+                    var catLabel = m.matchNum.split("-")[0];
+                    var catName = catLabel === "MS" ? "Men Singles" : catLabel === "WS" ? "Women Singles" : catLabel === "MD" ? "Men Doubles" : catLabel === "MX" ? "Mixed Doubles" : "";
+                    
+                    var statusHtml = isCompleted ? 
+                        '<span class="bg-green-500/20 text-green-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(m.winner || '') + '</span>' :
+                        '<span class="bg-purple-500/20 text-purple-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
+                    
+                    html += '<tr class="border-b border-slate-700/50 ' + (isCompleted ? 'bg-green-900/10' : 'bg-purple-900/10') + '">' +
+                        '<td class="py-2 px-1 sm:px-2 text-amber-400 font-bold text-xs whitespace-nowrap">' + timeStr + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-purple-400 font-bold text-xs whitespace-nowrap">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-400 text-xs">' + catName + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-100 font-semibold text-xs sm:text-sm">' + formatTeamName(m.match) + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-center">' + statusHtml + '</td>' +
+                    '</tr>';
+                    startMins += 10;
+                });
+                
+                html += '</tbody></table></div>';
+                
+                // FINALS - start from 10:30 AM
+                startMins = 60; // 9:30 + 60 = 10:30
+                html += '<div><h3 class="text-yellow-400 font-bold text-sm mb-3">🏅 FINALS</h3>';
+                html += '<table class="w-full text-sm"><tbody>';
+                
+                var allFinals = upcoming.filter(function(m) { return (m.matchNum || "").toUpperCase().includes("FINAL"); });
+                var allFinalList = allFinals;
+                
+                var fOrder = ["MS-FI", "WS-FI", "MD-FI", "WD-FI", "MX-FI"];
+                allFinalList.sort(function(a, b) {
+                    var aIdx = fOrder.findIndex(function(p) { return a.matchNum.toUpperCase().startsWith(p); });
+                    var bIdx = fOrder.findIndex(function(p) { return b.matchNum.toUpperCase().startsWith(p); });
+                    if (aIdx === -1) aIdx = 99;
+                    if (bIdx === -1) bIdx = 99;
+                    return aIdx - bIdx;
+                });
+                
+                allFinalList.forEach(function(m) {
+                    var h = 9 + Math.floor((30 + startMins) / 60);
+                    var mins = (30 + startMins) % 60;
+                    var timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
+                    
+                    var isCompleted = false; //(function(c) { return c.matchNum === m.matchNum; });
+                    var catLabel = m.matchNum.split("-")[0];
+                    var catName = catLabel === "MS" ? "Men Singles" : catLabel === "WS" ? "Women Singles" : catLabel === "MD" ? "Men Doubles" : catLabel === "WD" ? "Women Doubles" : catLabel === "MX" ? "Mixed Doubles" : "";
+                    
+                    var statusHtml = isCompleted ? 
+                        '<span class="bg-green-500/20 text-green-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(m.winner || '') + '</span>' :
+                        '<span class="bg-yellow-500/20 text-yellow-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
+                    
+                    html += '<tr class="border-b border-slate-700/50 ' + (isCompleted ? 'bg-green-900/10' : 'bg-yellow-900/10') + '">' +
+                        '<td class="py-2 px-1 sm:px-2 text-amber-400 font-bold text-xs whitespace-nowrap">' + timeStr + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-yellow-400 font-bold text-xs whitespace-nowrap">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-400 text-xs">' + catName + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-100 font-semibold text-xs sm:text-sm">' + formatTeamName(m.match) + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-center">' + statusHtml + '</td>' +
+                    '</tr>';
+                    startMins += 10;
+                });
+                
+                html += '</tbody></table></div>';
+                
+                container.innerHTML = html;
+                
+                // Hide section if no matches
+                if (allSFList.length === 0 && allFinalList.length === 0) {
+                    document.getElementById("showdown-section").style.display = "none";
+                }
+            }
+
             function renderLeaderboard() {
                 var container = document.getElementById("leaderboard-container");
                 if (!container) return;
@@ -1471,8 +1621,9 @@
                     var toppers = getGroupToppers(cat);
                     if (!toppers) return;
                     
-                    // Only show knockout if ALL league matches are completed
-                    if (!allLeagueMatchesCompleted(cat)) return;
+                    // Only show knockout if league complete OR knockout matches already started
+                    var hasKnockoutData = !!(currentKnockoutData[catKey] && Object.keys(currentKnockoutData[catKey]).length > 0);
+                    if (!allLeagueMatchesCompleted(cat) && !hasKnockoutData) return;
                     
                     var groupNames = Object.keys(toppers).sort();
                     if (groupNames.length < 1) return;
@@ -1492,25 +1643,40 @@
                     if (catKey === "mens_singles" && groupNames.length === 4) {
                         var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
                         var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
+                        var koMS = currentKnockoutData["mens_singles"] || {};
                         
                         html += renderKnockoutRow("QF1", ga[0], gd.length > 1 ? gd[1] : null, groupNames[0] + " #1", groupNames[3] + " #2", catKey);
                         html += renderKnockoutRow("QF2", gb[0], gc[0], groupNames[1] + " #1", groupNames[2] + " #1", catKey);
                         html += renderKnockoutRow("QF3", gb.length > 1 ? gb[1] : null, gc.length > 1 ? gc[1] : null, groupNames[1] + " #2", groupNames[2] + " #2", catKey);
                         html += renderKnockoutRow("QF4", gd[0], ga.length > 1 ? ga[1] : null, groupNames[3] + " #1", groupNames[0] + " #2", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── SEMI FINALS ─────</td></tr>';
-                        html += renderKnockoutRow("SF1", null, null, "QF1 Winner", "QF3 Winner", catKey);
-                        html += renderKnockoutRow("SF2", null, null, "QF2 Winner", "QF4 Winner", catKey);
+                        
+                        // Use custom SF teams if set, else use QF winners
+                        var msSfTeams = koMS.sfTeams || {};
+                        var sf1t1 = msSfTeams.SF1 ? { name: msSfTeams.SF1.team1 } : (koMS.QF1 ? { name: koMS.QF1.winner } : null);
+                        var sf1t2 = msSfTeams.SF1 ? { name: msSfTeams.SF1.team2 } : (koMS.QF3 ? { name: koMS.QF3.winner } : null);
+                        var sf2t1 = msSfTeams.SF2 ? { name: msSfTeams.SF2.team1 } : (koMS.QF2 ? { name: koMS.QF2.winner } : null);
+                        var sf2t2 = msSfTeams.SF2 ? { name: msSfTeams.SF2.team2 } : (koMS.QF4 ? { name: koMS.QF4.winner } : null);
+                        html += renderKnockoutRow("SF1", sf1t1, sf1t2, "QF1 Winner", "QF3 Winner", catKey);
+                        html += renderKnockoutRow("SF2", sf2t1, sf2t2, "QF2 Winner", "QF4 Winner", catKey);
+                        
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        // Use SF winners for Final teams
+                        var ft1 = koMS.SF1 ? { name: koMS.SF1.winner } : null;
+                        var ft2 = koMS.SF2 ? { name: koMS.SF2.winner } : null;
+                        html += renderKnockoutRow("FINAL", ft1, ft2, "SF1 Winner", "SF2 Winner", catKey);
                         
                     } else if (catKey === "mens_doubles" && groupNames.length === 4) {
                         var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
                         var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
+                        var koMD = currentKnockoutData["mens_doubles"] || {};
                         
-                        html += renderKnockoutRow("SF1", ga[0], gd[0], groupNames[0] + " #1", groupNames[3] + " #1", catKey);
-                        html += renderKnockoutRow("SF2", gb[0], gc[0], groupNames[1] + " #1", groupNames[2] + " #1", catKey);
+                        html += renderKnockoutRow("SF1", gb[0], gd[0], groupNames[1] + " #1", groupNames[3] + " #1", catKey);
+                        html += renderKnockoutRow("SF2", ga[0], gc[0], groupNames[0] + " #1", groupNames[2] + " #1", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        var mdft1 = koMD.SF1 ? { name: koMD.SF1.winner } : null;
+                        var mdft2 = koMD.SF2 ? { name: koMD.SF2.winner } : null;
+                        html += renderKnockoutRow("FINAL", mdft1, mdft2, "SF1 Winner", "SF2 Winner", catKey);
                         
                     } else if (catKey === "womens_doubles") {
                         // WOMENS DOUBLES: Custom final teams from knockoutData or top 2
@@ -1528,10 +1694,23 @@
                         
                     } else if (groupNames.length === 2) {
                         var a = toppers[groupNames[0]], b = toppers[groupNames[1]];
-                        html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
-                        html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        var koCat = currentKnockoutData[catKey] || {};
+                        
+                        // Use custom SF teams if set in knockoutData
+                        if (koCat.sfTeams) {
+                            var sf1 = koCat.sfTeams.SF1 || {};
+                            var sf2 = koCat.sfTeams.SF2 || {};
+                            html += renderKnockoutRow("SF1", { name: sf1.team1 }, { name: sf1.team2 }, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
+                            html += renderKnockoutRow("SF2", { name: sf2.team1 }, { name: sf2.team2 }, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        } else {
+                            html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
+                            html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        }
+                        
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        var cft1 = koCat.SF1 ? { name: koCat.SF1.winner } : null;
+                        var cft2 = koCat.SF2 ? { name: koCat.SF2.winner } : null;
+                        html += renderKnockoutRow("FINAL", cft1, cft2, "SF1 Winner", "SF2 Winner", catKey);
                     }
                     
                     html += '</tbody></table></div>';
