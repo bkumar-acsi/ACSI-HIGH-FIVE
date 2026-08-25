@@ -1553,8 +1553,17 @@
                         var a = toppers[groupNames[0]], b = toppers[groupNames[1]];
                         var koCat = currentKnockoutData[catKey] || {};
                         
-                        html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
-                        html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        // Use custom SF teams if set in knockoutData
+                        if (koCat.sfTeams) {
+                            var sf1 = koCat.sfTeams.SF1 || {};
+                            var sf2 = koCat.sfTeams.SF2 || {};
+                            html += renderKnockoutRow("SF1", { name: sf1.team1 }, { name: sf1.team2 }, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
+                            html += renderKnockoutRow("SF2", { name: sf2.team1 }, { name: sf2.team2 }, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        } else {
+                            html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
+                            html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
+                        }
+                        
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
                         var cft1 = koCat.SF1 ? { name: koCat.SF1.winner } : null;
                         var cft2 = koCat.SF2 ? { name: koCat.SF2.winner } : null;
