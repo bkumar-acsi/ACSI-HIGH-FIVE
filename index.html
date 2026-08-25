@@ -1551,9 +1551,13 @@
             }
 
             // Check if all league matches completed for current category
-            function isLeagueComplete() {
+            async function isLeagueComplete() {
                 var category = tournamentState[currentCategory];
                 if (!category || !category.teams) return false;
+                
+                // If knockoutData already exists, league is done
+                var koData = await firebaseGet('knockoutData/' + currentCategory);
+                if (koData && Object.keys(koData).length > 0) return true;
                 
                 var groups = {};
                 category.teams.forEach(function(t) {
@@ -1568,9 +1572,16 @@
                     totalPossible += n * (n - 1) / 2;
                 }
                 
-                var matchesPlayed = (category.matches || []).length;
-                console.log("League: " + matchesPlayed + "/" + totalPossible);
-                return matchesPlayed >= totalPossible;
+                // Count only within-group matches
+                var leagueMatches = 0;
+                (category.matches || []).forEach(function(m) {
+                    var t1 = category.teams.find(function(t) { return t.id === m.team1Id; });
+                    var t2 = category.teams.find(function(t) { return t.id === m.team2Id; });
+                    if (t1 && t2 && t1.group === t2.group) leagueMatches++;
+                });
+                
+                console.log("League: " + leagueMatches + "/" + totalPossible);
+                return leagueMatches >= totalPossible;
             }
 
             // Save knockout match result to Firebase
@@ -1795,7 +1806,7 @@
                 const savedSetHistory = [...liveMatch.setHistory];
 
                 // CHECK: Is league complete? → Save as knockout match
-                if (isLeagueComplete()) {
+                if (await isLeagueComplete()) {
                     console.log("🏆 KNOCKOUT MATCH - league is complete!");
                     
                     alert(`🏆 Knockout Match Saved!\n\n${team1Name} vs ${team2Name}\nSets: ${savedSets1} - ${savedSets2}\nWinner: ${winnerName}`);
