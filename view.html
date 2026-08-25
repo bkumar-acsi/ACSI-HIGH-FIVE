@@ -244,7 +244,18 @@
                 </div>
             </div>
 
-                <!-- KNOCKOUT STAGE (TOP - below live score) -->
+                <!-- 🔥 FINAL SHOWDOWN SECTION -->
+                <div id="showdown-section" class="bg-gradient-to-br from-slate-900 via-purple-950/30 to-slate-900 border border-purple-500/30 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-5 border-b border-purple-500/30 text-center">
+                        <h2 class="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 bg-clip-text text-transparent">🔥 Ready for the Final Showdown! 🔥</h2>
+                        <p class="text-purple-300 text-sm mt-2">📅 26 August 2026 | ⏰ Starting 10:30 AM</p>
+                    </div>
+                    <div class="p-3 sm:p-5">
+                        <div id="showdown-container" class="knockout-table-wrap"></div>
+                    </div>
+                </div>
+
+                <!-- KNOCKOUT STAGE -->
                 <div id="knockout-section" class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-800">
                         <h2 class="font-bold text-lg">⚡ Knockout Stage</h2>
@@ -1159,6 +1170,9 @@
                 
                 console.log("✅ Matches populated - Upcoming:", upcomingMatchesList.length, "Completed:", completedMatchesList.length);
                 
+                // Render showdown schedule
+                await renderShowdown();
+                
                 // Render leaderboard and knockout brackets
                 renderLeaderboard();
                 await renderKnockout("knockout-container");
@@ -1419,6 +1433,134 @@
                 return toppers;
             }
             
+            async function renderShowdown() {
+                var container = document.getElementById("showdown-container");
+                if (!container) return;
+                
+                // Load knockout data
+                var koResp = await firebaseGet('knockoutData') || {};
+                
+                // Load upcoming matches for SF/Final entries
+                var matchTables = await firebaseGet('matchTables') || {};
+                var upcoming = matchTables.upcomingMatches || [];
+                var completed = matchTables.completedMatches || [];
+                
+                // Collect all SF and Final matches
+                var sfMatches = [];
+                var finalMatches = [];
+                
+                // From upcoming table
+                upcoming.concat(completed).forEach(function(m) {
+                    var label = (m.matchNum || "").toUpperCase();
+                    if (label.includes("SF")) sfMatches.push(m);
+                    else if (label.includes("FINAL")) finalMatches.push(m);
+                });
+                
+                // Also check knockoutData for matches not in upcoming
+                var categories = {
+                    "mens_singles": "Men Singles",
+                    "womens_singles": "Women Singles", 
+                    "mens_doubles": "Men Doubles",
+                    "womens_doubles": "Women Doubles",
+                    "mix_doubles": "Mixed Doubles"
+                };
+                
+                var startMins = 0; // minutes from 9:30
+                var html = '';
+                
+                // SEMI FINALS
+                html += '<div class="mb-4"><h3 class="text-purple-400 font-bold text-sm mb-3">⚡ SEMI FINALS</h3>';
+                html += '<table class="w-full text-sm"><tbody>';
+                
+                var allSFs = upcoming.filter(function(m) { return (m.matchNum || "").toUpperCase().includes("SF"); });
+                var allSFList = allSFs;
+                
+                // Sort: MS first, then WS, MD, MX
+                var sfOrder = ["MS-SF", "WS-SF", "MD-SF", "MX-SF"];
+                allSFList.sort(function(a, b) {
+                    var aIdx = sfOrder.findIndex(function(p) { return a.matchNum.toUpperCase().startsWith(p); });
+                    var bIdx = sfOrder.findIndex(function(p) { return b.matchNum.toUpperCase().startsWith(p); });
+                    if (aIdx === -1) aIdx = 99;
+                    if (bIdx === -1) bIdx = 99;
+                    if (aIdx !== bIdx) return aIdx - bIdx;
+                    return a.matchNum.localeCompare(b.matchNum);
+                });
+                
+                allSFList.forEach(function(m) {
+                    var h = 9 + Math.floor((30 + startMins) / 60);
+                    var mins = (30 + startMins) % 60;
+                    var timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
+                    
+                    var isCompleted = false; //(function(c) { return c.matchNum === m.matchNum; });
+                    var catLabel = m.matchNum.split("-")[0];
+                    var catName = catLabel === "MS" ? "Men Singles" : catLabel === "WS" ? "Women Singles" : catLabel === "MD" ? "Men Doubles" : catLabel === "MX" ? "Mixed Doubles" : "";
+                    
+                    var statusHtml = isCompleted ? 
+                        '<span class="bg-green-500/20 text-green-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(m.winner || '') + '</span>' :
+                        '<span class="bg-purple-500/20 text-purple-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
+                    
+                    html += '<tr class="border-b border-slate-700/50 ' + (isCompleted ? 'bg-green-900/10' : 'bg-purple-900/10') + '">' +
+                        '<td class="py-2 px-1 sm:px-2 text-amber-400 font-bold text-xs whitespace-nowrap">' + timeStr + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-purple-400 font-bold text-xs whitespace-nowrap">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-400 text-xs">' + catName + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-100 font-semibold text-xs sm:text-sm">' + formatTeamName(m.match) + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-center">' + statusHtml + '</td>' +
+                    '</tr>';
+                    startMins += 10;
+                });
+                
+                html += '</tbody></table></div>';
+                
+                // FINALS - start from 10:30 AM
+                startMins = 60; // 9:30 + 60 = 10:30
+                html += '<div><h3 class="text-yellow-400 font-bold text-sm mb-3">🏅 FINALS</h3>';
+                html += '<table class="w-full text-sm"><tbody>';
+                
+                var allFinals = upcoming.filter(function(m) { return (m.matchNum || "").toUpperCase().includes("FINAL"); });
+                var allFinalList = allFinals;
+                
+                var fOrder = ["MS-FI", "WS-FI", "MD-FI", "WD-FI", "MX-FI"];
+                allFinalList.sort(function(a, b) {
+                    var aIdx = fOrder.findIndex(function(p) { return a.matchNum.toUpperCase().startsWith(p); });
+                    var bIdx = fOrder.findIndex(function(p) { return b.matchNum.toUpperCase().startsWith(p); });
+                    if (aIdx === -1) aIdx = 99;
+                    if (bIdx === -1) bIdx = 99;
+                    return aIdx - bIdx;
+                });
+                
+                allFinalList.forEach(function(m) {
+                    var h = 9 + Math.floor((30 + startMins) / 60);
+                    var mins = (30 + startMins) % 60;
+                    var timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
+                    
+                    var isCompleted = false; //(function(c) { return c.matchNum === m.matchNum; });
+                    var catLabel = m.matchNum.split("-")[0];
+                    var catName = catLabel === "MS" ? "Men Singles" : catLabel === "WS" ? "Women Singles" : catLabel === "MD" ? "Men Doubles" : catLabel === "WD" ? "Women Doubles" : catLabel === "MX" ? "Mixed Doubles" : "";
+                    
+                    var statusHtml = isCompleted ? 
+                        '<span class="bg-green-500/20 text-green-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">🏆 ' + formatTeamName(m.winner || '') + '</span>' :
+                        '<span class="bg-yellow-500/20 text-yellow-400 px-1 sm:px-2 py-1 rounded-full text-xs font-bold">Upcoming</span>';
+                    
+                    html += '<tr class="border-b border-slate-700/50 ' + (isCompleted ? 'bg-green-900/10' : 'bg-yellow-900/10') + '">' +
+                        '<td class="py-2 px-1 sm:px-2 text-amber-400 font-bold text-xs whitespace-nowrap">' + timeStr + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-yellow-400 font-bold text-xs whitespace-nowrap">' + m.matchNum + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-400 text-xs">' + catName + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-slate-100 font-semibold text-xs sm:text-sm">' + formatTeamName(m.match) + '</td>' +
+                        '<td class="py-2 px-1 sm:px-2 text-center">' + statusHtml + '</td>' +
+                    '</tr>';
+                    startMins += 10;
+                });
+                
+                html += '</tbody></table></div>';
+                
+                container.innerHTML = html;
+                
+                // Hide section if no matches
+                if (allSFList.length === 0 && allFinalList.length === 0) {
+                    document.getElementById("showdown-section").style.display = "none";
+                }
+            }
+
             function renderLeaderboard() {
                 var container = document.getElementById("leaderboard-container");
                 if (!container) return;
