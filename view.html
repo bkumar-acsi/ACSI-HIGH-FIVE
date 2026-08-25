@@ -1379,11 +1379,19 @@
                     totalPossible += n * (n - 1) / 2;
                 }
                 
-                // Count actual matches played
-                var matchesPlayed = (category.matches || []).length;
+                // Count only WITHIN-GROUP matches (exclude cross-group knockout matches)
+                var leagueMatches = 0;
+                (category.matches || []).forEach(function(m) {
+                    // Find both teams' groups
+                    var t1 = category.teams.find(function(t) { return t.id === m.team1Id; });
+                    var t2 = category.teams.find(function(t) { return t.id === m.team2Id; });
+                    if (t1 && t2 && t1.group === t2.group) {
+                        leagueMatches++;
+                    }
+                });
                 
-                console.log("League check: " + matchesPlayed + "/" + totalPossible + " matches played");
-                return matchesPlayed >= totalPossible;
+                console.log("League check: " + leagueMatches + "/" + totalPossible + " within-group matches");
+                return leagueMatches >= totalPossible;
             }
 
             // Generate knockout bracket from standings
@@ -1471,8 +1479,9 @@
                     var toppers = getGroupToppers(cat);
                     if (!toppers) return;
                     
-                    // Only show knockout if ALL league matches are completed
-                    if (!allLeagueMatchesCompleted(cat)) return;
+                    // Only show knockout if league complete OR knockout matches already started
+                    var hasKnockoutData = !!(currentKnockoutData[catKey] && Object.keys(currentKnockoutData[catKey]).length > 0);
+                    if (!allLeagueMatchesCompleted(cat) && !hasKnockoutData) return;
                     
                     var groupNames = Object.keys(toppers).sort();
                     if (groupNames.length < 1) return;
