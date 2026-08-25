@@ -1492,25 +1492,39 @@
                     if (catKey === "mens_singles" && groupNames.length === 4) {
                         var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
                         var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
+                        var koMS = currentKnockoutData["mens_singles"] || {};
                         
                         html += renderKnockoutRow("QF1", ga[0], gd.length > 1 ? gd[1] : null, groupNames[0] + " #1", groupNames[3] + " #2", catKey);
                         html += renderKnockoutRow("QF2", gb[0], gc[0], groupNames[1] + " #1", groupNames[2] + " #1", catKey);
                         html += renderKnockoutRow("QF3", gb.length > 1 ? gb[1] : null, gc.length > 1 ? gc[1] : null, groupNames[1] + " #2", groupNames[2] + " #2", catKey);
                         html += renderKnockoutRow("QF4", gd[0], ga.length > 1 ? ga[1] : null, groupNames[3] + " #1", groupNames[0] + " #2", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── SEMI FINALS ─────</td></tr>';
-                        html += renderKnockoutRow("SF1", null, null, "QF1 Winner", "QF3 Winner", catKey);
-                        html += renderKnockoutRow("SF2", null, null, "QF2 Winner", "QF4 Winner", catKey);
+                        
+                        // Use QF winners for SF teams
+                        var sf1t1 = koMS.QF1 ? { name: koMS.QF1.winner } : null;
+                        var sf1t2 = koMS.QF3 ? { name: koMS.QF3.winner } : null;
+                        var sf2t1 = koMS.QF2 ? { name: koMS.QF2.winner } : null;
+                        var sf2t2 = koMS.QF4 ? { name: koMS.QF4.winner } : null;
+                        html += renderKnockoutRow("SF1", sf1t1, sf1t2, "QF1 Winner", "QF3 Winner", catKey);
+                        html += renderKnockoutRow("SF2", sf2t1, sf2t2, "QF2 Winner", "QF4 Winner", catKey);
+                        
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        // Use SF winners for Final teams
+                        var ft1 = koMS.SF1 ? { name: koMS.SF1.winner } : null;
+                        var ft2 = koMS.SF2 ? { name: koMS.SF2.winner } : null;
+                        html += renderKnockoutRow("FINAL", ft1, ft2, "SF1 Winner", "SF2 Winner", catKey);
                         
                     } else if (catKey === "mens_doubles" && groupNames.length === 4) {
                         var ga = toppers[groupNames[0]], gb = toppers[groupNames[1]];
                         var gc = toppers[groupNames[2]], gd = toppers[groupNames[3]];
+                        var koMD = currentKnockoutData["mens_doubles"] || {};
                         
                         html += renderKnockoutRow("SF1", ga[0], gc[0], groupNames[0] + " #1", groupNames[2] + " #1", catKey);
                         html += renderKnockoutRow("SF2", gb[0], gd[0], groupNames[1] + " #1", groupNames[3] + " #1", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        var mdft1 = koMD.SF1 ? { name: koMD.SF1.winner } : null;
+                        var mdft2 = koMD.SF2 ? { name: koMD.SF2.winner } : null;
+                        html += renderKnockoutRow("FINAL", mdft1, mdft2, "SF1 Winner", "SF2 Winner", catKey);
                         
                     } else if (catKey === "womens_doubles") {
                         // WOMENS DOUBLES: Custom final teams from knockoutData or top 2
@@ -1528,10 +1542,14 @@
                         
                     } else if (groupNames.length === 2) {
                         var a = toppers[groupNames[0]], b = toppers[groupNames[1]];
+                        var koCat = currentKnockoutData[catKey] || {};
+                        
                         html += renderKnockoutRow("SF1", a[0], b.length > 1 ? b[1] : null, groupNames[0] + " #1", groupNames[1] + " #2", catKey);
                         html += renderKnockoutRow("SF2", b[0], a.length > 1 ? a[1] : null, groupNames[1] + " #1", groupNames[0] + " #2", catKey);
                         html += '<tr><td colspan="5" class="py-2 text-center text-slate-600 text-xs">───── FINAL ─────</td></tr>';
-                        html += renderKnockoutRow("FINAL", null, null, "SF1 Winner", "SF2 Winner", catKey);
+                        var cft1 = koCat.SF1 ? { name: koCat.SF1.winner } : null;
+                        var cft2 = koCat.SF2 ? { name: koCat.SF2.winner } : null;
+                        html += renderKnockoutRow("FINAL", cft1, cft2, "SF1 Winner", "SF2 Winner", catKey);
                     }
                     
                     html += '</tbody></table></div>';
