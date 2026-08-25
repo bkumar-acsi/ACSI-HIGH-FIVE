@@ -1609,7 +1609,6 @@
                     } else if (catKey === "womens_doubles") {
                         if (!knockoutData.FINAL) matchLabel = "FINAL";
                     } else {
-                        // womens_singles, mix_doubles (2 groups → SF + Final)
                         if (!knockoutData.SF1) matchLabel = "SF1";
                         else if (!knockoutData.SF2) matchLabel = "SF2";
                         else if (!knockoutData.FINAL) matchLabel = "FINAL";
@@ -1633,6 +1632,84 @@
                     await firebaseSet('knockoutData/' + currentCategory, knockoutData);
                     console.log("✅ Knockout match saved: " + matchLabel + " → " + winnerName);
                     alert("✅ Knockout " + matchLabel + " saved!\n" + team1Name + " vs " + team2Name + "\nWinner: " + winnerName);
+                    
+                    // AUTO-GENERATE FINAL when both SFs are done
+                    if (matchLabel === "SF1" || matchLabel === "SF2") {
+                        if (knockoutData.SF1 && knockoutData.SF1.winner && knockoutData.SF2 && knockoutData.SF2.winner) {
+                            var sf1Winner = knockoutData.SF1.winner;
+                            var sf2Winner = knockoutData.SF2.winner;
+                            console.log("🏅 Both SFs done! Auto-creating FINAL: " + sf1Winner + " vs " + sf2Winner);
+                            
+                            // Get category prefix for match label
+                            var prefix = catKey === "mens_singles" ? "MS" : 
+                                         catKey === "womens_singles" ? "WS" :
+                                         catKey === "mens_doubles" ? "MD" :
+                                         catKey === "womens_doubles" ? "WD" : "MX";
+                            
+                            // Add FINAL to upcoming matches
+                            var matchTables = await firebaseGet('matchTables') || {};
+                            var upcoming = matchTables.upcomingMatches || [];
+                            
+                            // Remove old final for this category if exists
+                            upcoming = upcoming.filter(function(m) {
+                                return (m.matchNum || "").toUpperCase() !== prefix + "-FINAL";
+                            });
+                            
+                            // Create match string
+                            var finalMatch;
+                            if (catKey === "mens_singles" || catKey === "womens_singles") {
+                                finalMatch = sf1Winner.split(" ")[0] + " vs " + sf2Winner.split(" ")[0];
+                            } else {
+                                finalMatch = sf1Winner + " vs " + sf2Winner;
+                            }
+                            
+                            upcoming.push({
+                                matchNum: prefix + "-FINAL",
+                                match: finalMatch
+                            });
+                            
+                            matchTables.upcomingMatches = upcoming;
+                            await firebaseSet('matchTables', matchTables);
+                            
+                            console.log("✅ FINAL auto-added to upcoming: " + finalMatch);
+                            alert("🏅 FINAL auto-generated!\n" + sf1Winner + " vs " + sf2Winner);
+                        }
+                    }
+                    
+                    // AUTO-GENERATE SF when all QFs are done (mens singles only)
+                    if (catKey === "mens_singles" && (matchLabel === "QF1" || matchLabel === "QF2" || matchLabel === "QF3" || matchLabel === "QF4")) {
+                        if (knockoutData.QF1 && knockoutData.QF2 && knockoutData.QF3 && knockoutData.QF4) {
+                            var sf1t1 = knockoutData.QF1.winner;
+                            var sf1t2 = knockoutData.QF3.winner;
+                            var sf2t1 = knockoutData.QF2.winner;
+                            var sf2t2 = knockoutData.QF4.winner;
+                            
+                            console.log("⚡ All QFs done! Auto-creating SFs");
+                            
+                            // Save custom SF teams
+                            knockoutData.sfTeams = knockoutData.sfTeams || {};
+                            knockoutData.sfTeams.SF1 = { team1: sf1t1, team2: sf1t2 };
+                            knockoutData.sfTeams.SF2 = { team1: sf2t1, team2: sf2t2 };
+                            await firebaseSet('knockoutData/' + currentCategory, knockoutData);
+                            
+                            // Add SFs to upcoming
+                            var matchTables = await firebaseGet('matchTables') || {};
+                            var upcoming = matchTables.upcomingMatches || [];
+                            
+                            upcoming = upcoming.filter(function(m) {
+                                var l = (m.matchNum || "").toUpperCase();
+                                return l !== "MS-SF1" && l !== "MS-SF2";
+                            });
+                            
+                            upcoming.push({ matchNum: "MS-SF1", match: sf1t1.split(" ")[0] + " vs " + sf1t2.split(" ")[0] });
+                            upcoming.push({ matchNum: "MS-SF2", match: sf2t1.split(" ")[0] + " vs " + sf2t2.split(" ")[0] });
+                            
+                            matchTables.upcomingMatches = upcoming;
+                            await firebaseSet('matchTables', matchTables);
+                            
+                            alert("⚡ SFs auto-generated!\nSF1: " + sf1t1 + " vs " + sf1t2 + "\nSF2: " + sf2t1 + " vs " + sf2t2);
+                        }
+                    }
                     
                 } catch (error) {
                     console.error("Error saving knockout match:", error);
