@@ -1517,7 +1517,8 @@
                 html += '<table class="w-full text-sm"><tbody>';
                 
                 var allFinals = upcoming.filter(function(m) { return (m.matchNum || "").toUpperCase().includes("FINAL"); });
-                var allFinalList = allFinals;
+                var completedFinals = completed.filter(function(m) { return (m.matchNum || "").toUpperCase().includes("FINAL"); });
+                var allFinalList = allFinals.concat(completedFinals);
                 
                 var fOrder = ["MS-FI", "WS-FI", "MD-FI", "WD-FI", "MX-FI"];
                 allFinalList.sort(function(a, b) {
@@ -1533,7 +1534,8 @@
                     var mins = (30 + startMins) % 60;
                     var timeStr = (h < 10 ? '0' + h : h) + ':' + (mins < 10 ? '0' + mins : mins);
                     
-                    var isCompleted = false; //(function(c) { return c.matchNum === m.matchNum; });
+                    // Check if completed (in completed list or has winner)
+                    var isCompleted = completedFinals.some(function(c) { return c.matchNum === m.matchNum; }) || (m.winner && m.winner !== "");
                     var catLabel = m.matchNum.split("-")[0];
                     var catName = catLabel === "MS" ? "Men Singles" : catLabel === "WS" ? "Women Singles" : catLabel === "MD" ? "Men Doubles" : catLabel === "WD" ? "Women Doubles" : catLabel === "MX" ? "Mixed Doubles" : "";
                     
